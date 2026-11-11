@@ -442,6 +442,15 @@ function salvageObjects(text) {
   return out;
 }
 
+function parseObject(text) {
+  const t = String(text || "").trim();
+  const tryParse = x => { try { const v = JSON.parse(x); return v && typeof v === "object" && !Array.isArray(v) ? v : null; } catch (e) { return null; } };
+  let v = tryParse(t); if (v) return v;
+  const f = /```(?:json)?\s*([\s\S]*?)```/.exec(t); if (f && (v = tryParse(f[1]))) return v;
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  return a >= 0 && b > a ? tryParse(t.slice(a, b + 1)) : null;
+}
+
 function parseReply(text) {
   try { const a = extractJSONArray(text); if (a.length) return a; } catch (e) { }
   return salvageObjects(text || "");
@@ -473,5 +482,5 @@ function parseGitHubURL(input) {
 }
 
 const CORE = { splitLean, statementPart, proofSplit, identifiers, buildIndex, lookupIdent, importsOf, modulePath,
-  collectContext, chunkBlocks, buildPrompt, extractJSONArray, salvageObjects, parseReply, hashStr, parseGitHubURL, declName, headKeyword, codeOnly };
+  collectContext, chunkBlocks, buildPrompt, extractJSONArray, salvageObjects, parseReply, parseObject, hashStr, parseGitHubURL, declName, headKeyword, codeOnly };
 if (typeof module !== "undefined") module.exports = CORE;

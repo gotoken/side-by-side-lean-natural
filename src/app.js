@@ -5,100 +5,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-// ---------- i18n ----------
-const UI = {
-  ja: {
-    open: "開く", zip: "ZIP を開く", folder: "フォルダ", settings: "設定", files: "ファイル", filter: "ファイル名で絞り込み",
-    lang: "訳す言語", style: "詳しさ", brief: "要点", normal: "標準", detail: "詳しく", other: "その他…",
-    translateFile: "このファイルを訳す", stop: "停止", translate: "訳す", retranslate: "訳し直す", back: "戻る",
-    viewBoth: "対訳", viewLean: "Lean", viewTr: "訳",
-    showProof: n => `証明を表示（${n} 行）`, hideProof: "証明をたたむ",
-    math: "内容", proof: "証明の方針", lean: "Lean の読み方", src: "元のソースとの対応",
-    notYet: "まだ訳していません", struct: "構造", translated: (a, b) => `訳済み ${a} / ${b}`,
-    lines: n => `${n} 行`, thinking: "考え中…", receiving: n => `受信中… ${n} 文字`,
-    chunkOf: (i, n) => `${i} / ${n} 回目`, done: "完了", stopped: "停止しました",
-    confirmMany: n => `${n} 回に分けて訳します。もう一度押すと開始`,
-    noEngine: "翻訳エンジンがありません。設定で Anthropic API キーを入れるか、claude.ai 上で開いてください。",
-    urlPh: "https://github.com/owner/repo（private 可）",
-    demoLabel: "デモ", jumpDef: "定義へ移動", defIn: "定義", glossary: "Lean の用語・記号",
-    loading: "読み込み中…", repoLoaded: n => `${n} 個の .lean ファイル`,
-    ghNet: "GitHub に接続できませんでした。",
-    ghInArtifact: "claude.ai の中のページからは GitHub に接続できません。GitHub で Code → Download ZIP した ZIP を「ZIP を開く」で読み込んでください（private リポジトリも可）。この HTML を手元で開けば URL から直接読めます。",
-    zipLink: "このリポジトリの ZIP をダウンロード",
-    gh404: "見つかりません。非公開リポジトリなら設定で GitHub トークンを入れてください。",
-    gh401: "GitHub トークンが無効です。", ghRate: "GitHub API の回数制限に達しました。トークンを設定すると上限が上がります。",
-    treeTrunc: "ファイル数が多く一覧の一部しか取得できませんでした。", noLean: ".lean ファイルが見つかりません。",
-    apiErr: "翻訳に失敗しました", parseErr: "返答を読み取れませんでした。もう一度試してください。",
-    sEngine: "翻訳エンジン", sClaude: "Claude（claude.ai のあなたのアカウント）", sTier: "モデル",
-    tierDefault: "標準", tierComplex: "高精度（時間がかかる）", tierQuick: "高速",
-    sApi: "Anthropic API キー", sModel: "モデル名", sGh: "GitHub トークン（private 用。fine-grained PAT で Contents: Read-only）",
-    sRemember: "このブラウザに保存する", sUi: "表示言語", sExport: "訳をエクスポート", sImport: "訳をインポート",
-    sCopy: "JSON をコピー", sDownload: "ダウンロード", sClose: "閉じる", copied: "コピーしました",
-    imported: n => `${n} 件取り込みました`, sNoteArtifact: "claude.ai 上では API キーは不要です。訳はこのブラウザに保存されます。",
-    sNoteStandalone: "キーはこのページから api.anthropic.com と api.github.com に直接送られるだけです。共用 PC では保存しないでください。",
-    ctx: n => `参照した定義 ${n} 件`, about: "このツールについて",
-    aboutText: "Lean 4 のソースを宣言ごとに区切り、各ブロックを指定した言語の数学的な文章に訳して並べます。import 先から参照している定義も文脈として渡します。Lean のビルドは不要です。訳は LLM によるもので、誤りがありえます。必ずコードと照らして読んでください。識別子や記号をタップすると定義や意味を表示します。",
-    demoNote: "デモ: Broyojo/python-formalization @7d5a5ed の range 長に関する部分（Apache-2.0, © 2026 David Andrews）。Spec.lean と Length.lean は日本語訳済み。",
-    otherLangPh: "例: Italiano",
-    partial: n => `${n} 件は訳せませんでした（返答が長さの上限で切れた可能性）。もう一度押すと残りだけ訳します。`,
-    bundled: n => `リポジトリに同梱された訳を ${n} 件読み込みました。`,
-    sExportHint: "いま開いているリポジトリの訳だけを書き出します。そのリポジトリの .lean-taiyaku/ja.json（言語ごとに 1 ファイル）として置くと、開いた人はキーなしで訳を読めます。",
-    copyLink: "リンク", linkCopied: "リンクをコピーしました", lic: "ライセンスと帰属表示",
-    patLink: "GitHub でトークンを作る（読み取り専用の設定を記入済み）",
-    patSteps: "開いた画面で Repository access を「Only select repositories」にして読みたいリポジトリを選び、Generate token を押します。表示された github_pat_… をここに貼ってください。期限は 30 日です。",
-    ghPrivateHint: "非公開リポジトリを読むには、読み取り専用の GitHub トークンが要ります。",
-    patLinkShort: "トークンを作る（記入済み）", openSettings: "設定を開く", orZip: "または ZIP で開く",
-    askClaude: "この箇所について Claude に聞く", claudeSays: "Claude の説明（この宣言の中で）",
-    askWaiting: "Claude に問い合わせ中…", askWriting: "Claude が回答中…", secs: n => `${n} 秒`, askDone: n => `回答済み（${n} 秒）`,
-    askAgain: "もう一度聞く", askRetry: "もう一度試す", askReady: w => `「${w}」の説明ができました。もう一度タップすると表示します。`,
-  },
-  en: {
-    open: "Open", zip: "Open ZIP", folder: "Folder", settings: "Settings", files: "Files", filter: "Filter files",
-    lang: "Translate into", style: "Detail", brief: "Brief", normal: "Normal", detail: "Detailed", other: "Other…",
-    translateFile: "Translate this file", stop: "Stop", translate: "Translate", retranslate: "Retranslate", back: "Back",
-    viewBoth: "Side by side", viewLean: "Lean", viewTr: "Prose",
-    showProof: n => `Show proof (${n} lines)`, hideProof: "Hide proof",
-    math: "Content", proof: "Proof idea", lean: "Reading the Lean", src: "Source correspondence",
-    notYet: "Not translated yet", struct: "Structure", translated: (a, b) => `${a} / ${b} translated`,
-    lines: n => `${n} lines`, thinking: "Thinking…", receiving: n => `Receiving… ${n} chars`,
-    chunkOf: (i, n) => `call ${i} of ${n}`, done: "Done", stopped: "Stopped",
-    confirmMany: n => `This takes ${n} calls. Press again to start`,
-    noEngine: "No translator available. Add an Anthropic API key in Settings, or open this page on claude.ai.",
-    urlPh: "https://github.com/owner/repo (private OK)",
-    demoLabel: "Demo", jumpDef: "Go to definition", defIn: "Defined", glossary: "Lean keywords and notation",
-    loading: "Loading…", repoLoaded: n => `${n} .lean files`,
-    ghNet: "Could not reach GitHub.",
-    ghInArtifact: "Pages inside claude.ai cannot reach GitHub. Download the repository with Code → Download ZIP and open it with \"Open ZIP\" (private repositories work). Opened as a local HTML file, this page reads GitHub URLs directly.",
-    zipLink: "Download this repository as ZIP",
-    gh404: "Not found. For a private repository, add a GitHub token in Settings.",
-    gh401: "The GitHub token is invalid.", ghRate: "GitHub API rate limit reached. A token raises the limit.",
-    treeTrunc: "The repository is large; only part of the file list was returned.", noLean: "No .lean files found.",
-    apiErr: "Translation failed", parseErr: "Could not read the reply. Please try again.",
-    sEngine: "Translator", sClaude: "Claude (your claude.ai account)", sTier: "Model",
-    tierDefault: "Default", tierComplex: "Most capable (slower)", tierQuick: "Fast",
-    sApi: "Anthropic API key", sModel: "Model", sGh: "GitHub token (for private repos; fine-grained PAT with Contents: Read-only)",
-    sRemember: "Remember in this browser", sUi: "Interface language", sExport: "Export translations", sImport: "Import translations",
-    sCopy: "Copy JSON", sDownload: "Download", sClose: "Close", copied: "Copied",
-    imported: n => `Imported ${n} entries`, sNoteArtifact: "No API key is needed on claude.ai. Translations are kept in this browser.",
-    sNoteStandalone: "Keys are sent only from this page to api.anthropic.com and api.github.com. Do not save them on shared computers.",
-    ctx: n => `${n} referenced definitions`, about: "About",
-    aboutText: "Splits Lean 4 source into declarations and shows each next to a natural-language mathematical translation in the language you pick. Definitions referenced from imported files are passed as context. No Lean build is needed. Translations come from an LLM and can be wrong: read them against the code. Tap identifiers and symbols for their definition or meaning.",
-    demoNote: "Demo: the range-length part of Broyojo/python-formalization @7d5a5ed (Apache-2.0, © 2026 David Andrews). Spec.lean and Length.lean come pre-translated into Japanese.",
-    otherLangPh: "e.g. Italiano",
-    partial: n => `${n} blocks were not translated (the reply may have hit the length limit). Press again to translate only the rest.`,
-    bundled: n => `Loaded ${n} translations bundled with the repository.`,
-    sExportHint: "Exports translations for the repository that is open now. Commit it to that repository as .lean-taiyaku/<lang>.json and anyone who opens it sees the translations without a key.",
-    copyLink: "Link", linkCopied: "Link copied", lic: "Licenses and attribution",
-    patLink: "Create a token on GitHub (read-only, pre-filled)",
-    patSteps: "On the page that opens, set Repository access to \"Only select repositories\", pick the repositories to read, and press Generate token. Paste the github_pat_… it shows here. It expires in 30 days.",
-    ghPrivateHint: "Reading a private repository needs a read-only GitHub token.",
-    patLinkShort: "Create a token (pre-filled)", openSettings: "Open settings", orZip: "or open a ZIP",
-    askClaude: "Ask Claude about this spot", claudeSays: "Claude's explanation (in this declaration)",
-    askWaiting: "Asking Claude…", askWriting: "Claude is answering…", secs: n => `${n}s`, askDone: n => `Answered (${n}s)`,
-    askAgain: "Ask again", askRetry: "Try again", askReady: w => `The explanation of “${w}” is ready. Tap it again to see it.`,
-  }
-};
-const LANGS = ["日本語", "English", "简体中文", "繁體中文", "한국어", "Français", "Deutsch", "Español", "Português", "Русский"];
+// Interface strings and the language list live in i18n.js (UI, LANGS).
 
 // ---------- storage helpers ----------
 const LS = {
@@ -133,7 +40,7 @@ function idbPut(k, v) { try { if (idb) idb.transaction("tr", "readwrite").object
 
 // ---------- state ----------
 const S = {
-  ui: LS.get("ui", (navigator.language || "ja").startsWith("ja") ? "ja" : "en"),
+  uiMode: LS.get("uiMode", LS.get("ui", "auto")),
   lang: LS.get("lang", null), style: LS.get("style", "normal"), view: LS.get("view", "both"),
   tier: LS.get("tier", "default"), model: LS.get("model", "claude-sonnet-5-5"),
   apiKey: LS.get("apiKey", ""), ghToken: LS.get("ghToken", ""), remember: LS.get("remember", false),
@@ -142,9 +49,25 @@ const S = {
   sample: null, inArtifact: !!(window.claude && typeof window.claude.use === "function"),
   job: null, confirmArm: 0,
 };
-if (!S.lang) S.lang = S.ui === "ja" ? "日本語" : "English";
+function defaultLang() {
+  const prefixes = LANGS.flatMap(L => L.nav.map(n => [n, L.name])).sort((a, b) => b[0].length - a[0].length);
+  for (const bl of (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"])) {
+    const n = String(bl).toLowerCase();
+    const hit = prefixes.find(([p]) => n === p || n.startsWith(p + "-"));
+    if (hit) return hit[1];
+  }
+  return "English";
+}
+if (!S.lang) S.lang = defaultLang();
+// The interface follows the selected language unless Settings pins one; languages without
+// built-in strings fall back to English.
+function uiCode() {
+  if (S.uiMode && S.uiMode !== "auto" && UI[S.uiMode]) return S.uiMode;
+  const L = LANGS.find(l => l.name === S.lang);
+  return L ? L.ui : "en";
+}
 const scroller = () => getComputedStyle($("#main")).overflowY === "auto" ? $("#main") : (document.scrollingElement || document.documentElement);
-const t = (k, ...a) => { const v = (UI[S.ui] || UI.ja)[k]; return typeof v === "function" ? v(...a) : (v ?? k); };
+const t = (k, ...a) => { const d = UI[uiCode()] || UI.en; let v = d[k]; if (v === undefined) v = UI.en[k]; return typeof v === "function" ? v(...a) : (v ?? k); };
 
 function keyFor(path, b) { return `${S.lang}|${S.style}|${CORE.hashStr(path + "\n" + b.text)}`; }
 function getTr(path, b) { return MEM.get(keyFor(path, b)) || null; }
@@ -324,40 +247,39 @@ function hlLean(text) {
 }
 
 function structDesc(b) {
-  const ja = S.ui === "ja", out = [];
+  const out = [];
   for (const l of b.text.split("\n")) {
     let m;
-    if ((m = /^(?:public\s+|meta\s+)*import\s+(.+)/.exec(l))) out.push(ja ? `読み込み: ${m[1]}` : `imports ${m[1]}`);
-    else if ((m = /^namespace\s+(\S+)/.exec(l))) out.push(ja ? `名前空間 ${m[1]} に入る（以下の f は ${m[1]}.f）` : `enter namespace ${m[1]}`);
-    else if ((m = /^open\s+(.+)/.exec(l))) out.push(ja ? `${m[1]} の名前を短く書けるようにする` : `open ${m[1]}`);
-    else if ((m = /^end\s*(\S*)/.exec(l))) out.push(ja ? `${m[1] || "セクション"} を閉じる` : `close ${m[1] || "section"}`);
-    else if (/^(?:noncomputable\s+|public\s+)?section/.test(l)) out.push(ja ? "セクション開始" : "begin section");
-    else if (/^set_option/.test(l)) out.push(ja ? "Lean のオプション設定" : "Lean option");
-    else if (/^module\b/.test(l)) out.push(ja ? "モジュール宣言" : "module header");
+    if ((m = /^(?:public\s+|meta\s+)*import\s+(.+)/.exec(l))) out.push(t("sdImport", m[1]));
+    else if ((m = /^namespace\s+(\S+)/.exec(l))) out.push(t("sdNs", m[1]));
+    else if ((m = /^open\s+(.+)/.exec(l))) out.push(t("sdOpen", m[1]));
+    else if ((m = /^end\s*(\S*)/.exec(l))) out.push(m[1] ? t("sdEnd", m[1]) : t("sdEndSec"));
+    else if (/^(?:noncomputable\s+|public\s+)?section/.test(l)) out.push(t("sdSection"));
+    else if (/^set_option/.test(l)) out.push(t("sdOpt"));
+    else if (/^module\b/.test(l)) out.push(t("sdModule"));
   }
   return out.join(" / ");
 }
 
-const KIND_LABEL = {
-  ja: { theorem: "定理", lemma: "補題", def: "定義", abbrev: "定義", structure: "構造体", inductive: "帰納型", class: "クラス", instance: "インスタンス", axiom: "公理", example: "例", variable: "変数", prose: "説明", struct: "構造", cmd: "コマンド" },
-  en: { theorem: "theorem", lemma: "lemma", def: "def", abbrev: "abbrev", structure: "structure", inductive: "inductive", class: "class", instance: "instance", axiom: "axiom", example: "example", variable: "variable", prose: "doc", struct: "structure", cmd: "command" }
-};
 function kindOf(b) {
   if (b.cls !== "decl") return b.cls;
   if (b.kw === "def" && /:\s*Prop\s*:=/.test(CORE.statementPart(b.text).replace(/\s+/g, " ") + ":=")) return "prop";
   return b.kw;
 }
-function kindLabel(k) { if (k === "prop") return S.ui === "ja" ? "命題" : "property"; return (KIND_LABEL[S.ui] || KIND_LABEL.ja)[k] || k; }
+function kindLabel(k) { const K = t("kinds"); return (K && K[k]) || k; }
 
 // ---------- UI building ----------
 function setStatus(msg, kind) { const el = $("#status"); el.textContent = msg || ""; el.dataset.kind = kind || ""; }
 function toast(msg) { const el = $("#toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.tm); toast.tm = setTimeout(() => el.hidden = true, 2600); }
 
 function applyUI() {
-  document.documentElement.lang = S.ui;
+  document.documentElement.lang = uiCode();
   $$("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
   $$("[data-ph]").forEach(el => el.placeholder = t(el.dataset.ph));
-  const ls = $("#lang"); ls.innerHTML = LANGS.map(l => `<option ${l === S.lang ? "selected" : ""}>${l}</option>`).join("") + (LANGS.includes(S.lang) ? "" : `<option selected>${esc(S.lang)}</option>`) + `<option value="__other">${t("other")}</option>`;
+  const ls = $("#lang"); ls.innerHTML = LANGS.map(l => `<option ${l.name === S.lang ? "selected" : ""}>${l.name}</option>`).join("") + (LANGS.some(l => l.name === S.lang) ? "" : `<option selected>${esc(S.lang)}</option>`) + `<option value="__other">${t("other")}</option>`;
+  if (S.paths.length) $("#repoCount").textContent = t("repoLoaded", S.paths.filter(p => p.endsWith(".lean")).length);
+  if (S.source && S.source.kind === "demo") $("#repoNote").textContent = t("demoNote");
+  showGlossProg();
   $("#style").innerHTML = ["brief", "normal", "detail"].map(s => `<option value="${s}" ${s === S.style ? "selected" : ""}>${t(s)}</option>`).join("");
   $$("#viewSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === S.view));
   $("#blocks").dataset.view = S.view;
@@ -672,7 +594,7 @@ function showPop(target, html) {
 }
 function hidePop() { $("#pop").hidden = true; tickAsk(); }
 function tokenPop(el) {
-  const w = el.dataset.t; const gi = S.ui === "ja" ? 0 : 1;
+  const w = el.dataset.t;
   let html = "";
   const hits = el.classList.contains("i") || el.classList.contains("ty") ? CORE.lookupIdent(S.idx, w) : null;
   if (hits && hits.length) {
@@ -684,8 +606,8 @@ function tokenPop(el) {
         <button class="jump" data-p="${esc(h.path)}" data-id="${h.block.id}">${t("jumpDef")}</button></div>`;
     }).join("");
   }
-  const g = GLOSSARY[w];
-  if (g) html += `<div class="pg"><div class="pk">${t("glossary")}</div><code>${esc(w)}</code> ${renderRich(g[gi])}</div>`;
+  let needGloss = false;
+  if (GLOSSARY[w]) { html += glossHTML(w); needGloss = glossPending(w); }
   const blkEl = el.closest(".blk");
   let key = null;
   if (!(hits && hits.length) && blkEl && (S.sample || S.apiKey)) {
@@ -696,6 +618,88 @@ function tokenPop(el) {
   showPop(el, html);
   $("#pop").dataset.k = key || "";
   tickAsk();
+  if (needGloss) glossNow(w);
+}
+
+// ---------- glossary in other languages ----------
+// Japanese and English are built in. For any other language the English text is translated
+// by Claude: the word just clicked at once, the rest in the background with a progress chip.
+const GL = new Map();        // `${lang}|${key}` -> translated text
+const GLFAIL = new Set();    // `${lang}|${key}` that failed this session
+const GLOSS_KEYS = Object.keys(GLOSSARY);
+const GJ = { lang: null, ctl: null, total: 0, done: 0 };
+function glossBuiltIn(lang) { return lang === "日本語" ? 0 : lang === "English" ? 1 : -1; }
+function glossText(k) {
+  const i = glossBuiltIn(S.lang);
+  if (i >= 0) return { text: GLOSSARY[k][i], native: true };
+  const v = GL.get(S.lang + "|" + k);
+  return v ? { text: v, native: true } : { text: GLOSSARY[k][1], native: false };
+}
+function glossPending(k) { return !glossText(k).native && !!(S.sample || S.apiKey) && !GLFAIL.has(S.lang + "|" + k); }
+function glossHTML(k) {
+  const g = glossText(k);
+  return `<div class="pg" data-g="${esc(k)}"><div class="pk">${t("glossary")}${g.native ? "" : ` · ${esc(t("glossInEnglish"))}`}</div><code>${esc(k)}</code> ${renderRich(g.text)}`
+    + (glossPending(k) ? `<div class="askstat"><span class="spin" aria-hidden="true"></span><span>${t("glossWorking")}</span></div>` : "") + `</div>`;
+}
+function glossMissing(lang) { return GLOSS_KEYS.filter(k => !GL.has(lang + "|" + k)); }
+function showGlossProg() {
+  const el = $("#glossProg"); if (!el) return;
+  if (!GJ.ctl || GJ.lang !== S.lang) { el.hidden = true; return; }
+  el.hidden = false;
+  el.querySelector(".lbl").textContent = t("glossProg", GJ.done, GJ.total);
+  el.style.setProperty("--p", (GJ.total ? Math.round(GJ.done / GJ.total * 100) : 0) + "%");
+}
+async function glossTranslate(lang, keys, signal) {
+  const src = {}; for (const k of keys) src[k] = GLOSSARY[k][1];
+  const prompt = `Translate these short explanations of Lean 4 keywords, tactics and notation from English into ${lang}.
+Keep everything inside backticks exactly as it is, and keep symbols and formulas unchanged.
+Keep each explanation about as short as the original, and use the usual mathematical terminology of ${lang}.
+Reply with only a JSON object that maps each key to its translation.
+
+${JSON.stringify(src, null, 1)}`;
+  const r = await callLLM(prompt, null, signal, { tier: "quick", maxTokens: 8000 });
+  const obj = CORE.parseObject(r.text) || {};
+  let n = 0;
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === "string" && v.trim()) {
+      GL.set(lang + "|" + k, v.trim());
+      idbPut(`g|${lang}|${k}`, { gloss: v.trim(), lang, k, h: CORE.hashStr(GLOSSARY[k][1]) });
+      n++;
+    }
+  }
+  return n;
+}
+async function startGlossJob() {
+  const lang = S.lang;
+  if (GJ.ctl && GJ.lang === lang) return;
+  if (GJ.ctl) GJ.ctl.abort();
+  GJ.ctl = null;
+  if (glossBuiltIn(lang) >= 0 || !(S.sample || S.apiKey) || !glossMissing(lang).length) { showGlossProg(); return; }
+  const ctl = new AbortController();
+  Object.assign(GJ, { lang, ctl, total: GLOSS_KEYS.length, done: GLOSS_KEYS.length - glossMissing(lang).length });
+  showGlossProg();
+  let fails = 0;
+  try {
+    while (!ctl.signal.aborted) {
+      const todo = glossMissing(lang);
+      GJ.done = GLOSS_KEYS.length - todo.length; showGlossProg();
+      if (!todo.length) break;
+      const n = await glossTranslate(lang, todo.slice(0, 40), ctl.signal);
+      if (!n && ++fails >= 2) break;
+    }
+    if (!ctl.signal.aborted && !glossMissing(lang).length && S.lang === lang) toast(t("glossDone"));
+  } catch (e) { /* stop quietly; English remains as the fallback */ }
+  finally { if (GJ.ctl === ctl) GJ.ctl = null; showGlossProg(); }
+}
+async function glossNow(k) {
+  const lang = S.lang;
+  try { if (!(await glossTranslate(lang, [k]))) GLFAIL.add(lang + "|" + k); }
+  catch (e) { GLFAIL.add(lang + "|" + k); }
+  if (S.lang !== lang) return;
+  const el = $(`#pop:not([hidden]) .pg[data-g="${CSS.escape(k)}"]`);
+  if (el) el.outerHTML = glossHTML(k);
+  if (GJ.lang === lang && GJ.ctl) { GJ.done = GLOSS_KEYS.length - glossMissing(lang).length; showGlossProg(); }
 }
 
 // "Ask Claude": one entry per (language, token, declaration); survives closing the popover.
@@ -767,19 +771,22 @@ function openSettings() {
   $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone");
   $("#apiKey").value = S.apiKey; $("#model").value = S.model; $("#ghToken").value = S.ghToken;
   $("#patLink").href = patURL(currentOwner());
-  $("#remember").checked = S.remember; $("#uiLang").value = S.ui;
+  $("#remember").checked = S.remember;
+  $("#uiLang").innerHTML = `<option value="auto">${esc(t("uiAuto"))}</option>` + LANGS.map(L => `<option value="${L.ui}">${L.name}</option>`).join("");
+  $("#uiLang").value = UI[S.uiMode] ? S.uiMode : "auto";
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
 function saveSettings() {
-  const oldGh = S.ghToken;
+  const oldGh = S.ghToken, hadKey = !!S.apiKey;
   S.apiKey = $("#apiKey").value.trim(); S.model = $("#model").value.trim() || "claude-sonnet-5-5"; S.ghToken = $("#ghToken").value.trim();
   if (S.ghToken && S.ghToken !== oldGh && S.lastFailed) { const f = S.lastFailed; S.lastFailed = null; $("#hint").hidden = true; setTimeout(() => { const gs = new GitHubSource(f.p, S.ghToken); gs.openPath = f.openPath; gs.focus = f.focus; loadSource(gs); }, 0); }
   S.remember = $("#remember").checked; S.tier = $("#tier").value || S.tier;
   LS.set("model", S.model); LS.set("tier", S.tier); LS.set("remember", S.remember);
   if (S.remember) { LS.set("apiKey", S.apiKey); LS.set("ghToken", S.ghToken); } else { LS.del("apiKey"); LS.del("ghToken"); }
   setEngineLabel();
-  const ui = $("#uiLang").value; if (ui !== S.ui) { S.ui = ui; LS.set("ui", ui); applyUI(); if (S.cur) renderBlocks(S.cur, S.blocks.get(S.cur)); updateCounts(); }
+  const um = $("#uiLang").value; if (um !== S.uiMode) { S.uiMode = um; LS.set("uiMode", um); LS.del("ui"); applyUI(); refresh(); }
+  if (!hadKey && S.apiKey) startGlossJob();
 }
 function exportJSON() {
   const have = new Set(S.paths);
@@ -805,9 +812,9 @@ function bind() {
   document.addEventListener("drop", e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && /\.zip$/i.test(f.name)) loadSource(new ZipSource(f)); });
   $("#lang").addEventListener("change", e => {
     if (e.target.value === "__other") { $("#otherLang").hidden = false; $("#otherLang").focus(); return; }
-    S.lang = e.target.value; LS.set("lang", S.lang); $("#otherLang").hidden = true; refresh();
+    S.lang = e.target.value; LS.set("lang", S.lang); $("#otherLang").hidden = true; applyUI(); refresh(); startGlossJob();
   });
-  $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); } e.target.hidden = true; });
+  $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); startGlossJob(); } e.target.hidden = true; });
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
@@ -865,7 +872,10 @@ async function boot() {
     for (const b of bl) { const tr = m[b.id]; if (!tr) continue; const k = `日本語|normal|${CORE.hashStr(p + "\n" + b.text)}`; MEM.set(k, { tr, path: p, id: b.id, name: b.name || "", repo: demo.label, lang: "日本語", style: "normal", model: "Claude (demo)", demo: true }); }
   }
   await openDB();
-  for (const [k, v] of await idbAll()) if (!MEM.has(k)) MEM.set(k, v);
+  for (const [k, v] of await idbAll()) {
+    if (String(k).startsWith("g|")) { if (v && v.gloss && GLOSSARY[v.k] && v.h === CORE.hashStr(GLOSSARY[v.k][1])) GL.set(v.lang + "|" + v.k, v.gloss); }
+    else if (!MEM.has(k)) MEM.set(k, v);
+  }
   const q = new URLSearchParams(S.inArtifact ? "" : location.search);
   if (q.get("lang")) { S.lang = q.get("lang"); applyUI(); }
   const qp = q.get("repo") && CORE.parseGitHubURL(q.get("repo"));
@@ -886,6 +896,7 @@ async function boot() {
     try { S.sample = await window.claude.use("sample"); } catch (e) { S.sample = null; }
   }
   setEngineLabel();
+  startGlossJob();
 }
 function setEngineLabel() {
   const el = $("#engine");

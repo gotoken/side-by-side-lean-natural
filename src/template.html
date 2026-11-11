@@ -106,6 +106,7 @@ textarea { width: 100%; font-family: var(--font-code); font-size: 12px; }
 #path { font-size: 14px; font-weight: 600; word-break: break-all; }
 .fh2 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pill { font-size: 12.5px; padding: 2px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.pill.prog { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 22%, var(--panel)) var(--p, 0%), var(--panel) var(--p, 0%)); color: var(--ink); }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; margin-left: auto; }
 .seg button { border: 0; background: var(--panel); padding: 5px 11px; cursor: pointer; font-size: 13px; }
 .seg button + button { border-left: 1px solid var(--line); }
@@ -254,6 +255,7 @@ math { font-size: 1.06em; }
         <button id="trFile" class="btn primary" type="button" data-i="translateFile"></button>
         <button id="stop" class="btn ghost" type="button" data-i="stop"></button>
         <span id="count" class="pill"></span>
+        <span id="glossProg" class="pill prog" role="status" hidden><span class="lbl"></span></span>
         <div id="viewSeg" class="seg" role="group" aria-label="view"><button type="button" data-v="both" data-i="viewBoth"></button><button type="button" data-v="lean" data-i="viewLean"></button><button type="button" data-v="tr" data-i="viewTr"></button></div>
       </div>
       <div id="status" role="status" aria-live="polite"></div>
@@ -274,7 +276,7 @@ math { font-size: 1.06em; }
       <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
     </div>
     <p id="sNote" class="note"></p>
-    <div class="row"><label for="uiLang" data-i="sUi"></label><select id="uiLang"><option value="ja">日本語</option><option value="en">English</option></select></div>
+    <div class="row"><label for="uiLang" data-i="sUi"></label><select id="uiLang"></select></div>
     <h3 data-i="sExport"></h3>
     <p class="note" data-i="sExportHint"></p>
     <div class="btns"><button id="sCopy" class="btn" type="button" data-i="sCopy"></button><button id="sDownload" class="btn" type="button" data-i="sDownload"></button></div>

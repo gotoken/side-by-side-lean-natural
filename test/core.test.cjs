@@ -89,3 +89,25 @@ test("glossary entries are complete and cover every highlighted keyword and tact
     assert.deepEqual(words.filter(w => !G[w]), [], `${name} words without a glossary entry`);
   }
 });
+
+test("every interface language has every string, with the same shape as English", () => {
+  const vm = require("node:vm");
+  const ctx = vm.createContext({});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "src", "i18n.js"), "utf8") + ";this.UI = UI; this.LANGS = LANGS;", ctx);
+  const { UI, LANGS } = ctx;
+  assert.deepEqual(Array.from(LANGS, l => l.ui).sort(), Object.keys(UI).sort());
+  const shape = v => typeof v === "function" ? `fn${v.length}` : typeof v;
+  for (const [code, d] of Object.entries(UI)) {
+    for (const [k, v] of Object.entries(UI.en)) {
+      assert.ok(k in d, `${code} lacks ${k}`);
+      assert.equal(shape(d[k]), shape(v), `${code}.${k}`);
+      if (k === "kinds") assert.deepEqual(Object.keys(d[k]).sort(), Object.keys(v).sort(), `${code}.kinds`);
+    }
+    assert.deepEqual(Object.keys(d).filter(k => !(k in UI.en)), [], `${code} has extra keys`);
+  }
+});
+
+test("parseObject reads a JSON object from a reply", () => {
+  assert.deepEqual(C.parseObject('Sure:\n```json\n{"a":"x","|>":"y"}\n```'), { a: "x", "|>": "y" });
+  assert.equal(C.parseObject("no json"), null);
+});

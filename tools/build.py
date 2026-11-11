@@ -31,7 +31,7 @@ def demo_payload():
 
 
 def script_body():
-    return "\n" + "\n".join((SRC / f).read_text("utf-8") for f in ("core.js", "glossary.js", "app.js")) + "\n"
+    return "\n" + "\n".join((SRC / f).read_text("utf-8") for f in ("core.js", "glossary.js", "i18n.js", "app.js")) + "\n"
 
 
 def render(libs, license_links):
