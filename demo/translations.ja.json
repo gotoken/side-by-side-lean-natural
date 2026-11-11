@@ -1,0 +1,246 @@
+{
+ "lean/PyLean/RangeSlice/Spec.lean": {
+  "b1": {
+   "id": "b1",
+   "title": "モジュール説明",
+   "math": "`range` の性質を述べるための数学的な用語を定める。第 $k$ 要素 $start + k\\cdot step$ と、割り算を使わずに特徴づけた長さ。\n\n$L$ が `range(start, stop, step)` の長さであるとは、添字 $0 \\le k < L$ のときにちょうど、要素が `step` の向きに見て `stop` より手前にある、ということ。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b3": {
+   "id": "b3",
+   "title": "定義: InSeq（第 k 要素が stop より手前にある）",
+   "math": "整数 $start, stop, step, k$ に対して\n$$\\mathrm{InSeq}(start, stop, step, k) \\;:\\iff\\; \\begin{cases} start + k\\cdot step < stop & (0 < step)\\\\ stop < start + k\\cdot step & (\\text{それ以外})\\end{cases}$$\n$start + k\\cdot step$ が、`step` の向きに見て `stop` より手前にある（`stop` 自身は含まない）。",
+   "proof": "",
+   "lean": "`def … : Prop` は真偽値ではなく**命題**に名前を付ける定義。`if 0 < step then … else …` は命題の場合分けで、$step = 0$ は else 側に入るが、使う側で必ず $step \\ne 0$ を仮定するので問題にならない。",
+   "src": ""
+  },
+  "b4": {
+   "id": "b4",
+   "title": "定義: IsLen（L が range の長さである）",
+   "math": "$$\\mathrm{IsLen}(start, stop, step, L) \\;:\\iff\\; 0 \\le L \\;\\wedge\\; \\forall k \\ge 0,\\ \\bigl(k < L \\iff \\mathrm{InSeq}(start, stop, step, k)\\bigr)$$\n添字 $k \\ge 0$ のうち、要素 $start + k\\cdot step$ が stop より手前にあるのはちょうど $k = 0, 1, \\dots, L-1$ である、という長さの特徴づけ。割り算を使わないので、C の実装の式とは独立な「正解」として使える。これを満たす $L$ は高々 1 つ（`isLen_unique`）。",
+   "proof": "",
+   "lean": "`∀ k, 0 ≤ k → (…)` は「すべての整数 $k$ について、$k \\ge 0$ ならば …」。`↔` は同値、`∧` は「かつ」。",
+   "src": ""
+  },
+  "b5": {
+   "id": "b5",
+   "title": "定義: range の第 k 要素",
+   "math": "range オブジェクト $r$ と整数 $k$ に対して $r.\\mathrm{elem}(k) = r.start + k\\cdot r.step$。",
+   "proof": "",
+   "lean": "`Range.elem` は構造体 `Range`（Model.lean、フィールド start / stop / step / length）に付いた関数で、`r.elem k` と書ける（ドット記法）。$k$ は `Int` なので負の $k$ でも値はあるが、意味を持つのは $0 \\le k < L$ のとき。",
+   "src": ""
+  },
+  "b6": {
+   "id": "b6",
+   "title": "定義: Range.WF（rangeobject の型不変条件）",
+   "math": "$$r.\\mathrm{WF} \\;:\\iff\\; r.step \\ne 0 \\;\\wedge\\; r.length = \\mathrm{computeRangeLength}(r.start, r.stop, r.step)$$\nstep が 0 でなく、`length` フィールドには `compute_range_length` が計算した値が入っている。",
+   "proof": "",
+   "lean": "WF は well-formed の略。`computeRangeLength` は Model.lean の定義で、C の long での高速経路を試し、だめなら PyLong の低速経路を使う。",
+   "src": "`make_range_object`（rangeobject.c:66-88）が `length` に `compute_range_length` の結果を格納すること、step が `validate_step` で 0 を拒否される（あるいはスライスで非零 step 同士の積になる）ことに対応。"
+  },
+  "b7": {
+   "id": "b7",
+   "title": "定義: r の数学的な長さ",
+   "math": "$r.\\mathrm{Len}(L) :\\iff \\mathrm{IsLen}(r.start, r.stop, r.step, L)$。\n\nC 側が計算して格納した `r.length` とは別に、数学的に正しい長さを述語として与えている。両者が一致することを Length.lean で証明する。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b8": {
+   "id": "b8",
+   "title": "定義: x は（長さ L の）r の要素である",
+   "math": "$$r.\\mathrm{MemL}(L, x) \\;:\\iff\\; \\exists k,\\ 0 \\le k \\;\\wedge\\; k < L \\;\\wedge\\; x = r.start + k\\cdot r.step$$",
+   "proof": "",
+   "lean": "`∃ k, …` は存在量化。長さを引数 $L$ として受け取る形なので、使う側で `r.Len L` と組み合わせる。",
+   "src": ""
+  }
+ },
+ "lean/PyLean/RangeSlice/Length.lean": {
+  "b1": {
+   "id": "b1",
+   "title": "モジュール説明",
+   "math": "range の長さについて次を示す。\n\n- unsigned long で計算する高速経路 `get_len_of_range` は、PyLong で計算する低速経路 `compute_range_length` と一致する。\n- どちらも、任意の Python 整数に対して数学的な長さを計算する。\n- `len()` は、その長さが `sys.maxsize` を超えるときに限って `OverflowError` を送出する。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b3": {
+   "id": "b3",
+   "title": "見出し: 算術の補題",
+   "math": "",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b4": {
+   "id": "b4",
+   "title": "補題: 条件が真なら if は then 側の値",
+   "math": "決定可能な命題 $c$ と値 $a, b$ について、$c$ が成り立つなら $(\\text{if } c \\text{ then } a \\text{ else } b) = a$。",
+   "proof": "仮定 $h : c$ を使って `simp` で書き換えるだけ。",
+   "lean": "`[Decidable c]` は「$c$ の真偽を計算で決められる」というインスタンス引数で、`if` を書くのに必要。`{α : Sort _}` は暗黙の型引数。以降の証明で `rw [ite_t h]` として if を外すための小道具。",
+   "src": ""
+  },
+  "b5": {
+   "id": "b5",
+   "title": "補題: 条件が偽なら if は else 側の値",
+   "math": "決定可能な命題 $c$ について、$\\neg c$ なら $(\\text{if } c \\text{ then } a \\text{ else } b) = b$。",
+   "proof": "`simp [h]`。",
+   "lean": "",
+   "src": ""
+  },
+  "b6": {
+   "id": "b6",
+   "title": "定理: 長さは一意に決まる",
+   "math": "$\\mathrm{IsLen}(a, b, s, L_1)$ かつ $\\mathrm{IsLen}(a, b, s, L_2)$ ならば $L_1 = L_2$。",
+   "proof": "三分律で $L_1 < L_2$、$L_1 = L_2$、$L_1 > L_2$ に分ける。$L_1 < L_2$ なら $k = L_1$ は $k < L_2$ を満たすので、$L_2$ の定義から $\\mathrm{InSeq}(k)$ が成り立つ。すると $L_1$ の定義から $k < L_1$、つまり $L_1 < L_1$ となって矛盾。$L_1 > L_2$ も対称。",
+   "lean": "`obtain ⟨h₁0, h₁⟩ := h₁` は「かつ」を 2 つの仮定に分解する。`omega` は整数・自然数の線形算術を自動で解くタクティク。",
+   "src": ""
+  },
+  "b7": {
+   "id": "b7",
+   "title": "定理: 低速経路は数学的な長さを計算する",
+   "math": "$s \\ne 0$ ならば $\\mathrm{IsLen}(a, b, s, \\mathrm{computeRangeLengthSlow}(a, b, s))$。ここで\n$$\\mathrm{computeRangeLengthSlow}(a,b,s) = \\begin{cases} 0 & s>0,\\ a \\ge b\\\\ \\left\\lfloor \\dfrac{b-a-1}{s} \\right\\rfloor + 1 & s>0,\\ a<b\\\\ 0 & s<0,\\ b \\ge a\\\\ \\left\\lfloor \\dfrac{a-b-1}{-s} \\right\\rfloor + 1 & s<0,\\ a>b \\end{cases}$$",
+   "proof": "定義を展開し、$s>0$ / $s<0$ と空かどうかの 4 通りに場合分けする。空の場合は $L = 0$ で、どの $k \\ge 0$ でも要素が stop を越えている（$a + ks \\ge b$、あるいはその逆向き）ことを示す。空でない場合は $q = \\lfloor (b-a-1)/s \\rfloor$ とおき、$k \\le q \\iff ks \\le b-a-1$（`Int.le_ediv_iff_mul_le`）から $k < q+1 \\iff a + ks < b$ を導く。最後は `omega`。",
+   "lean": "`/` は `Int.ediv`。除数が正なら床関数 $\\lfloor\\cdot\\rfloor$ と同じ（C の切り捨て除算とは負の数で異なる）。`ite_t` / `ite_f` で if を外しながら進めている。",
+   "src": ""
+  },
+  "b8": {
+   "id": "b8",
+   "title": "定理: unsigned long 版 get_len_of_range は PyLong 版の式と一致する",
+   "math": "$lo, hi, step$ がすべて C の `long` の範囲 $[-2^{63}, 2^{63}-1]$ にあり、$step \\ne 0$ ならば\n$$\\mathrm{getLenOfRange}(lo, hi, step) = \\mathrm{computeRangeLengthSlow}(lo, hi, step).$$\n左辺は $2^{64}$ を法とする符号なし演算で、たとえば $step > 0,\\ lo < hi$ なら $\\Bigl(1 + \\bigl\\lfloor \\bigl((hi - 1 - lo) \\bmod 2^{64}\\bigr) / step \\bigr\\rfloor\\Bigr) \\bmod 2^{64}$ を計算する。",
+   "proof": "「$step>0$ かつ $lo<hi$」「$step<0$ かつ $lo>hi$」「それ以外」の 3 通りに分ける。前の 2 つでは、long の範囲という仮定から $0 \\le hi - lo - 1 < 2^{64}$ なので符号なし減算が折り返さない（結果がそのまま $hi - lo - 1$）ことを示す。商は非負かつ被除数以下なので、最後の $1 + q$ も $2^{64}$ 未満で折り返さない。ここまで `omega`。「それ以外」では両辺とも 0。",
+   "lean": "`toU x = x % 2^64`、`usub` / `uadd` は mod $2^{64}$ の減算・加算（Model.lean）。`%` は `Int.emod` なので結果は常に $[0, 2^{64})$ に入る。$step < 0$ のときの $-step$ は `usub 0 (toU step)` で表している。",
+   "src": "CPython の `get_len_of_range`（rangeobject.c:992-1014）の unsigned long 算術。"
+  },
+  "b9": {
+   "id": "b9",
+   "title": "見出し: 性質",
+   "math": "",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b10": {
+   "id": "b10",
+   "title": "性質（命題の定義）: 高速経路と低速経路の一致",
+   "math": "$$\\forall\\, start, stop, step, len \\in \\mathbb{Z},\\quad step \\ne 0 \\;\\wedge\\; \\mathrm{computeRangeLengthLong}(start, stop, step) = \\mathrm{some}(len) \\;\\Longrightarrow\\; len = \\mathrm{computeRangeLengthSlow}(start, stop, step)$$\nC の `long` の高速経路が長さを返したなら、それは PyLong の低速経路の値と等しい。",
+   "proof": "",
+   "lean": "`def … : Prop` で性質に名前を付け、証明は次の `…_proven` で与えるのがこのリポジトリの流儀（Registry に登録される）。`some len` は Option 型で「値 len がある」、`none` は高速経路が長さを返さない（オーバーフロー）場合。",
+   "src": "高速経路 `compute_range_length_long`（rangeobject.c:202-236）と PyLong 低速経路（rangeobject.c:273-315）。前提 $step \\ne 0$ は、`get_len_of_range` の assert と `validate_step` で保証される事前条件。"
+  },
+  "b11": {
+   "id": "b11",
+   "title": "定理: RangeLengthFastSlow は成り立つ",
+   "math": "直前の命題 `RangeLengthFastSlow` の証明。",
+   "proof": "`computeRangeLengthLong` を展開すると、3 引数がすべて long に収まり、かつ得られた長さが `LONG_MAX` 以下のときだけ `some (getLenOfRange …)` を返す。3 つの `IsLong` で場合分けし、収まらない場合は `none` なので仮定と矛盾。収まる場合は `getLenOfRange_eq` に帰着する。",
+   "lean": "`<;>` は直前のタクティクで生じたすべてのゴールに同じタクティクを適用する。`obtain ⟨-, rfl⟩ := h` は不要な成分を捨て、等式を代入して消す。",
+   "src": ""
+  },
+  "b12": {
+   "id": "b12",
+   "title": "定理: compute_range_length は常に低速経路の値と等しい",
+   "math": "$step \\ne 0$ ならば $\\mathrm{computeRangeLength}(start, stop, step) = \\mathrm{computeRangeLengthSlow}(start, stop, step)$。",
+   "proof": "`computeRangeLength` は、高速経路が `some len` を返せば len、`none` なら低速経路の値。前者は `rangeLengthFastSlow_proven`、後者は定義そのまま（`rfl`）。",
+   "lean": "`split` は match の分岐ごとにゴールを分ける。`rfl` は両辺が定義から等しいことを示す。",
+   "src": ""
+  },
+  "b13": {
+   "id": "b13",
+   "title": "系: compute_range_length は数学的な長さ",
+   "math": "$step \\ne 0$ ならば $\\mathrm{IsLen}(start, stop, step, \\mathrm{computeRangeLength}(start, stop, step))$。",
+   "proof": "直前の定理で低速経路の値に書き換え、`slow_isLen` を使う。",
+   "lean": "",
+   "src": ""
+  },
+  "b14": {
+   "id": "b14",
+   "title": "系: WF な range の length フィールドは数学的な長さ",
+   "math": "$r.\\mathrm{WF}$ ならば $r.\\mathrm{Len}(r.length)$。",
+   "proof": "WF の第 2 成分 $r.length = \\mathrm{computeRangeLength}(\\dots)$ で書き換え、第 1 成分 $r.step \\ne 0$ を使って `computeRangeLength_isLen` を適用する。",
+   "lean": "名前が `Range.WF.len` なので、`h : r.WF` に対して `h.len` と書ける（ドット記法）。`h.1`、`h.2` は「かつ」の左右の成分。",
+   "src": ""
+  },
+  "b15": {
+   "id": "b15",
+   "title": "系: range の長さの一意性",
+   "math": "$r.\\mathrm{WF}$ かつ $r.\\mathrm{Len}(L)$ ならば $r.length = L$。",
+   "proof": "`h.len` と仮定 `hL` を `isLen_unique` に渡すだけ。",
+   "lean": "",
+   "src": ""
+  },
+  "b16": {
+   "id": "b16",
+   "title": "定理: make_range_object は WF な range を作る",
+   "math": "$s \\ne 0$ ならば $\\mathrm{makeRangeObject}(a, b, s)$ は WF。",
+   "proof": "`makeRangeObject` は `length` に `computeRangeLength` の値を入れて作るので、第 2 成分は定義どおり（`rfl`）。",
+   "lean": "",
+   "src": "`make_range_object`（rangeobject.c:67-88）。"
+  },
+  "b17": {
+   "id": "b17",
+   "title": "定理: range() の生成が成功すれば結果は WF",
+   "math": "$\\mathrm{rangeNew}(a, b, s) = \\mathrm{ok}(r)$ ならば $r.\\mathrm{WF}$。ここで $s$ は省略可能な step（`Option Int`）。",
+   "proof": "step が省略（`none`）なら step は 1 で、`makeRangeObject_wf` を使う。指定あり（`some v`）なら、$v = 0$ のときは `ValueError` で `.ok` にならず仮定と矛盾、$v \\ne 0$ なら `makeRangeObject_wf`。",
+   "lean": "`Py α` は `Except PyExc α` の別名で、成功 `.ok r` か例外 `.error e` を返す計算。`simp [bind, Except.bind, …]` は do 記法の連鎖を展開している。",
+   "src": ""
+  },
+  "b18": {
+   "id": "b18",
+   "title": "定理: range(stop) は WF",
+   "math": "任意の $b$ について $\\mathrm{range1}(b)$（step = 1、start = 0）は WF。",
+   "proof": "`makeRangeObject_wf` に $1 \\ne 0$（`decide` で計算）を渡す。",
+   "lean": "",
+   "src": ""
+  },
+  "b19": {
+   "id": "b19",
+   "title": "性質（命題の定義）: range(start, stop, step) の生成と長さ",
+   "math": "任意の整数 start, stop と省略可能な step について:\n\n- step = `some 0` なら、`rangeNew` は `ValueError(\"range() arg 3 must not be zero\")` を返す。\n- それ以外なら成功して range $r$ を返し、$r.start = start$、$r.stop = stop$、$r.step$ = step（省略時は 1）、かつ $r.\\mathrm{Len}(r.length)$（length フィールドが数学的な長さ）。\n\n引数がどれほど大きな整数でも失敗しない。",
+   "proof": "",
+   "lean": "`step.getD 1` は Option から値を取り出し、`none` なら 1 を使う。",
+   "src": ""
+  },
+  "b20": {
+   "id": "b20",
+   "title": "定理: RangeNewLength は成り立つ",
+   "math": "直前の命題 `RangeNewLength` の証明。",
+   "proof": "step = `some 0` の場合は計算で一致（`rfl`）。それ以外では、`makeRangeObject start stop (step.getD 1)` が答えであることを示す。`step.getD 1 ≠ 0` を step の場合分けで確かめ、`(makeRangeObject_wf …).len` から長さの性質を得る。",
+   "lean": "",
+   "src": ""
+  },
+  "b21": {
+   "id": "b21",
+   "title": "性質（命題の定義）: len(r) と OverflowError",
+   "math": "WF な range $r$ とその数学的な長さ $L$（$r.\\mathrm{Len}(L)$）について\n$$\\mathrm{rangeLength}(r) = \\begin{cases} \\mathrm{ok}(L) & L \\le \\mathtt{ssizeMax} \\\\ \\mathrm{error}(\\texttt{OverflowError}) & \\text{それ以外} \\end{cases}$$\nここで $\\mathtt{ssizeMax} = 2^{63} - 1$（64 ビット環境の `sys.maxsize`）。",
+   "proof": "",
+   "lean": "`ssizeOverflow` は `OverflowError(\"Python int too large to convert to C ssize_t\")`。`r.WF` は型不変条件として仮定している。",
+   "src": "Python ドキュメント（Doc/builtins/stdtypes.rst:1817-1819）の「`sys.maxsize` より大きな絶対値を含む range は作れるが、`len()` などは `OverflowError` を送出しうる」という記述に対応。"
+  },
+  "b22": {
+   "id": "b22",
+   "title": "定理: LenOverflow は成り立つ",
+   "math": "直前の命題 `LenOverflow` の証明。",
+   "proof": "`Range.WF.length_eq` で $r.length = L$ に書き換えれば、あとは `rangeLength` の定義そのもの（`rfl`）。",
+   "lean": "",
+   "src": ""
+  },
+  "b23": {
+   "id": "b23",
+   "title": "性質（命題の定義）: すべての長さ計算経路が正確",
+   "math": "次の 4 つの連言。\n\n1. $lo, hi, step$ がすべて long に収まり $step \\ne 0$ なら、$\\mathrm{IsLen}(lo, hi, step, \\mathrm{getLenOfRange}(lo, hi, step))$。\n2. $step \\ne 0$ かつ $\\mathrm{IsLen}(start, stop, step, L)$ なら、$\\mathrm{computeRangeLengthLong}(start, stop, step)$ は「3 引数がすべて long に収まり $L \\le \\mathtt{longMax}$」のとき $\\mathrm{some}(L)$、そうでなければ $\\mathrm{none}$。\n3. $step \\ne 0$ なら $\\mathrm{IsLen}(start, stop, step, \\mathrm{computeRangeLengthSlow}(start, stop, step))$。\n4. $step \\ne 0$ なら $\\mathrm{IsLen}(start, stop, step, \\mathrm{computeRangeLength}(start, stop, step))$。",
+   "proof": "",
+   "lean": "`IsLen` が値を一意に決めるので、大きな引数で 0 を返す低速経路や `ULONG_MAX` を返す `get_len_of_range` のような誤った実装はこの性質を満たせない、とコメントにある。命題を弱めずに「正しさ」を捉えるための書き方。",
+   "src": "`get_len_of_range`（rangeobject.c:992-1014）、`compute_range_length_long`（:202-236）、PyLong 低速経路（:273-315）、`compute_range_length`（:243-323）。"
+  },
+  "b24": {
+   "id": "b24",
+   "title": "定理: RangeLengthExact は成り立つ",
+   "math": "直前の命題 `RangeLengthExact` の証明。",
+   "proof": "4 つを順に示す。(1) `getLenOfRange_eq` で低速経路に書き換えて `slow_isLen`。(2) 一意性 `isLen_unique` で $L$ を低速経路の値に置き換え、3 つの `IsLong` と $L \\le \\mathtt{longMax}$ で場合分けして定義を計算する。(3) `slow_isLen`。(4) `computeRangeLength_isLen`。",
+   "lean": "",
+   "src": ""
+  }
+ }
+}

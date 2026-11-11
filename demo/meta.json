@@ -1,0 +1,12 @@
+{
+  "label": "Broyojo/python-formalization @ 7d5a5ed（demo）",
+  "upstream": "https://github.com/Broyojo/python-formalization",
+  "commit": "7d5a5ed98bed33876a74051c4666c307f6918d33",
+  "start": "lean/PyLean/RangeSlice/Length.lean",
+  "files": [
+    "lean/PyLean/RangeSlice/Length.lean",
+    "lean/PyLean/RangeSlice/Spec.lean",
+    "lean/PyLean/RangeSlice/Model.lean",
+    "lean/PyLean/Core.lean"
+  ]
+}

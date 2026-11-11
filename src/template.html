@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lean 対訳ブラウザ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b6e69'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%88%80%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+Math&display=swap" rel="stylesheet">
+<style>
+/* Layout: file tree on the left; each Lean declaration is one row, code left, its mathematical translation right. */
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #18202c;
+  --muted: #5b6577;
+  --line: #d8dde5;
+  --accent: #0b6e69;
+  --accent-ink: #ffffff;
+  --code-bg: #f6f8fa;
+  --hl: #fff5c2;
+  --k: #6a35c9; --t: #0a6a8a; --ty: #8a4b00; --c: #5f7a5a; --s: #a6400f; --n: #9a3412; --y: #b0186a;
+  --theorem: #3f51b5; --def: #0b6e69; --prop: #8a3fb5; --structure: #a35a00; --prose: #6b7280;
+  --err: #b42318; --warn: #8a5a00;
+  --font-body: "IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+  --font-code: "JetBrains Mono", "Noto Sans Math", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151b; --panel: #171c24; --ink: #e5e9f0; --muted: #98a2b3; --line: #2a313c; --accent: #3cc7bb; --accent-ink: #062b28;
+    --code-bg: #12171e; --hl: #3a3415;
+    --k: #b9a3ff; --t: #62d0f0; --ty: #f0b45e; --c: #8ba585; --s: #f29e74; --n: #f6a37c; --y: #f48fc5;
+    --theorem: #8ea2ff; --def: #3cc7bb; --prop: #c99bf0; --structure: #f0b45e; --prose: #9aa3b2;
+    --err: #ff8b80; --warn: #f3c46b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151b; --panel: #171c24; --ink: #e5e9f0; --muted: #98a2b3; --line: #2a313c; --accent: #3cc7bb; --accent-ink: #062b28;
+  --code-bg: #12171e; --hl: #3a3415;
+  --k: #b9a3ff; --t: #62d0f0; --ty: #f0b45e; --c: #8ba585; --s: #f29e74; --n: #f6a37c; --y: #f48fc5;
+  --theorem: #8ea2ff; --def: #3cc7bb; --prop: #c99bf0; --structure: #f0b45e; --prose: #9aa3b2;
+  --err: #ff8b80; --warn: #f3c46b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.65 var(--font-body); display: flex; flex-direction: column; overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+code, pre { font-family: var(--font-code); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.muted { color: var(--muted); } .small { font-size: 12.5px; } .pad { padding: 16px; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: baseline; gap: 8px; margin-right: 4px; white-space: nowrap; }
+.brand b { font-weight: 600; font-size: 16px; letter-spacing: .01em; }
+.brand .logo { font-family: var(--font-code); color: var(--accent); font-weight: 600; }
+#srcForm { display: flex; flex: 1 1 320px; min-width: 220px; gap: 6px; }
+#url { flex: 1; min-width: 0; }
+input[type=text], input[type=search], input[type=password], input:not([type]), select, textarea {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; min-height: 34px;
+}
+textarea { width: 100%; font-family: var(--font-code); font-size: 12px; }
+.grp { display: flex; align-items: center; gap: 6px; }
+.grp label { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.btn, #srcForm button { display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 5px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; white-space: nowrap; }
+.btn:hover, #srcForm button:hover { border-color: var(--accent); }
+.btn.primary, #srcForm button { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 500; }
+.btn.ghost { background: transparent; }
+#engine { font-family: var(--font-code); font-size: 12px; color: var(--accent); }
+#engine.off { color: var(--err); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.only-m { display: none; }
+.hint { padding: 10px 16px; background: var(--hl); border-bottom: 1px solid var(--line); font-size: 14px; }
+.hint a { color: inherit; font-weight: 600; }
+
+/* layout */
+.layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+#side { border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+.repo { padding: 12px 14px 8px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+.rl { font-family: var(--font-code); font-size: 13px; font-weight: 600; word-break: break-all; }
+.note { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+#filter { margin: 10px 12px 6px; }
+#tree { flex: 1; overflow: auto; padding: 4px 6px 12px; font-size: 13.5px; }
+#tree details > summary { cursor: pointer; padding: 3px 6px; border-radius: 5px; color: var(--muted); font-family: var(--font-code); font-size: 12.5px; list-style: none; }
+#tree details > summary::before { content: "▸ "; } #tree details[open] > summary::before { content: "▾ "; }
+#tree .sub { padding-left: 12px; border-left: 1px solid var(--line); margin-left: 9px; }
+#tree .f { display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left; border: 0; background: none; padding: 3px 8px; border-radius: 5px; cursor: pointer; font-family: var(--font-code); font-size: 12.5px; }
+#tree .f small { color: var(--muted); font-size: 11px; word-break: break-all; }
+#tree .f:hover { background: var(--bg); }
+#tree .f.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--ink); font-weight: 600; }
+.sidefoot { border-top: 1px solid var(--line); padding: 10px 14px; font-size: 12.5px; }
+.sidefoot p { margin: 8px 0 0; color: var(--muted); line-height: 1.6; }
+.sidefoot a { color: var(--accent); }
+.bh button.lines { border: 0; background: none; cursor: pointer; padding: 0; }
+.bh button.lines:hover { color: var(--accent); text-decoration: underline; }
+#scrim { display: none; }
+
+#main { overflow: auto; min-height: 0; }
+.filehead { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); padding: 12px 20px 8px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.fh1 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+#path { font-size: 14px; font-weight: 600; word-break: break-all; }
+.fh2 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pill { font-size: 12.5px; padding: 2px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; margin-left: auto; }
+.seg button { border: 0; background: var(--panel); padding: 5px 11px; cursor: pointer; font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+#stop { display: none; } body.busy #stop { display: inline-flex; } body.busy #trFile { opacity: .5; pointer-events: none; }
+#status { font-size: 13px; min-height: 1.2em; color: var(--muted); }
+#status:empty { display: none; }
+#status[data-kind="err"] { color: var(--err); } #status[data-kind="warn"] { color: var(--warn); font-weight: 500; }
+
+/* blocks */
+#blocks { padding: 14px 20px 80px; display: grid; gap: 12px; }
+.blk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; scroll-margin-top: 120px; }
+.blk.flash { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+.blk.c-struct { background: transparent; border-style: dashed; }
+.bh { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.c-struct .bh { border-bottom: 0; padding-bottom: 0; }
+.bh .lines { margin-left: auto; color: var(--muted); font-family: var(--font-code); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.chip { font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 4px; color: var(--chip, var(--prose)); background: color-mix(in srgb, var(--chip, var(--prose)) 13%, transparent); }
+.k-theorem, .k-lemma { --chip: var(--theorem); } .k-def, .k-abbrev, .k-instance { --chip: var(--def); } .k-prop { --chip: var(--prop); }
+.k-structure, .k-inductive, .k-class { --chip: var(--structure); }
+.nm { font-size: 13px; font-weight: 600; word-break: break-all; }
+.pair { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+.left { background: var(--code-bg); border-right: 1px solid var(--line); min-width: 0; }
+.right { min-width: 0; }
+#blocks[data-view="lean"] .right { display: none; } #blocks[data-view="lean"] .pair { grid-template-columns: 1fr; } #blocks[data-view="lean"] .left { border-right: 0; }
+#blocks[data-view="tr"] .left { display: none; } #blocks[data-view="tr"] .pair { grid-template-columns: 1fr; }
+.c-struct .pair { grid-template-columns: 1fr 1fr; }
+.c-struct .left { background: transparent; }
+pre.code { margin: 0; padding: 10px 12px 10px 0; overflow-x: auto; font-size: 12.8px; line-height: 1.6; tab-size: 2; }
+.ln { display: inline-block; width: 4.2ch; padding-right: 1.2ch; text-align: right; color: var(--muted); opacity: .6; user-select: none; -webkit-user-select: none; }
+.ln::before { content: attr(data-n); }
+.lc .k { color: var(--k); font-weight: 600; } .lc .t { color: var(--t); } .lc .ty { color: var(--ty); } .lc .c { color: var(--c); font-style: italic; }
+.lc .s { color: var(--s); } .lc .n { color: var(--n); } .lc .y { color: var(--y); }
+.tok { cursor: pointer; border-radius: 3px; }
+.tok:hover { background: var(--hl); }
+.tok.ref { text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent); }
+.proofT { display: block; margin: 0 12px 10px 5.4ch; border: 1px dashed var(--line); background: transparent; color: var(--muted); border-radius: 6px; padding: 2px 10px; font-size: 12px; cursor: pointer; }
+.proofT:hover { color: var(--accent); border-color: var(--accent); }
+pre.code.proof { padding-top: 0; }
+
+.tr { padding: 10px 16px 12px; max-width: 72ch; }
+.tr.struct p { margin: 0; font-size: 13px; }
+.tr.empty { display: flex; align-items: center; gap: 12px; }
+.tr.empty p { margin: 0; font-size: 13px; }
+.trOne { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 6px; padding: 2px 12px; cursor: pointer; font-size: 13px; }
+.trOne.ghost { border-color: var(--line); color: var(--muted); }
+.blk.pending .tr.empty p::after { content: " …"; }
+.blk.pending { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.tt { margin: 0 0 6px; font-size: 15px; font-weight: 600; line-height: 1.45; text-wrap: balance; }
+.mathbody p, .sec p { margin: 0 0 8px; }
+.mathbody ul, .mathbody ol, .sec ul, .sec ol { margin: 0 0 8px; padding-left: 1.3em; }
+.mathbody .h { font-weight: 600; }
+.tr code { -webkit-box-decoration-break: clone; box-decoration-break: clone; font-size: .88em; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; word-break: break-word; }
+.dm { overflow-x: auto; margin: 6px 0 10px; }
+math { font-size: 1.06em; }
+.dm math { display: block; }
+.sec { margin-top: 8px; padding: 6px 0 0 10px; border-left: 3px solid var(--line); font-size: 14px; }
+.sec .lbl { font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; margin-bottom: 2px; }
+.sec.pf { border-left-color: var(--theorem); } .sec.lnote { border-left-color: var(--y); } .sec.sr { border-left-color: var(--structure); }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 11.5px; color: var(--muted); font-family: var(--font-code); }
+
+/* popover, modal, toast */
+.pop { position: fixed; z-index: 30; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgb(0 0 0 / .18); padding: 10px 14px; max-height: 60vh; overflow: auto; font-size: 14px; }
+.pop.sheet { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto !important; max-height: 55vh; }
+.pop .pk { font-size: 11px; font-weight: 600; color: var(--muted); }
+.pop .pdef + .pdef, .pop .pg { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.pop .pdef:first-child, .pop .pg:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.pop pre.mini { margin: 6px 0; padding: 6px 8px; background: var(--code-bg); border-radius: 6px; font-size: 11.5px; white-space: pre-wrap; }
+.pop .ptitle p { margin: 4px 0; }
+.pop .jump { margin-top: 4px; border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 12.5px; }
+.pop p { margin: 4px 0; }
+.modal { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / .35); display: grid; place-items: center; padding: 16px; }
+.modal .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: min(560px, 100%); max-height: calc(100% - 32px); overflow: auto; padding: 18px 20px; display: grid; gap: 12px; }
+.modal h2 { margin: 0; font-size: 17px; } .modal h3 { margin: 6px 0 0; font-size: 13.5px; }
+.row { display: grid; gap: 4px; } .row.wide { gap: 12px; } .row label { font-size: 13px; color: var(--muted); }
+.chk { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; } .btns.end { justify-content: flex-end; }
+#toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 50; background: var(--ink); color: var(--panel); padding: 8px 16px; border-radius: 8px; font-size: 13.5px; }
+.err { color: var(--err); }
+
+@media (max-width: 820px) {
+  body { font-size: 15px; display: block; overflow: auto; height: auto; min-height: 100%; }
+  .grp label { display: none; }
+  .btn, #srcForm button, select, input[type=text] { min-height: 32px; padding: 4px 10px; font-size: 14px; }
+  #main { overflow: visible; }
+  .filehead { top: 0; gap: 6px; }
+  #meta { display: none; }
+  #path { font-size: 12.5px; }
+  .seg button { padding: 4px 9px; }
+  .only-m { display: inline-flex; } .only-d { display: none; }
+  .top { padding: 8px 12px; gap: 8px; }
+  .brand b { font-size: 15px; }
+  #srcForm { order: 10; flex-basis: 100%; }
+  .layout { display: block; }
+  #side { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: min(86vw, 330px); transform: translateX(-102%); transition: transform .2s; box-shadow: 0 0 40px rgb(0 0 0 / .25); }
+  body.drawer #side { transform: none; }
+  body.drawer #scrim { display: block; position: fixed; inset: 0; z-index: 15; background: rgb(0 0 0 / .3); }
+  .filehead { padding: 10px 12px 8px; }
+  .seg { margin-left: 0; }
+  #blocks { padding: 10px 10px 80px; gap: 10px; }
+  .pair, .c-struct .pair { grid-template-columns: 1fr; }
+  .left { border-right: 0; border-bottom: 1px solid var(--line); }
+  #blocks[data-view="both"] .c-struct .left { border-bottom: 0; }
+  pre.code { font-size: 12.2px; }
+  .tr { padding: 10px 12px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { #side { transition: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <button id="drawerBtn" class="btn only-m" type="button" data-i="files"></button>
+  <div class="brand"><span class="logo" aria-hidden="true">∀↔</span><b>Lean 対訳ブラウザ</b></div>
+  <form id="srcForm"><input id="url" type="text" inputmode="url" data-ph="urlPh" aria-label="GitHub URL" autocomplete="off" spellcheck="false"><button type="submit" data-i="open"></button></form>
+  <label class="btn" for="zipIn"><span data-i="zip"></span></label><input type="file" id="zipIn" accept=".zip,application/zip" hidden>
+  <label class="btn only-d" for="dirIn"><span data-i="folder"></span></label><input type="file" id="dirIn" webkitdirectory multiple hidden>
+  <div class="grp"><label for="lang" data-i="lang"></label><select id="lang"></select><input id="otherLang" hidden data-ph="otherLangPh" aria-label="language"></div>
+  <div class="grp"><label for="style" data-i="style"></label><select id="style"></select></div>
+  <button id="settingsBtn" class="btn" type="button"><span data-i="settings"></span><span aria-hidden="true">·</span><span id="engine"></span></button>
+</header>
+<div id="hint" class="hint" hidden></div>
+<div class="layout">
+  <aside id="side">
+    <div class="repo"><div id="repoLabel" class="rl"></div><div id="repoCount" class="muted small"></div><p id="repoNote" class="note" hidden></p></div>
+    <input id="filter" type="search" data-ph="filter" aria-label="filter">
+    <nav id="tree"></nav>
+    <div class="sidefoot"><button id="aboutBtn" class="linkbtn" type="button" data-i="about"></button><div id="aboutBox" hidden><p data-i="aboutText"></p><p><b data-i="lic"></b><br><!--LICENSE_LINKS--></p></div></div>
+  </aside>
+  <div id="scrim"></div>
+  <main id="main">
+    <div class="filehead">
+      <div class="fh1"><button id="back" class="btn ghost" type="button" hidden data-i="back"></button><code id="path"></code><span id="meta" class="muted small"></span><button id="copyLink" class="linkbtn small" type="button" hidden data-i="copyLink"></button></div>
+      <div class="fh2">
+        <button id="trFile" class="btn primary" type="button" data-i="translateFile"></button>
+        <button id="stop" class="btn ghost" type="button" data-i="stop"></button>
+        <span id="count" class="pill"></span>
+        <div id="viewSeg" class="seg" role="group" aria-label="view"><button type="button" data-v="both" data-i="viewBoth"></button><button type="button" data-v="lean" data-i="viewLean"></button><button type="button" data-v="tr" data-i="viewTr"></button></div>
+      </div>
+      <div id="status" role="status" aria-live="polite"></div>
+    </div>
+    <div id="blocks" data-view="both"></div>
+  </main>
+</div>
+<div id="pop" class="pop" hidden></div>
+<div id="settings" class="modal" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <h2 id="sTitle" data-i="settings"></h2>
+    <div id="sClaudeRow" class="row"><label for="tier"><span data-i="sEngine"></span>: <span data-i="sClaude"></span></label><select id="tier"></select></div>
+    <div id="sApiRow" class="row wide">
+      <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></div>
+      <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"><option value="claude-sonnet-5-5"></option><option value="claude-opus-5-5"></option><option value="claude-haiku-5-5"></option></datalist></div>
+      <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>
+      <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
+    </div>
+    <p id="sNote" class="note"></p>
+    <div class="row"><label for="uiLang" data-i="sUi"></label><select id="uiLang"><option value="ja">日本語</option><option value="en">English</option></select></div>
+    <h3 data-i="sExport"></h3>
+    <p class="note" data-i="sExportHint"></p>
+    <div class="btns"><button id="sCopy" class="btn" type="button" data-i="sCopy"></button><button id="sDownload" class="btn" type="button" data-i="sDownload"></button></div>
+    <h3 data-i="sImport"></h3>
+    <input type="file" id="sImportFile" accept=".json,application/json" aria-label="import file">
+    <textarea id="sImportTxt" rows="3" aria-label="import JSON"></textarea>
+    <div class="btns"><button id="sImportBtn" class="btn" type="button" data-i="sImport"></button></div>
+    <div class="btns end"><button id="sClose" class="btn primary" type="button" data-i="sClose"></button></div>
+  </div>
+</div>
+<div id="toast" hidden></div>
+<!--LIBS-->
+<script type="application/json" id="demo-data">/*DEMO_DATA*/</script>
+<script type="application/json" id="demo-tr">/*DEMO_TR*/</script>
+<script>
+/*CORE*/
+/*GLOSSARY*/
+/*APP*/
+</script>
+</body>
+</html>
