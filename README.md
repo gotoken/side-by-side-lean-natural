@@ -29,7 +29,7 @@ Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言�
 2. 「設定」で Anthropic API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる。設定にある「GitHub でトークンを作る」から開くと、読み取り専用（Contents: read）・期限 30 日の設定が記入済みの作成画面になるので、読みたいリポジトリを選んで作るだけです
 3. 「このファイルを訳す」、または各ブロックの「訳す」を押す
 
-URL を入れずに開くと、デモ（[python-formalization](https://github.com/Broyojo/python-formalization) の `range` の長さを扱う部分。日本語訳つき）が表示されます。
+URL を入れずに開くと、デモが表示されます。CRuby の `range.c` にある `rb_range_component_beg_len`（範囲引数の正規化）を Lean に写したモデルと、仕様・性質 P1〜P4・修正版のモデルです（作者の実験リポジトリ `gotoken/cruby-formalized-trial` @74e11c6 から。リポジトリ自体は非公開）。`Basic`・`Cases`・`Spec`・`Impl`・`Statements`・`Fixed` は日本語訳つきで、ほかのファイルはその場で訳せます。
 
 ### claude.ai 版
 
@@ -81,7 +81,7 @@ python3 -m http.server -d public 8000
 
 ```
 src/        template.html, core.js（分割など DOM を使わない部分）, app.js（UI）, glossary.js（記号辞典）
-demo/       デモ用の Lean ファイルと日本語訳（Apache-2.0）
+demo/       デモ用の Lean ファイル、日本語訳、CRuby の BSDL
 vendor/     KaTeX, JSZip（MIT）
 tools/      build.py
 test/       node:test のテスト
@@ -101,8 +101,8 @@ dist/       claude.ai 版（ビルド結果。1 ファイル）
 
 ## ライセンス
 
-- ツール本体: BSD 2-Clause License（`LICENSE`）
-- `demo/`: Apache License 2.0（`demo/LICENSE`、`demo/NOTICE`）。python-formalization から変更せずに複製したファイル 4 つと、その日本語訳です
+- リポジトリ全体: BSD 2-Clause License（`LICENSE`）。デモの Lean ファイルも同じです
+- デモの `Impl.lean` と `Fixed.lean` は、CRuby の `range.c`（Copyright (C) 1993-2007 Yukihiro Matsumoto）と ruby/ruby#19824 のパッチを短く引用しています。CRuby は 2-clause BSDL か Ruby License で再配布でき、引用部分は BSDL で使っています（`demo/CRuby-BSDL.txt`）
 - `vendor/`: KaTeX、JSZip（いずれも MIT）
 
 詳しくは `NOTICE` を見てください。
@@ -124,4 +124,6 @@ dist/       claude.ai 版（ビルド結果。1 ファイル）
 - Keys stay in the browser. The page talks only to `api.github.com` and `api.anthropic.com`, enforced by the Content-Security-Policy in `public/_headers`.
 - Deploy: Cloudflare Pages with no build command and `public` as the output directory.
 
-License: BSD 2-Clause for the tool; `demo/` is Apache-2.0 (files from Broyojo/python-formalization and their Japanese translation); KaTeX and JSZip are MIT. See `NOTICE`.
+The demo is a Lean model of `rb_range_component_beg_len` in CRuby's `range.c`, with its specification, properties P1–P4 and a model of the fix (from the author's experiment, not public); six of its files come with Japanese translations.
+
+License: BSD 2-Clause, including the demo. The demo quotes short excerpts of CRuby's `range.c` under CRuby's 2-clause BSDL (`demo/CRuby-BSDL.txt`). KaTeX and JSZip are MIT. See `NOTICE`.

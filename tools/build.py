@@ -55,15 +55,15 @@ def build_public():
     shutil.copy(VENDOR / "jszip" / "jszip.min.js", PUBLIC / "vendor" / "jszip.min.js")
     lic = {
         "LICENSE.txt": ROOT / "LICENSE",
-        "demo-Apache-2.0.txt": DEMO / "LICENSE",
-        "demo-NOTICE.txt": DEMO / "NOTICE",
+        "NOTICE.txt": ROOT / "NOTICE",
+        "CRuby-BSDL.txt": DEMO / "CRuby-BSDL.txt",
         "KaTeX-LICENSE.txt": VENDOR / "katex" / "LICENSE",
         "JSZip-LICENSE.txt": VENDOR / "jszip" / "LICENSE.markdown",
     }
     for name, src in lic.items():
         shutil.copy(src, PUBLIC / "licenses" / name)
-    links = ('<a href="licenses/LICENSE.txt">本体 / tool: BSD-2-Clause</a><br>'
-             '<a href="licenses/demo-Apache-2.0.txt">デモ / demo: Apache-2.0</a> · <a href="licenses/demo-NOTICE.txt">NOTICE</a><br>'
+    links = ('<a href="licenses/LICENSE.txt">BSD-2-Clause</a> · <a href="licenses/NOTICE.txt">NOTICE</a><br>'
+             '<a href="licenses/CRuby-BSDL.txt">CRuby range.c excerpts (BSDL)</a><br>'
              '<a href="licenses/KaTeX-LICENSE.txt">KaTeX (MIT)</a> · <a href="licenses/JSZip-LICENSE.txt">JSZip (MIT)</a>')
     libs = '<script src="vendor/katex.min.js"></script>\n<script src="vendor/jszip.min.js"></script>'
     html, body = render(libs, links)
@@ -96,8 +96,8 @@ def build_artifact():
     DIST.mkdir(exist_ok=True)
     libs = (f'<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/{KATEX_VER}/katex.min.js"></script>\n'
             f'<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/{JSZIP_VER}/jszip.min.js"></script>')
-    links = ('本体 / tool: BSD-2-Clause<br>デモ / demo: Apache-2.0 (python-formalization, © 2026 David Andrews; '
-             'CPython excerpts under the PSF License)<br>KaTeX (MIT) · JSZip (MIT)')
+    links = ('BSD-2-Clause (© 2026 gotoken)<br>CRuby range.c excerpts: © 1993-2007 Yukihiro Matsumoto, 2-clause BSDL<br>'
+             'KaTeX (MIT) · JSZip (MIT)')
     html, _ = render(libs, links)
     (DIST / "claude-artifact.html").write_text(html, "utf-8")
 

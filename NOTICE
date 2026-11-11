@@ -1,17 +1,16 @@
 side-by-side-lean-natural (Lean 対訳ブラウザ)
 Copyright (c) 2026, gotoken
 
-The tool itself (src/, tools/, test/ and the build outputs generated from them)
-is licensed under the BSD 2-Clause License (see LICENSE).
+Everything in this repository is licensed under the BSD 2-Clause License
+(see LICENSE), except as noted below.
 
-This repository also contains third-party material under other licenses:
-
-* demo/  — four Lean files from python-formalization
-  (https://github.com/Broyojo/python-formalization, commit 7d5a5ed),
-  Copyright 2026 David Andrews, under the Apache License 2.0, and Japanese
-  translations derived from them, also under the Apache License 2.0.
-  See demo/LICENSE and demo/NOTICE. Those files quote excerpts of CPython,
-  which remain under the Python Software Foundation License Version 2.
+* demo/lean/ — Lean files from the author's experiment repository
+  gotoken/cruby-formalized-trial (commit 74e11c6), same license.
+  demo/lean/CrubyRange/Impl.lean and Fixed.lean quote short excerpts of
+  CRuby's range.c, Copyright (C) 1993-2007 Yukihiro Matsumoto, and of the
+  patch merged as ruby/ruby#19824. CRuby may be redistributed under the
+  2-clause BSDL or the Ruby License; the excerpts are used under the BSDL,
+  whose text and copyright notice are in demo/CRuby-BSDL.txt.
 
 * vendor/katex/ — KaTeX 0.16.9, Copyright (c) 2013-2020 Khan Academy and
   other contributors, MIT License (vendor/katex/LICENSE).
@@ -21,5 +20,4 @@ This repository also contains third-party material under other licenses:
   (dual-licensed MIT or GPLv3; see vendor/jszip/LICENSE.markdown).
 
 The built page (public/index.html, dist/claude-artifact.html) embeds the demo
-files and translations; the page links to these license texts under
-public/licenses/.
+files; the page links to these license texts under public/licenses/.

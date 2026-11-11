@@ -1,13 +1,18 @@
 # demo/
 
-The sample shown when the page opens. Everything in this directory is under the
-Apache License 2.0 (see `LICENSE` and `NOTICE` here), not the BSD 2-Clause
-License of the rest of the repository.
+The sample shown when the page opens: a Lean model of `rb_range_component_beg_len`
+in CRuby's `range.c`, from the author's experiment repository
+`gotoken/cruby-formalized-trial` at commit `74e11c6` (not public).
 
-- `lean/PyLean/...` — four files copied unmodified from
-  [Broyojo/python-formalization](https://github.com/Broyojo/python-formalization)
-  at commit `7d5a5ed` (the `range` length part of the CPython model).
-- `translations.ja.json` — Japanese translations of `Spec.lean` and `Length.lean`,
-  keyed by file path and block id (`b0`, `b1`, … as the splitter numbers them). `Model.lean` and `Core.lean` are included
-  untranslated so the demo can show context lookup and live translation.
-- `meta.json` — label, upstream commit and file list used by `tools/build.py`.
+- `lean/` — the experiment's `lean/CrubyRange.lean` and `lean/CrubyRange/*.lean`,
+  copied unmodified (the `dump` executable `Main.lean` is left out).
+  Same license as the rest of this repository (BSD 2-Clause, see `../LICENSE`).
+- `translations.ja.json` — Japanese translations of `Basic`, `Cases`, `Spec`,
+  `Impl`, `Statements` and `Fixed`, keyed by file path and block id (`b0`, `b1`, …
+  as the splitter numbers them). Generated from `tools/demo_translations_ja.py`.
+  The other files are left untranslated so the demo can show live translation.
+- `meta.json` — label, commit, start file and file list used by `tools/build.py`.
+- `CRuby-BSDL.txt` — `Impl.lean` and `Fixed.lean` quote short excerpts of CRuby's
+  `range.c` (Copyright (C) 1993-2007 Yukihiro Matsumoto) and of the patch merged as
+  ruby/ruby#19824. CRuby may be redistributed under the 2-clause BSDL or the Ruby
+  License; the excerpts are used under the BSDL, reproduced here.

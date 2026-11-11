@@ -1,74 +1,208 @@
 {
- "lean/PyLean/RangeSlice/Spec.lean": {
-  "b1": {
-   "id": "b1",
-   "title": "モジュール説明",
-   "math": "`range` の性質を述べるための数学的な用語を定める。第 $k$ 要素 $start + k\\cdot step$ と、割り算を使わずに特徴づけた長さ。\n\n$L$ が `range(start, stop, step)` の長さであるとは、添字 $0 \\le k < L$ のときにちょうど、要素が `step` の向きに見て `stop` より手前にある、ということ。",
+ "lean/CrubyRange/Basic.lean": {
+  "b0": {
+   "id": "b0",
+   "title": "モジュール説明: 共通の定義",
+   "math": "対象は ruby/ruby `1f2a4bd5750b…` の `range.c` にある `rb_range_component_beg_len` と `rb_range_beg_len`。LP64 環境（`rb_len_t` が 64 ビットの `long`）を前提とする。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b2": {
+   "id": "b2",
+   "title": "定義: MIN（LONG_MIN）",
+   "math": "$\\mathrm{MIN} = -2^{63}$。LP64 での `LONG_MIN`。",
    "proof": "",
    "lean": "",
    "src": ""
   },
   "b3": {
    "id": "b3",
-   "title": "定義: InSeq（第 k 要素が stop より手前にある）",
-   "math": "整数 $start, stop, step, k$ に対して\n$$\\mathrm{InSeq}(start, stop, step, k) \\;:\\iff\\; \\begin{cases} start + k\\cdot step < stop & (0 < step)\\\\ stop < start + k\\cdot step & (\\text{それ以外})\\end{cases}$$\n$start + k\\cdot step$ が、`step` の向きに見て `stop` より手前にある（`stop` 自身は含まない）。",
+   "title": "定義: MAX（LONG_MAX）",
+   "math": "$\\mathrm{MAX} = 2^{63} - 1$。LP64 での `LONG_MAX`。",
    "proof": "",
-   "lean": "`def … : Prop` は真偽値ではなく**命題**に名前を付ける定義。`if 0 < step then … else …` は命題の場合分けで、$step = 0$ は else 側に入るが、使う側で必ず $step \\ne 0$ を仮定するので問題にならない。",
+   "lean": "",
    "src": ""
   },
   "b4": {
    "id": "b4",
-   "title": "定義: IsLen（L が range の長さである）",
-   "math": "$$\\mathrm{IsLen}(start, stop, step, L) \\;:\\iff\\; 0 \\le L \\;\\wedge\\; \\forall k \\ge 0,\\ \\bigl(k < L \\iff \\mathrm{InSeq}(start, stop, step, k)\\bigr)$$\n添字 $k \\ge 0$ のうち、要素 $start + k\\cdot step$ が stop より手前にあるのはちょうど $k = 0, 1, \\dots, L-1$ である、という長さの特徴づけ。割り算を使わないので、C の実装の式とは独立な「正解」として使える。これを満たす $L$ は高々 1 つ（`isLen_unique`）。",
+   "title": "構造体: 1 回の呼び出しの入力",
+   "math": "`rb_range_component_beg_len(b, e, excl, &beg, &len, n, err)` の 1 回の呼び出しに渡すものを並べた組。\n\n- `b`: 範囲の始点（整数、または `nil`）\n- `e`: 範囲の終点（整数、または `nil`）\n- `excl`: 終点を含まないか（`a...b` なら真、`a..b` なら偽）\n- `n`: 対象の長さ（C の `len`）\n- `err`: 呼び出し側の用途を表すフラグ（0・1・2）\n\n`#to_int` を経由して整数になる値は対象外。",
    "proof": "",
-   "lean": "`∀ k, 0 ≤ k → (…)` は「すべての整数 $k$ について、$k \\ge 0$ ならば …」。`↔` は同値、`∧` は「かつ」。",
+   "lean": "`Option Int` の `none` が Ruby の `nil` にあたる。`deriving Repr, DecidableEq` は表示と等号判定を自動で用意する指定。",
    "src": ""
   },
   "b5": {
    "id": "b5",
-   "title": "定義: range の第 k 要素",
-   "math": "range オブジェクト $r$ と整数 $k$ に対して $r.\\mathrm{elem}(k) = r.start + k\\cdot r.step$。",
+   "title": "定義: 対象とする入力（Valid）",
+   "math": "$$\\mathrm{Valid}(i) :\\iff (b = x \\Rightarrow \\mathrm{MIN} \\le x \\le \\mathrm{MAX}) \\wedge (e = x \\Rightarrow \\mathrm{MIN} \\le x \\le \\mathrm{MAX}) \\wedge 0 \\le n \\le \\mathrm{MAX} \\wedge err \\le 2$$\n端点が `long` に収まらない場合は、関数本体に入る前に `NUM2LEN` が例外を出すので、対象から外している。",
    "proof": "",
-   "lean": "`Range.elem` は構造体 `Range`（Model.lean、フィールド start / stop / step / length）に付いた関数で、`r.elem k` と書ける（ドット記法）。$k$ は `Int` なので負の $k$ でも値はあるが、意味を持つのは $0 \\le k < L$ のとき。",
+   "lean": "`∀ x, i.b = some x → …` は「b が整数 x なら …」。b が `nil` のときは条件なしに成り立つ。`Prop` を返す定義なので、真偽を計算する関数ではなく命題に名前を付けている。",
    "src": ""
   },
   "b6": {
    "id": "b6",
-   "title": "定義: Range.WF（rangeobject の型不変条件）",
-   "math": "$$r.\\mathrm{WF} \\;:\\iff\\; r.step \\ne 0 \\;\\wedge\\; r.length = \\mathrm{computeRangeLength}(r.start, r.stop, r.step)$$\nstep が 0 でなく、`length` フィールドには `compute_range_length` が計算した値が入っている。",
+   "title": "帰納型: 関数の結果（Out）",
+   "math": "次のどちらか。\n\n- `ok beg len`: `Qtrue` を返し、`*begp` と `*lenp` に beg と len が入る\n- `out`: `Qnil` を返す（C の `goto out_of_range`）",
    "proof": "",
-   "lean": "WF は well-formed の略。`computeRangeLength` は Model.lean の定義で、C の long での高速経路を試し、だめなら PyLong の低速経路を使う。",
-   "src": "`make_range_object`（rangeobject.c:66-88）が `length` に `compute_range_length` の結果を格納すること、step が `validate_step` で 0 を拒否される（あるいはスライスで非零 step 同士の積になる）ことに対応。"
+   "lean": "",
+   "src": ""
   },
   "b7": {
    "id": "b7",
-   "title": "定義: r の数学的な長さ",
-   "math": "$r.\\mathrm{Len}(L) :\\iff \\mathrm{IsLen}(r.start, r.stop, r.step, L)$。\n\nC 側が計算して格納した `r.length` とは別に、数学的に正しい長さを述語として与えている。両者が一致することを Length.lean で証明する。",
+   "title": "帰納型: 実装モデルの結果（ChkOut）",
+   "math": "`Out` の 2 つに、`overflow`（符号付きオーバーフローに当たった）を加えたもの。オーバーフローを検出するモデルの結果に使う。",
    "proof": "",
    "lean": "",
    "src": ""
   },
   "b8": {
    "id": "b8",
-   "title": "定義: x は（長さ L の）r の要素である",
-   "math": "$$r.\\mathrm{MemL}(L, x) \\;:\\iff\\; \\exists k,\\ 0 \\le k \\;\\wedge\\; k < L \\;\\wedge\\; x = r.start + k\\cdot r.step$$",
+   "title": "定義: Out を ChkOut に埋め込む",
+   "math": "`ok b l` は `ok b l` に、`out` は `out` に対応させる。仕様 S（`Out` を返す）と実装モデル（`ChkOut` を返す）を比べるために使う。",
    "proof": "",
-   "lean": "`∃ k, …` は存在量化。長さを引数 $L$ として受け取る形なので、使う側で `r.Len L` と組み合わせる。",
+   "lean": "",
    "src": ""
   }
  },
- "lean/PyLean/RangeSlice/Length.lean": {
+ "lean/CrubyRange/Cases.lean": {
   "b1": {
    "id": "b1",
-   "title": "モジュール説明",
-   "math": "range の長さについて次を示す。\n\n- unsigned long で計算する高速経路 `get_len_of_range` は、PyLong で計算する低速経路 `compute_range_length` と一致する。\n- どちらも、任意の Python 整数に対して数学的な長さを計算する。\n- `len()` は、その長さが `sys.maxsize` を超えるときに限って `OverflowError` を送出する。",
+   "title": "モジュール説明: 具体的な入力",
+   "math": "既知の正解、証明、非空性の確認（命題の前提が満たされる入力が実際にあること）で使う具体的な入力。",
    "proof": "",
    "lean": "",
    "src": ""
   },
   "b3": {
    "id": "b3",
-   "title": "見出し: 算術の補題",
+   "title": "定義: caseEndMax（`[1,2][0..LONG_MAX]`）",
+   "math": "$b = 0,\\ e = \\mathrm{MAX}$、終点を含む、$n = 2,\\ err = 0$。Ruby の `[1,2][0..LONG_MAX]` にあたる。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b4": {
+   "id": "b4",
+   "title": "定義: caseDouble（2 回折り返す例）",
+   "math": "$b = -1,\\ e = \\mathrm{MAX}$、終点を含む、$n = 2,\\ err = 1$。範囲 `-1..LONG_MAX` を err = 1（`values_at` など）で使う場合で、64 ビットの折り返しが 2 回起きる。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b5": {
+   "id": "b5",
+   "title": "定義: caseNormal（普通の読み出し）",
+   "math": "$b = 0,\\ e = 1$、終点を含む、$n = 2,\\ err = 0$。`[1,2][0..1]` にあたる、オーバーフローのない普通の読み出し。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b6": {
+   "id": "b6",
+   "title": "定義: caseO2（O2 の例）",
+   "math": "$b = \\mathrm{MAX},\\ e = \\mathrm{MIN}$、終点を含む、$n = 2,\\ err = 1$。範囲 `LONG_MAX..LONG_MIN` で、オーバーフロー条件 O2 に当たる。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  }
+ },
+ "lean/CrubyRange/Spec.lean": {
+  "b1": {
+   "id": "b1",
+   "title": "モジュール説明: 仕様 S",
+   "math": "数学的な整数の上で定義した仕様で、C コードの文の順序には依らない。文章による説明は `PROPERTIES.md` にある。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b3": {
+   "id": "b3",
+   "title": "定義: 正規化した始点 B",
+   "math": "$b_0$ を始点（`nil` なら 0）として\n$$B = \\begin{cases} b_0 + n & (b_0 < 0) \\\\ b_0 & (b_0 \\ge 0) \\end{cases}$$\n負の値は末尾から数える。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b4": {
+   "id": "b4",
+   "title": "定義: 正規化した終点 E（含まない側）",
+   "math": "終点が `nil`（終わりのない範囲）なら $E = n$。そうでなければ、終点 e を $e' = e + n$（$e < 0$ のとき）または $e' = e$ と正規化し、\n$$E = e' + \\begin{cases} 0 & (\\text{終点を含まない}) \\\\ 1 & (\\text{終点を含む}) \\end{cases}$$\nつまり E は「最後の添字の 1 つ先」。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b5": {
+   "id": "b5",
+   "title": "定義: 仕様 S（意図される区間）",
+   "math": "$$S(i) = \\begin{cases} \\mathrm{out} & (B < 0) \\\\ \\mathrm{ok}\\bigl(B,\\ \\max(E - B,\\ 0)\\bigr) & (err = 1) \\\\ \\mathrm{out} & (n < B) \\\\ \\mathrm{ok}\\bigl(B,\\ \\max(\\min(E, n) - B,\\ 0)\\bigr) & (\\text{それ以外}) \\end{cases}$$\n\n- err ∈ {0, 2}: 選ばれる添字は $[B, E) \\cap [0, n)$。始点が末尾より後なら範囲外。\n- err = 1: 区間 $[B, E)$ を n で切り詰めない（受け手を伸ばすことがある）。\n\nS は常にこの数学的な区間を返す。区間が `long` に収まらない場合（err = 1 で len や B + len が `LONG_MAX` を超える）にどうすべきかはモデル化しておらず、例外も出さない。表現できるかどうかは `P1_repr` と `P4` で別に調べる。",
+   "proof": "",
+   "lean": "`max (E - B) 0` は長さが負にならないようにするため。比較と演算はすべて `Int`（上限のない整数）なので、ここではあふれは起きない。",
+   "src": ""
+  }
+ },
+ "lean/CrubyRange/Impl.lean": {
+  "b1": {
+   "id": "b1",
+   "title": "モジュール説明: 実装モデル M_chk と M_wrap",
+   "math": "どちらも `rb_range_component_beg_len`（range.c、ruby/ruby 1f2a4bd）を文ごとに写したモデルで、違いは `long` の加算・減算の扱いだけ。\n\n引用している C の処理は次のとおり。\n\n1. 始点 beg（nil なら 0）と終点 end（nil なら −1）を取り出す。終点が nil なら「終点を含まない」を偽にする\n2. beg < 0 なら len を足し、それでも負なら範囲外\n3. end < 0 なら len を足す\n4. 終点を含むなら end を 1 増やす\n5. err が 0 か 2 なら、beg > len で範囲外、end > len なら end = len に切り詰める\n6. len = end − beg とし、負なら 0",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b3": {
+   "id": "b3",
+   "title": "定義: 検査つきの long 演算",
+   "math": "$$\\mathrm{checked}(x) = \\begin{cases} \\mathrm{some}\\ x & (\\mathrm{MIN} \\le x \\le \\mathrm{MAX}) \\\\ \\mathrm{none} & (\\text{それ以外 = 符号付きオーバーフロー}) \\end{cases}$$",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b4": {
+   "id": "b4",
+   "title": "定義: 64 ビットへの折り返し",
+   "math": "$$\\mathrm{wrap64}(x) = \\bigl((x - \\mathrm{MIN}) \\bmod 2^{64}\\bigr) + \\mathrm{MIN}$$\n2 の補数で 64 ビットに折り返した値。結果は常に $[\\mathrm{MIN}, \\mathrm{MAX}]$ に入る。",
+   "proof": "",
+   "lean": "`%` は `Int.emod` で、除数が正なら結果は 0 以上。そのため和は $\\mathrm{MIN}$ 以上 $\\mathrm{MAX}$ 以下になる。",
+   "src": ""
+  },
+  "b5": {
+   "id": "b5",
+   "title": "定義: 関数本体（演算の扱いを引数にしたもの）",
+   "math": "arith は `long` の加算・減算の結果を与える関数（`none` はオーバーフロー）。入力 i に対して次の順に計算する。\n\n1. $b_0$ = 始点（nil なら 0）、$e_0$ = 終点（nil なら −1）。終点が nil なら「終点を含まない」を偽にする。\n2. $b_0 < 0$ なら $\\mathit{beg} = \\mathrm{arith}(b_0 + n)$、そうでなければ $\\mathit{beg} = b_0$。$\\mathit{beg} < 0$ なら `out`。\n3. $e_0 < 0$ なら $e_1 = \\mathrm{arith}(e_0 + n)$、そうでなければ $e_1 = e_0$。\n4. 終点を含むなら $e_2 = \\mathrm{arith}(e_1 + 1)$、そうでなければ $e_2 = e_1$。\n5. err ∈ {0, 2} なら、$n < \\mathit{beg}$ で `out`、$e_2 > n$ なら $e_3 = n$（それ以外は $e_3 = e_2$）。\n6. $l = \\mathrm{arith}(e_3 - \\mathit{beg})$ とし、結果は $\\mathrm{ok}(\\mathit{beg},\\ \\max(l, 0))$。\n\n途中のどこかで arith が `none` を返したら、結果は `overflow`。",
+   "proof": "",
+   "lean": "`match … with | none => … | some x => …` で各演算の結果を場合分けしている。`i.b.getD 0` は Option から値を取り出し、`none` なら 0 を使う。`clip && i.n < beg` の `&&` は Bool の「かつ」。",
+   "src": "`--` のコメントは、そこで写している range.c の文。モジュール説明に引用した `rb_range_component_beg_len` の本体と 1 文ずつ対応する。"
+  },
+  "b6": {
+   "id": "b6",
+   "title": "定義: M_chk（検査つき）",
+   "math": "$M_{chk}(i) = \\mathrm{body}(\\mathrm{checked}, i)$。すべての `long` 演算を検査し、$[\\mathrm{MIN}, \\mathrm{MAX}]$ を外れたら `overflow` を返す。C の意味に対して安全側（保守的）なモデル。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b7": {
+   "id": "b7",
+   "title": "定義: M_wrap（64 ビット折り返し）",
+   "math": "$M_{wrap}(i) = \\mathrm{body}(x \\mapsto \\mathrm{some}(\\mathrm{wrap64}(x)), i)$。すべての `long` 演算を $2^{64}$ を法として折り返す。`overflow` を返すことはない。",
+   "proof": "",
+   "lean": "生成されたコードと一致するのは `-fno-strict-overflow` が有効なときだけ（CRuby の configure が付ける。gcc 13 と clang 18 で確認）。付いていなければ符号付きオーバーフローは未定義動作で、このモデルは当てはまらない。",
+   "src": ""
+  }
+ },
+ "lean/CrubyRange/Statements.lean": {
+  "b1": {
+   "id": "b1",
+   "title": "モジュール説明: 命題 P1〜P4（主張だけ）",
+   "math": "ここにあるのは定理ではなく `Prop` の定義で、何を証明・反証するのかを正確に述べたもの。証明は `CrubyRange/Proofs.lean` にある。算術と比較はすべて `Int` の上で行う（折り返しなし）。",
+   "proof": "",
+   "lean": "",
+   "src": ""
+  },
+  "b3": {
+   "id": "b3",
+   "title": "見出し: P1 仕様との一致（主目標）",
    "math": "",
    "proof": "",
    "lean": "",
@@ -76,169 +210,139 @@
   },
   "b4": {
    "id": "b4",
-   "title": "補題: 条件が真なら if は then 側の値",
-   "math": "決定可能な命題 $c$ と値 $a, b$ について、$c$ が成り立つなら $(\\text{if } c \\text{ then } a \\text{ else } b) = a$。",
-   "proof": "仮定 $h : c$ を使って `simp` で書き換えるだけ。",
-   "lean": "`[Decidable c]` は「$c$ の真偽を計算で決められる」というインスタンス引数で、`if` を書くのに必要。`{α : Sort _}` は暗黙の型引数。以降の証明で `rw [ite_t h]` として if を外すための小道具。",
+   "title": "命題 P1: M_chk はオーバーフローしない限り S と一致する",
+   "math": "$$\\forall i,\\quad \\mathrm{Valid}(i) \\;\\wedge\\; M_{chk}(i) \\ne \\mathrm{overflow} \\;\\Longrightarrow\\; M_{chk}(i) = S(i)$$",
+   "proof": "",
+   "lean": "右辺の `(spec i).toChk` は、S の結果（`Out`）を `ChkOut` に埋め込んだもの。",
    "src": ""
   },
   "b5": {
    "id": "b5",
-   "title": "補題: 条件が偽なら if は else 側の値",
-   "math": "決定可能な命題 $c$ について、$\\neg c$ なら $(\\text{if } c \\text{ then } a \\text{ else } b) = b$。",
-   "proof": "`simp [h]`。",
+   "title": "命題 P1_repr: err ∈ {0, 2} なら S の結果は long に収まる",
+   "math": "$$\\forall i,\\quad \\mathrm{Valid}(i) \\wedge err \\ne 1 \\wedge S(i) = \\mathrm{ok}(b, l) \\;\\Longrightarrow\\; \\mathrm{MIN} \\le b \\le \\mathrm{MAX} \\;\\wedge\\; \\mathrm{MIN} \\le l \\le \\mathrm{MAX}$$",
+   "proof": "",
    "lean": "",
    "src": ""
   },
   "b6": {
    "id": "b6",
-   "title": "定理: 長さは一意に決まる",
-   "math": "$\\mathrm{IsLen}(a, b, s, L_1)$ かつ $\\mathrm{IsLen}(a, b, s, L_2)$ ならば $L_1 = L_2$。",
-   "proof": "三分律で $L_1 < L_2$、$L_1 = L_2$、$L_1 > L_2$ に分ける。$L_1 < L_2$ なら $k = L_1$ は $k < L_2$ を満たすので、$L_2$ の定義から $\\mathrm{InSeq}(k)$ が成り立つ。すると $L_1$ の定義から $k < L_1$、つまり $L_1 < L_1$ となって矛盾。$L_1 > L_2$ も対称。",
-   "lean": "`obtain ⟨h₁0, h₁⟩ := h₁` は「かつ」を 2 つの仮定に分解する。`omega` は整数・自然数の線形算術を自動で解くタクティク。",
+   "title": "見出し: P3 演算の安全性（主目標）",
+   "math": "",
+   "proof": "",
+   "lean": "",
    "src": ""
   },
   "b7": {
    "id": "b7",
-   "title": "定理: 低速経路は数学的な長さを計算する",
-   "math": "$s \\ne 0$ ならば $\\mathrm{IsLen}(a, b, s, \\mathrm{computeRangeLengthSlow}(a, b, s))$。ここで\n$$\\mathrm{computeRangeLengthSlow}(a,b,s) = \\begin{cases} 0 & s>0,\\ a \\ge b\\\\ \\left\\lfloor \\dfrac{b-a-1}{s} \\right\\rfloor + 1 & s>0,\\ a<b\\\\ 0 & s<0,\\ b \\ge a\\\\ \\left\\lfloor \\dfrac{a-b-1}{-s} \\right\\rfloor + 1 & s<0,\\ a>b \\end{cases}$$",
-   "proof": "定義を展開し、$s>0$ / $s<0$ と空かどうかの 4 通りに場合分けする。空の場合は $L = 0$ で、どの $k \\ge 0$ でも要素が stop を越えている（$a + ks \\ge b$、あるいはその逆向き）ことを示す。空でない場合は $q = \\lfloor (b-a-1)/s \\rfloor$ とおき、$k \\le q \\iff ks \\le b-a-1$（`Int.le_ediv_iff_mul_le`）から $k < q+1 \\iff a + ks < b$ を導く。最後は `omega`。",
-   "lean": "`/` は `Int.ediv`。除数が正なら床関数 $\\lfloor\\cdot\\rfloor$ と同じ（C の切り捨て除算とは負の数で異なる）。`ite_t` / `ite_f` で if を外しながら進めている。",
-   "src": ""
+   "title": "定義: オーバーフロー条件 O1",
+   "math": "$$O_1(i) :\\iff 0 \\le B \\;\\wedge\\; e = \\mathrm{MAX} \\;\\wedge\\; \\text{終点を含む}$$\n終点が `LONG_MAX` の範囲で `end++` があふれる場合。",
+   "proof": "",
+   "lean": "",
+   "src": "range.c:1925 の `end++`。"
   },
   "b8": {
    "id": "b8",
-   "title": "定理: unsigned long 版 get_len_of_range は PyLong 版の式と一致する",
-   "math": "$lo, hi, step$ がすべて C の `long` の範囲 $[-2^{63}, 2^{63}-1]$ にあり、$step \\ne 0$ ならば\n$$\\mathrm{getLenOfRange}(lo, hi, step) = \\mathrm{computeRangeLengthSlow}(lo, hi, step).$$\n左辺は $2^{64}$ を法とする符号なし演算で、たとえば $step > 0,\\ lo < hi$ なら $\\Bigl(1 + \\bigl\\lfloor \\bigl((hi - 1 - lo) \\bmod 2^{64}\\bigr) / step \\bigr\\rfloor\\Bigr) \\bmod 2^{64}$ を計算する。",
-   "proof": "「$step>0$ かつ $lo<hi$」「$step<0$ かつ $lo>hi$」「それ以外」の 3 通りに分ける。前の 2 つでは、long の範囲という仮定から $0 \\le hi - lo - 1 < 2^{64}$ なので符号なし減算が折り返さない（結果がそのまま $hi - lo - 1$）ことを示す。商は非負かつ被除数以下なので、最後の $1 + q$ も $2^{64}$ 未満で折り返さない。ここまで `omega`。「それ以外」では両辺とも 0。",
-   "lean": "`toU x = x % 2^64`、`usub` / `uadd` は mod $2^{64}$ の減算・加算（Model.lean）。`%` は `Int.emod` なので結果は常に $[0, 2^{64})$ に入る。$step < 0$ のときの $-step$ は `usub 0 (toU step)` で表している。",
-   "src": "CPython の `get_len_of_range`（rangeobject.c:992-1014）の unsigned long 算術。"
+   "title": "定義: オーバーフロー条件 O2（err = 1 のときだけ）",
+   "math": "$$O_2(i) :\\iff err = 1 \\;\\wedge\\; 0 \\le B \\;\\wedge\\; E - B < \\mathrm{MIN}$$\n`end - beg` が `LONG_MIN` を下回る場合。",
+   "proof": "",
+   "lean": "",
+   "src": "range.c:1932 の `end - beg`。"
   },
   "b9": {
    "id": "b9",
-   "title": "見出し: 性質",
-   "math": "",
+   "title": "命題 P3: M_chk がオーバーフローするのは、ちょうど O1 か O2 のとき",
+   "math": "$$\\forall i,\\quad \\mathrm{Valid}(i) \\;\\Longrightarrow\\; \\bigl(M_{chk}(i) = \\mathrm{overflow} \\iff O_1(i) \\vee O_2(i)\\bigr)$$\n同値なので、O1・O2 以外ではあふれないことと、O1・O2 では必ずあふれることの両方を述べている。",
    "proof": "",
    "lean": "",
    "src": ""
   },
   "b10": {
    "id": "b10",
-   "title": "性質（命題の定義）: 高速経路と低速経路の一致",
-   "math": "$$\\forall\\, start, stop, step, len \\in \\mathbb{Z},\\quad step \\ne 0 \\;\\wedge\\; \\mathrm{computeRangeLengthLong}(start, stop, step) = \\mathrm{some}(len) \\;\\Longrightarrow\\; len = \\mathrm{computeRangeLengthSlow}(start, stop, step)$$\nC の `long` の高速経路が長さを返したなら、それは PyLong の低速経路の値と等しい。",
+   "title": "系 P3_safe: よくある使い方ではオーバーフローしない",
+   "math": "$$\\forall i,\\quad \\mathrm{Valid}(i) \\wedge err \\ne 1 \\wedge (e \\ne \\mathrm{MAX} \\vee \\text{終点を含まない}) \\;\\Longrightarrow\\; M_{chk}(i) \\ne \\mathrm{overflow}$$\nerr ∈ {0, 2} では、終点を含まない範囲か、終点が `LONG_MAX` 以外の範囲なら、あふれない。",
    "proof": "",
-   "lean": "`def … : Prop` で性質に名前を付け、証明は次の `…_proven` で与えるのがこのリポジトリの流儀（Registry に登録される）。`some len` は Option 型で「値 len がある」、`none` は高速経路が長さを返さない（オーバーフロー）場合。",
-   "src": "高速経路 `compute_range_length_long`（rangeobject.c:202-236）と PyLong 低速経路（rangeobject.c:273-315）。前提 $step \\ne 0$ は、`get_len_of_range` の assert と `validate_step` で保証される事前条件。"
+   "lean": "",
+   "src": ""
   },
   "b11": {
    "id": "b11",
-   "title": "定理: RangeLengthFastSlow は成り立つ",
-   "math": "直前の命題 `RangeLengthFastSlow` の証明。",
-   "proof": "`computeRangeLengthLong` を展開すると、3 引数がすべて long に収まり、かつ得られた長さが `LONG_MAX` 以下のときだけ `some (getLenOfRange …)` を返す。3 つの `IsLong` で場合分けし、収まらない場合は `none` なので仮定と矛盾。収まる場合は `getLenOfRange_eq` に帰着する。",
-   "lean": "`<;>` は直前のタクティクで生じたすべてのゴールに同じタクティクを適用する。`obtain ⟨-, rfl⟩ := h` は不要な成分を捨て、等式を代入して消す。",
+   "title": "見出し: P2 上限での飽和性（要素の読み出しのみ）",
+   "math": "",
+   "proof": "",
+   "lean": "",
    "src": ""
   },
   "b12": {
    "id": "b12",
-   "title": "定理: compute_range_length は常に低速経路の値と等しい",
-   "math": "$step \\ne 0$ ならば $\\mathrm{computeRangeLength}(start, stop, step) = \\mathrm{computeRangeLengthSlow}(start, stop, step)$。",
-   "proof": "`computeRangeLength` は、高速経路が `some len` を返せば len、`none` なら低速経路の値。前者は `rangeLengthFastSlow_proven`、後者は定義そのまま（`rfl`）。",
-   "lean": "`split` は match の分岐ごとにゴールを分ける。`rfl` は両辺が定義から等しいことを示す。",
+   "title": "命題 P2(f): モデル f は上限で飽和する",
+   "math": "$$\\forall i,\\quad \\mathrm{Valid}(i) \\wedge err = 0 \\wedge \\text{終点を含む} \\wedge e = e_0 \\wedge n - 1 \\le e_0 \\;\\Longrightarrow\\; f(i) = f(i[e := \\mathrm{nil}])$$\n終点が最後の添字以降にある「終点を含む範囲」の結果は、終わりのない範囲（`b..`）の結果と同じになる、という性質。",
+   "proof": "",
+   "lean": "`{ i with e := none }` は、i の終点だけを `nil` に替えた入力。任意のモデル f について述べた命題で、S では成り立ち、M_wrap では `e = LONG_MAX` のとき破れる見込み、とコメントにある。",
    "src": ""
   },
   "b13": {
    "id": "b13",
-   "title": "系: compute_range_length は数学的な長さ",
-   "math": "$step \\ne 0$ ならば $\\mathrm{IsLen}(start, stop, step, \\mathrm{computeRangeLength}(start, stop, step))$。",
-   "proof": "直前の定理で低速経路の値に書き換え、`slow_isLen` を使う。",
+   "title": "見出し: P4 出力の契約（呼び出し側が頼っていることの調査つき）",
+   "math": "",
+   "proof": "",
    "lean": "",
    "src": ""
   },
   "b14": {
    "id": "b14",
-   "title": "系: WF な range の length フィールドは数学的な長さ",
-   "math": "$r.\\mathrm{WF}$ ならば $r.\\mathrm{Len}(r.length)$。",
-   "proof": "WF の第 2 成分 $r.length = \\mathrm{computeRangeLength}(\\dots)$ で書き換え、第 1 成分 $r.step \\ne 0$ を使って `computeRangeLength_isLen` を適用する。",
-   "lean": "名前が `Range.WF.len` なので、`h : r.WF` に対して `h.len` と書ける（ドット記法）。`h.1`、`h.2` は「かつ」の左右の成分。",
+   "title": "定義: ok の結果に課す契約の候補",
+   "math": "結果が $\\mathrm{ok}(\\mathit{beg}, \\mathit{len})$ のとき\n$$0 \\le \\mathit{beg} \\;\\wedge\\; 0 \\le \\mathit{len} \\;\\wedge\\; \\begin{cases} \\mathit{beg} + \\mathit{len} \\le \\mathrm{MAX} & (err = 1) \\\\ \\mathit{beg} \\le n \\;\\wedge\\; \\mathit{beg} + \\mathit{len} \\le n & (\\text{それ以外}) \\end{cases}$$\n`out` と `overflow` には何も課さない。",
+   "proof": "",
+   "lean": "和は `Int` で計算するので、契約の式そのものはあふれない。`| _ => True` は「それ以外の場合は無条件に成り立つ」。",
    "src": ""
   },
   "b15": {
    "id": "b15",
-   "title": "系: range の長さの一意性",
-   "math": "$r.\\mathrm{WF}$ かつ $r.\\mathrm{Len}(L)$ ならば $r.length = L$。",
-   "proof": "`h.len` と仮定 `hL` を `isLen_unique` に渡すだけ。",
-   "lean": "",
-   "src": ""
-  },
-  "b16": {
-   "id": "b16",
-   "title": "定理: make_range_object は WF な range を作る",
-   "math": "$s \\ne 0$ ならば $\\mathrm{makeRangeObject}(a, b, s)$ は WF。",
-   "proof": "`makeRangeObject` は `length` に `computeRangeLength` の値を入れて作るので、第 2 成分は定義どおり（`rfl`）。",
-   "lean": "",
-   "src": "`make_range_object`（rangeobject.c:67-88）。"
-  },
-  "b17": {
-   "id": "b17",
-   "title": "定理: range() の生成が成功すれば結果は WF",
-   "math": "$\\mathrm{rangeNew}(a, b, s) = \\mathrm{ok}(r)$ ならば $r.\\mathrm{WF}$。ここで $s$ は省略可能な step（`Option Int`）。",
-   "proof": "step が省略（`none`）なら step は 1 で、`makeRangeObject_wf` を使う。指定あり（`some v`）なら、$v = 0$ のときは `ValueError` で `.ok` にならず仮定と矛盾、$v \\ne 0$ なら `makeRangeObject_wf`。",
-   "lean": "`Py α` は `Except PyExc α` の別名で、成功 `.ok r` か例外 `.error e` を返す計算。`simp [bind, Except.bind, …]` は do 記法の連鎖を展開している。",
-   "src": ""
-  },
-  "b18": {
-   "id": "b18",
-   "title": "定理: range(stop) は WF",
-   "math": "任意の $b$ について $\\mathrm{range1}(b)$（step = 1、start = 0）は WF。",
-   "proof": "`makeRangeObject_wf` に $1 \\ne 0$（`decide` で計算）を渡す。",
-   "lean": "",
-   "src": ""
-  },
-  "b19": {
-   "id": "b19",
-   "title": "性質（命題の定義）: range(start, stop, step) の生成と長さ",
-   "math": "任意の整数 start, stop と省略可能な step について:\n\n- step = `some 0` なら、`rangeNew` は `ValueError(\"range() arg 3 must not be zero\")` を返す。\n- それ以外なら成功して range $r$ を返し、$r.start = start$、$r.stop = stop$、$r.step$ = step（省略時は 1）、かつ $r.\\mathrm{Len}(r.length)$（length フィールドが数学的な長さ）。\n\n引数がどれほど大きな整数でも失敗しない。",
+   "title": "命題 P4(f): モデル f は契約を満たす",
+   "math": "$$\\forall i,\\quad \\mathrm{Valid}(i) \\;\\Longrightarrow\\; \\mathrm{Contract}\\bigl(i, f(i)\\bigr)$$",
    "proof": "",
-   "lean": "`step.getD 1` は Option から値を取り出し、`none` なら 1 を使う。",
+   "lean": "",
    "src": ""
-  },
-  "b20": {
-   "id": "b20",
-   "title": "定理: RangeNewLength は成り立つ",
-   "math": "直前の命題 `RangeNewLength` の証明。",
-   "proof": "step = `some 0` の場合は計算で一致（`rfl`）。それ以外では、`makeRangeObject start stop (step.getD 1)` が答えであることを示す。`step.getD 1 ≠ 0` を step の場合分けで確かめ、`(makeRangeObject_wf …).len` から長さの性質を得る。",
+  }
+ },
+ "lean/CrubyRange/Fixed.lean": {
+  "b1": {
+   "id": "b1",
+   "title": "モジュール説明: 検証する修正（ruby/ruby#19824）",
+   "math": "`patches/range-beg-len-overflow.patch`（gotoken/ruby の `fix-range-beg-len-overflow` の commit d4d80a35。#19824 の先頭）は、`rb_range_component_beg_len` の 2 つの文を変える。\n\n- 終点を含むとき、`end < RB_LEN_MAX` の場合だけ `end++` する。`RB_LEN_MAX + 1` は表せないので、あふれさせずに飽和させる\n- `len = end > beg ? end - beg : 0;` にする。ここでは beg が非負なので、`end - beg` はあふれない\n\nさらに「成功したとき `*begp` と `*lenp` は非負で、その和は `RB_LEN_MAX` を超えない」と文書化する（`FixedProofs.lean` の `fix_doc_contract`）。`bodyFixed` は `body` にちょうどこの 2 点の変更を加えたもの。",
+   "proof": "",
    "lean": "",
    "src": ""
   },
-  "b21": {
-   "id": "b21",
-   "title": "性質（命題の定義）: len(r) と OverflowError",
-   "math": "WF な range $r$ とその数学的な長さ $L$（$r.\\mathrm{Len}(L)$）について\n$$\\mathrm{rangeLength}(r) = \\begin{cases} \\mathrm{ok}(L) & L \\le \\mathtt{ssizeMax} \\\\ \\mathrm{error}(\\texttt{OverflowError}) & \\text{それ以外} \\end{cases}$$\nここで $\\mathtt{ssizeMax} = 2^{63} - 1$（64 ビット環境の `sys.maxsize`）。",
+  "b3": {
+   "id": "b3",
+   "title": "定義: 修正後の関数本体",
+   "math": "`body` との違いは次の 2 点だけ。\n\n1. 終点を含むとき、$e_1 \\ge \\mathrm{MAX}$ なら $e_2 = e_1$（飽和）、そうでなければ $e_2 = \\mathrm{arith}(e_1 + 1)$。\n2. $\\mathit{beg} < e_3$ のときだけ $\\mathit{len} = \\mathrm{arith}(e_3 - \\mathit{beg})$、そうでなければ $\\mathit{len} = 0$。\n\nほかの手順（始点・終点の正規化、err ∈ {0, 2} での切り詰め）は `body` と同じ。",
    "proof": "",
-   "lean": "`ssizeOverflow` は `OverflowError(\"Python int too large to convert to C ssize_t\")`。`r.WF` は型不変条件として仮定している。",
-   "src": "Python ドキュメント（Doc/builtins/stdtypes.rst:1817-1819）の「`sys.maxsize` より大きな絶対値を含む range は作れるが、`len()` などは `OverflowError` を送出しうる」という記述に対応。"
+   "lean": "`decide (MAX ≤ end1)` は命題を Bool に変えて if の条件に使っている。`excl || …` の `||` は Bool の「または」。",
+   "src": ""
   },
-  "b22": {
-   "id": "b22",
-   "title": "定理: LenOverflow は成り立つ",
-   "math": "直前の命題 `LenOverflow` の証明。",
-   "proof": "`Range.WF.length_eq` で $r.length = L$ に書き換えれば、あとは `rangeLength` の定義そのもの（`rfl`）。",
+  "b4": {
+   "id": "b4",
+   "title": "定義: 修正後の M_chk",
+   "math": "$M_{chk}^{fixed}(i) = \\mathrm{bodyFixed}(\\mathrm{checked}, i)$。修正後の本体を検査つきの演算で動かすモデル。",
+   "proof": "",
    "lean": "",
    "src": ""
   },
-  "b23": {
-   "id": "b23",
-   "title": "性質（命題の定義）: すべての長さ計算経路が正確",
-   "math": "次の 4 つの連言。\n\n1. $lo, hi, step$ がすべて long に収まり $step \\ne 0$ なら、$\\mathrm{IsLen}(lo, hi, step, \\mathrm{getLenOfRange}(lo, hi, step))$。\n2. $step \\ne 0$ かつ $\\mathrm{IsLen}(start, stop, step, L)$ なら、$\\mathrm{computeRangeLengthLong}(start, stop, step)$ は「3 引数がすべて long に収まり $L \\le \\mathtt{longMax}$」のとき $\\mathrm{some}(L)$、そうでなければ $\\mathrm{none}$。\n3. $step \\ne 0$ なら $\\mathrm{IsLen}(start, stop, step, \\mathrm{computeRangeLengthSlow}(start, stop, step))$。\n4. $step \\ne 0$ なら $\\mathrm{IsLen}(start, stop, step, \\mathrm{computeRangeLength}(start, stop, step))$。",
+  "b5": {
+   "id": "b5",
+   "title": "定義: 修正後の M_wrap",
+   "math": "$M_{wrap}^{fixed}(i) = \\mathrm{bodyFixed}(x \\mapsto \\mathrm{some}(\\mathrm{wrap64}(x)), i)$。修正後の本体を 64 ビットの折り返しで動かすモデル。GCC でビルドしたものが実際に実行する動作にあたる。",
    "proof": "",
-   "lean": "`IsLen` が値を一意に決めるので、大きな引数で 0 を返す低速経路や `ULONG_MAX` を返す `get_len_of_range` のような誤った実装はこの性質を満たせない、とコメントにある。命題を弱めずに「正しさ」を捉えるための書き方。",
-   "src": "`get_len_of_range`（rangeobject.c:992-1014）、`compute_range_length_long`（:202-236）、PyLong 低速経路（:273-315）、`compute_range_length`（:243-323）。"
+   "lean": "",
+   "src": ""
   },
-  "b24": {
-   "id": "b24",
-   "title": "定理: RangeLengthExact は成り立つ",
-   "math": "直前の命題 `RangeLengthExact` の証明。",
-   "proof": "4 つを順に示す。(1) `getLenOfRange_eq` で低速経路に書き換えて `slow_isLen`。(2) 一意性 `isLen_unique` で $L$ を低速経路の値に置き換え、3 つの `IsLong` と $L \\le \\mathtt{longMax}$ で場合分けして定義を計算する。(3) `slow_isLen`。(4) `computeRangeLength_isLen`。",
+  "b6": {
+   "id": "b6",
+   "title": "定義: specSat（終点を LONG_MAX で打ち切った S）",
+   "math": "$E' = \\min(E, \\mathrm{MAX})$ として、S と同じ式で\n$$\\mathrm{specSat}(i) = \\begin{cases} \\mathrm{out} & (B < 0) \\\\ \\mathrm{ok}\\bigl(B,\\ \\max(E' - B,\\ 0)\\bigr) & (err = 1) \\\\ \\mathrm{out} & (n < B) \\\\ \\mathrm{ok}\\bigl(B,\\ \\max(\\min(E', n) - B,\\ 0)\\bigr) & (\\text{それ以外}) \\end{cases}$$\nS と違うのは err = 1 で O1 に当たる入力だけ。そこでは S の終点 `LONG_MAX + 1` が `long` で表せない。",
+   "proof": "",
    "lean": "",
    "src": ""
   }
