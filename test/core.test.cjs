@@ -11,13 +11,14 @@ const read = p => fs.readFileSync(path.join(DEMO, "lean", path.relative("lean", 
 const files = meta.files.map(p => ({ path: p, src: read(p), blocks: C.splitLean(read(p)) }));
 const byPath = Object.fromEntries(files.map(f => [f.path, f]));
 
-test("splits Spec.lean into declarations with namespaced names", () => {
-  const b = byPath["lean/PyLean/RangeSlice/Spec.lean"].blocks;
+test("splits Basic.lean into declarations with namespaced names", () => {
+  const b = byPath["lean/CrubyRange/Basic.lean"].blocks;
   assert.equal(b.length, 10);
+  assert.equal(b[0].cls, "prose");
   assert.deepEqual(b.filter(x => x.cls === "decl").map(x => x.full), [
-    "PyLean.RangeSlice.InSeq", "PyLean.RangeSlice.IsLen", "PyLean.RangeSlice.Range.elem",
-    "PyLean.RangeSlice.Range.WF", "PyLean.RangeSlice.Range.Len", "PyLean.RangeSlice.Range.MemL"]);
-  assert.equal(b[3].start, 12); // docstring is attached to its declaration
+    "CrubyRange.MIN", "CrubyRange.MAX", "CrubyRange.Input", "CrubyRange.Input.Valid",
+    "CrubyRange.Out", "CrubyRange.ChkOut", "CrubyRange.Out.toChk"]);
+  assert.equal(b[4].start, 17); // docstring is attached to its declaration
 });
 
 test("blocks cover the file without gaps or overlaps", () => {
@@ -34,10 +35,12 @@ test("blocks cover the file without gaps or overlaps", () => {
 });
 
 test("column-0 text inside doc comments does not start a block", () => {
-  const b = byPath["lean/PyLean/RangeSlice/Model.lean"].blocks;
-  assert.equal(b[1].cls, "prose");
-  assert.equal(b[1].start, 3);
-  assert.equal(b[1].end, 26);
+  const src = "/-! Module doc.\ntheorem inside_a_comment : True := trivial\n/- nested -/ still the doc\n-/\n\ntheorem real : True := trivial\n";
+  const b = C.splitLean(src);
+  assert.deepEqual(b.map(x => [x.cls, x.start, x.end]), [["prose", 1, 4], ["decl", 6, 6]]);
+  assert.equal(b[1].name, "real");
+  const impl = byPath["lean/CrubyRange/Impl.lean"].blocks;
+  assert.deepEqual([impl[1].cls, impl[1].start, impl[1].end], ["prose", 3, 33]); // quotes C code
 });
 
 test("demo translations match the block ids", () => {
@@ -50,17 +53,21 @@ test("demo translations match the block ids", () => {
 
 test("imports resolve and context includes referenced definitions", () => {
   const paths = files.map(f => f.path);
-  const len = byPath["lean/PyLean/RangeSlice/Length.lean"];
-  assert.deepEqual(C.importsOf(len.src), ["PyLean.RangeSlice.Spec"]);
-  assert.equal(C.modulePath("PyLean.RangeSlice.Spec", paths), "lean/PyLean/RangeSlice/Spec.lean");
+  const st = byPath["lean/CrubyRange/Statements.lean"];
+  assert.deepEqual(C.importsOf(st.src), ["CrubyRange.Spec", "CrubyRange.Impl"]);
+  assert.equal(C.modulePath("CrubyRange.Spec", paths), "lean/CrubyRange/Spec.lean");
+  assert.equal(C.modulePath("CrubyRange", paths), "lean/CrubyRange.lean");
   const idx = C.buildIndex(files);
-  const ctx = C.collectContext(len.path, len.blocks, idx);
-  for (const name of ["def IsLen", "def computeRangeLengthSlow", "def InSeq", "def getLenOfRange"]) assert.ok(ctx.includes(name), name);
+  const ctx = C.collectContext(st.path, st.blocks, idx);
+  for (const name of ["def spec ", "def mChk ", "def specBeg ", "def Input.Valid ", "structure Input "]) assert.ok(ctx.includes(name), name);
 });
 
-test("statementPart cuts the proof", () => {
-  const b = byPath["lean/PyLean/RangeSlice/Length.lean"].blocks.find(x => x.name === "slow_isLen");
-  assert.match(C.statementPart(b.text), /IsLen a b s \(computeRangeLengthSlow a b s\) := by …$/);
+test("statementPart cuts the proof or body", () => {
+  const p1 = byPath["lean/CrubyRange/Statements.lean"].blocks.find(x => x.name === "P1");
+  assert.match(C.statementPart(p1.text), /def P1 : Prop := …$/);
+  const proofs = byPath["lean/CrubyRange/Proofs.lean"].blocks.filter(x => x.kw === "theorem");
+  assert.ok(proofs.length > 0);
+  for (const b of proofs) assert.ok(!/\n\s+(simp|omega|rcases|intro)\b/.test(C.statementPart(b.text)), b.name);
 });
 
 test("reply parsing tolerates fences and truncation", () => {

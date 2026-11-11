@@ -1,12 +1,18 @@
 {
-  "label": "Broyojo/python-formalization @ 7d5a5ed（demo）",
-  "upstream": "https://github.com/Broyojo/python-formalization",
-  "commit": "7d5a5ed98bed33876a74051c4666c307f6918d33",
-  "start": "lean/PyLean/RangeSlice/Length.lean",
+  "label": "gotoken/cruby-formalized-trial @ 74e11c6（demo）",
+  "commit": "74e11c6",
+  "start": "lean/CrubyRange/Impl.lean",
   "files": [
-    "lean/PyLean/RangeSlice/Length.lean",
-    "lean/PyLean/RangeSlice/Spec.lean",
-    "lean/PyLean/RangeSlice/Model.lean",
-    "lean/PyLean/Core.lean"
+    "lean/CrubyRange/Impl.lean",
+    "lean/CrubyRange/Spec.lean",
+    "lean/CrubyRange/Statements.lean",
+    "lean/CrubyRange/Basic.lean",
+    "lean/CrubyRange/Cases.lean",
+    "lean/CrubyRange/Fixed.lean",
+    "lean/CrubyRange/Proofs.lean",
+    "lean/CrubyRange/FixedProofs.lean",
+    "lean/CrubyRange/NonVacuity.lean",
+    "lean/CrubyRange/Examples.lean",
+    "lean/CrubyRange.lean"
   ]
 }
