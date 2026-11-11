@@ -2,7 +2,7 @@
 
 Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言語の数学的な文章に訳して横に並べるブラウザです。Lean のビルドは要りません。ソースを読むだけで動きます。
 
-**Web 版: <https://side-by-side-lean-natural.gotoken.pages.dev/>**
+**Web 版: <https://side-by-side-lean-natural.pages.dev/>**
 
 ![Length.lean の対訳表示](docs/screenshot.png)
 
@@ -22,7 +22,7 @@ Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言�
 
 ### Web 版（Cloudflare Pages）
 
-<https://side-by-side-lean-natural.gotoken.pages.dev/> を開きます。
+<https://side-by-side-lean-natural.pages.dev/> を開きます。
 
 1. GitHub の URL を入れて「開く」を押す
 2. 「設定」で Anthropic API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる
@@ -46,7 +46,7 @@ Web 版で GitHub から開いている間は、アドレスバーの URL がそ
 | `decl` | スクロールする宣言の名前（名前のないブロックは `id=b12` の形） |
 | `lang` | 訳す言語 |
 
-例: <https://side-by-side-lean-natural.gotoken.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E6%97%A5%E6%9C%AC%E8%AA%9E>
+例: <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E6%97%A5%E6%9C%AC%E8%AA%9E>
 
 ### 訳をリポジトリに同梱する
 
@@ -112,7 +112,7 @@ dist/       claude.ai 版（ビルド結果。1 ファイル）
 
 **side-by-side-lean-natural** (Lean 対訳ブラウザ) splits Lean 4 source into declarations and shows each one next to a natural-language mathematical translation in the language you choose. It reads source only: no Lean build is required.
 
-**Web version: <https://side-by-side-lean-natural.gotoken.pages.dev/>**
+**Web version: <https://side-by-side-lean-natural.pages.dev/>**
 
 - Open a repository from a GitHub URL (private repositories work with a token), a ZIP or a folder.
 - Translations are made by Claude, either with your Anthropic API key (web version) or with the viewer's own Claude account (claude.ai version, `dist/claude-artifact.html`). Definitions referenced from imported files are sent as context.
