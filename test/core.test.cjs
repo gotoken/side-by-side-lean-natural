@@ -77,3 +77,15 @@ test("GitHub URL forms", () => {
   assert.equal(C.parseGitHubURL("git@github.com:o/r.git").repo, "r");
   assert.equal(C.parseGitHubURL("https://example.com/o/r"), null);
 });
+
+test("glossary entries are complete and cover every highlighted keyword and tactic", () => {
+  const vm = require("node:vm");
+  const src = p => fs.readFileSync(path.join(__dirname, "..", "src", p), "utf8");
+  const G = vm.runInNewContext(src("glossary.js") + ";GLOSSARY");
+  for (const [k, v] of Object.entries(G)) assert.ok(Array.isArray(v) && v.length === 2 && v[0] && v[1], k);
+  const app = src("app.js");
+  for (const name of ["TACTIC", "KW"]) {
+    const words = new RegExp(`const ${name} = new Set\\("([^"]+)"`).exec(app)[1].split(" ");
+    assert.deepEqual(words.filter(w => !G[w]), [], `${name} words without a glossary entry`);
+  }
+});
