@@ -20,7 +20,7 @@ const UI = {
     confirmMany: n => `${n} 回に分けて訳します。もう一度押すと開始`,
     noEngine: "翻訳エンジンがありません。設定で Anthropic API キーを入れるか、claude.ai 上で開いてください。",
     urlPh: "https://github.com/owner/repo（private 可）",
-    demoLabel: "デモ", jumpDef: "定義へ移動", defIn: "定義", glossary: "Lean の記号",
+    demoLabel: "デモ", jumpDef: "定義へ移動", defIn: "定義", glossary: "Lean の用語・記号",
     loading: "読み込み中…", repoLoaded: n => `${n} 個の .lean ファイル`,
     ghNet: "GitHub に接続できませんでした。",
     ghInArtifact: "claude.ai の中のページからは GitHub に接続できません。GitHub で Code → Download ZIP した ZIP を「ZIP を開く」で読み込んでください（private リポジトリも可）。この HTML を手元で開けば URL から直接読めます。",
@@ -48,6 +48,7 @@ const UI = {
     patSteps: "開いた画面で Repository access を「Only select repositories」にして読みたいリポジトリを選び、Generate token を押します。表示された github_pat_… をここに貼ってください。期限は 30 日です。",
     ghPrivateHint: "非公開リポジトリを読むには、読み取り専用の GitHub トークンが要ります。",
     patLinkShort: "トークンを作る（記入済み）", openSettings: "設定を開く", orZip: "または ZIP で開く",
+    askClaude: "この箇所について Claude に聞く", claudeSays: "Claude の説明（この宣言の中で）",
   },
   en: {
     open: "Open", zip: "Open ZIP", folder: "Folder", settings: "Settings", files: "Files", filter: "Filter files",
@@ -62,7 +63,7 @@ const UI = {
     confirmMany: n => `This takes ${n} calls. Press again to start`,
     noEngine: "No translator available. Add an Anthropic API key in Settings, or open this page on claude.ai.",
     urlPh: "https://github.com/owner/repo (private OK)",
-    demoLabel: "Demo", jumpDef: "Go to definition", defIn: "Defined", glossary: "Lean notation",
+    demoLabel: "Demo", jumpDef: "Go to definition", defIn: "Defined", glossary: "Lean keywords and notation",
     loading: "Loading…", repoLoaded: n => `${n} .lean files`,
     ghNet: "Could not reach GitHub.",
     ghInArtifact: "Pages inside claude.ai cannot reach GitHub. Download the repository with Code → Download ZIP and open it with \"Open ZIP\" (private repositories work). Opened as a local HTML file, this page reads GitHub URLs directly.",
@@ -90,6 +91,7 @@ const UI = {
     patSteps: "On the page that opens, set Repository access to \"Only select repositories\", pick the repositories to read, and press Generate token. Paste the github_pat_… it shows here. It expires in 30 days.",
     ghPrivateHint: "Reading a private repository needs a read-only GitHub token.",
     patLinkShort: "Create a token (pre-filled)", openSettings: "Open settings", orZip: "or open a ZIP",
+    askClaude: "Ask Claude about this spot", claudeSays: "Claude's explanation (in this declaration)",
   }
 };
 const LANGS = ["日本語", "English", "简体中文", "繁體中文", "한국어", "Français", "Deutsch", "Español", "Português", "Русский"];
@@ -219,9 +221,9 @@ class GitHubSource {
 }
 
 // ---------- translator ----------
-async function callLLM(prompt, onText, signal) {
+async function callLLM(prompt, onText, signal, opts = {}) {
   if (S.sample) {
-    const r = await S.sample(prompt, { onText: ({ text }) => onText && onText(text), signal, modelTier: S.tier, cache: false });
+    const r = await S.sample(prompt, { onText: ({ text }) => onText && onText(text), signal, modelTier: opts.tier || S.tier, cache: false });
     return { text: r.text, truncated: r.truncated, model: "claude (" + (r.modelTierApplied || S.tier) + ")" };
   }
   if (S.apiKey) {
@@ -230,7 +232,7 @@ async function callLLM(prompt, onText, signal) {
       r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST", signal,
         headers: { "x-api-key": S.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json", "anthropic-dangerous-direct-browser-access": "true" },
-        body: JSON.stringify({ model: S.model, max_tokens: 16000, messages: [{ role: "user", content: prompt }] })
+        body: JSON.stringify({ model: S.model, max_tokens: opts.maxTokens || 16000, messages: [{ role: "user", content: prompt }] })
       });
     } catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error((S.inArtifact ? "claude.ai " : "") + "api.anthropic.com: " + e.message); }
     const data = await r.json().catch(() => ({}));
@@ -278,15 +280,15 @@ function renderRich(src) {
   return html.replace(/\u0000(\d+)\u0000/g, (_, i) => ph[+i]);
 }
 
-const KW = new Set("theorem lemma def abbrev structure inductive class instance axiom opaque example where if then else match with fun λ let have show from by do return namespace end open section variable import deriving calc termination_by decreasing_by private protected noncomputable partial unsafe mutual universe set_option attribute at in for unless mut".split(" "));
-const TACTIC = new Set("intro intros exact apply refine rw rwa simp simp_all omega decide rfl unfold cases rcases obtain induction constructor use by_cases split linarith nlinarith norm_num ring field_simp aesop trivial contradiction exfalso subst rename_i generalize specialize congr ext funext suffices exists left right push_neg positivity gcongr tauto first repeat try all_goals any_goals next assumption sorry native_decide simp_arith norm_cast exact_mod_cast change conv calc nofun nomatch injection".split(" "));
+const KW = new Set("theorem lemma def abbrev structure inductive class instance axiom opaque example where if then else match with fun λ let have show from by do return namespace end open section variable import deriving calc termination_by decreasing_by private protected noncomputable partial unsafe mutual universe set_option attribute at in for unless mut extends suffices only using generalizing macro syntax notation".split(" "));
+const TACTIC = new Set("intro intros exact apply refine rw rwa simp simp_all omega decide rfl unfold cases rcases obtain induction constructor use by_cases split linarith nlinarith norm_num ring field_simp aesop trivial contradiction exfalso subst rename_i generalize specialize congr ext funext suffices exists left right push_neg positivity gcongr tauto first repeat try all_goals any_goals next assumption sorry native_decide simp_arith norm_cast exact_mod_cast change conv calc nofun nomatch injection rintro dsimp simpa simp? set case symm trans grind iterate focus done clear revert delta push_cast erw choose subst_vars ac_rfl by_contra contrapose interval_cases fin_cases simp_rw nth_rewrite nth_rw refine' split_ifs bv_decide exact? apply? rw? ring_nf linear_combination zify absurd".split(" "));
 const TYPES = new Set("Prop Type Sort Int Nat Option Except Bool String List Array Unit True False Decidable Fin UInt64 Char Float".split(" "));
 function hlLean(text) {
   // returns array of html lines
   const lines = text.split("\n");
   let depth = 0, inStr = false;
   const out = [];
-  const symRe = /^(<;>|:=|←|→|↔|∀|∃|¬|∧|∨|≠|≤|≥|⟨|⟩|↑|∘|×|·|\^\^\^|&&&|\|\|\||\?_|%|\/)/;
+  const symRe = /^(<;>|<\$>|>>=|\|>\.|\|>|<\||:=|=>|::|\+\+|#\[|!\[|←|→|↔|↦|∀|∃|¬|∧|∨|≠|≤|≥|∈|∉|⊆|∩|∪|∑|∏|⟨|⟩|‹|↑|∘|×|·|▸|∣|⁻¹|≡|•|\^\^\^|&&&|\|\|\||\?_|%|\/|@(?=[A-Za-z_\[]))/;
   for (const l of lines) {
     let h = "", i = 0;
     while (i < l.length) {
@@ -678,10 +680,37 @@ function tokenPop(el) {
         <button class="jump" data-p="${esc(h.path)}" data-id="${h.block.id}">${t("jumpDef")}</button></div>`;
     }).join("");
   }
-  const g = GLOSSARY[w] || (w.startsWith(".") ? null : null);
+  const g = GLOSSARY[w];
   if (g) html += `<div class="pg"><div class="pk">${t("glossary")}</div><code>${esc(w)}</code> ${renderRich(g[gi])}</div>`;
+  const blkEl = el.closest(".blk");
+  if (!(hits && hits.length) && blkEl && (S.sample || S.apiKey)) {
+    const cached = ASK.get(askKey(w, blkEl.dataset.id));
+    html += `<div class="pg"><div class="pk">${t("claudeSays")}</div><div class="askout">${cached ? renderRich(cached) : `<button type="button" class="jump askc" data-t="${esc(w)}" data-b="${esc(blkEl.dataset.id)}">${t("askClaude")}</button>`}</div></div>`;
+  }
   if (!html) return;
   showPop(el, html);
+}
+const ASK = new Map();
+function askKey(w, id) { const b = (S.blocks.get(S.cur) || []).find(x => x.id === id); return `${S.lang}|${w}|${CORE.hashStr((S.cur || "") + "\n" + (b ? b.text : id))}`; }
+async function askClaude(btn) {
+  const w = btn.dataset.t, id = btn.dataset.b;
+  const b = (await blocksOf(S.cur)).find(x => x.id === id); if (!b) return;
+  const out = btn.parentElement; out.textContent = t("thinking");
+  const prompt = `You explain Lean 4 code to a reader who knows mathematics but not Lean.
+In ${S.lang}, explain in 2-4 short sentences what \`${w}\` means or does at this place in the declaration below.
+If it is a tactic, say what it does to the goal here. If it is notation or a library name, say what it denotes.
+Plain text only, Lean identifiers in backticks, formulas in $...$. Say so if it cannot be determined from this code alone.
+
+File: ${S.cur}
+<decl>
+${b.text.slice(0, 12000)}
+</decl>`;
+  try {
+    const r = await callLLM(prompt, text => { out.textContent = text; }, undefined, { tier: "quick", maxTokens: 800 });
+    const txt = r.text.trim(); ASK.set(askKey(w, id), txt); out.innerHTML = renderRich(txt);
+  } catch (e) {
+    out.textContent = `${t("apiErr")}: ${(e && (e.code || e.message)) || e}`;
+  }
 }
 
 // ---------- settings ----------
@@ -752,7 +781,10 @@ function bind() {
     const tok = e.target.closest(".tok");
     if (tok) { e.stopPropagation(); tokenPop(tok); return; }
   });
-  $("#pop").addEventListener("click", e => { const j = e.target.closest(".jump"); if (j) { hidePop(); openFile(j.dataset.p, j.dataset.id); } });
+  $("#pop").addEventListener("click", e => {
+    const a = e.target.closest(".askc"); if (a) { askClaude(a); return; }
+    const j = e.target.closest(".jump"); if (j) { hidePop(); openFile(j.dataset.p, j.dataset.id); }
+  });
   document.addEventListener("click", e => { if (!e.target.closest("#pop") && !e.target.closest(".tok")) hidePop(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") { hidePop(); $("#settings").hidden = true; $("#aboutBox").hidden = true; } });
   $("#settingsBtn").addEventListener("click", openSettings);
