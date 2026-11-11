@@ -11,7 +11,8 @@ Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言�
 ## できること
 
 - GitHub の URL（private リポジトリも可）、ZIP、フォルダから Lean 4 のリポジトリを開く
-- 宣言（`def`、`theorem`、`structure` など）ごとに、Lean のコードと訳を並べて表示する。訳す言語は日本語、英語、中国語などから選べて、自由入力もできる
+- 宣言（`def`、`theorem`、`structure` など）ごとに、Lean のコードと訳を並べて表示する。言語は日本語、英語、中国語（簡体・繁体）、韓国語、フランス語、ドイツ語、スペイン語、ポルトガル語、ロシア語から選べて、自由入力もできる
+- 言語の選択は 1 つで、訳・画面の文言・用語解説・「Claude に聞く」の説明がすべてその言語になる。画面の文言は上の 10 言語を内蔵（それ以外は英語）。用語解説は日本語と英語を内蔵し、ほかの言語は初めて選んだときに Claude で訳してブラウザに保存する（押した語を先に訳し、残りはバックグラウンドで進めて進み具合を表示）。設定で画面の言語だけを固定することもできる
 - 訳すとき、import 先で定義されていて対象ファイルが参照しているものを、文脈として一緒に渡す
 - 識別子をタップすると定義の要約を表示し、定義元へ移動できる。`∀`、`omega`、`rcases` などの記号やタクティクには短い解説が出る
 - 長い証明は最初たたんで表示する
@@ -115,6 +116,7 @@ dist/       claude.ai 版（ビルド結果。1 ファイル）
 **Web version: <https://side-by-side-lean-natural.pages.dev/>**
 
 - Open a repository from a GitHub URL (private repositories work with a token), a ZIP or a folder.
+- One language choice drives the translations, the interface, the glossary and "Ask Claude". Interface strings are built in for ten languages (English otherwise); the glossary is built in for Japanese and English and is translated by Claude on first use for other languages, with the clicked word first and a progress chip for the rest.
 - Translations are made by Claude, either with your Anthropic API key (web version) or with the viewer's own Claude account (claude.ai version, `dist/claude-artifact.html`). Definitions referenced from imported files are sent as context.
 - Tap identifiers to see and jump to their definitions; tap Lean symbols and tactics for a short explanation.
 - Share links with `?repo=owner/repo&path=…&decl=…&lang=…`.
