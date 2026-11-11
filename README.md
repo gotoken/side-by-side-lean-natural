@@ -25,7 +25,7 @@ Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言�
 <https://side-by-side-lean-natural.pages.dev/> を開きます。
 
 1. GitHub の URL を入れて「開く」を押す
-2. 「設定」で Anthropic API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる
+2. 「設定」で Anthropic API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる。設定にある「GitHub でトークンを作る」から開くと、読み取り専用（Contents: read）・期限 30 日の設定が記入済みの作成画面になるので、読みたいリポジトリを選んで作るだけです
 3. 「このファイルを訳す」、または各ブロックの「訳す」を押す
 
 URL を入れずに開くと、デモ（[python-formalization](https://github.com/Broyojo/python-formalization) の `range` の長さを扱う部分。日本語訳つき）が表示されます。

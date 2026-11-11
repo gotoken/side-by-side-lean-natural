@@ -179,7 +179,8 @@ math { font-size: 1.06em; }
 .pop p { margin: 4px 0; }
 .modal { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / .35); display: grid; place-items: center; padding: 16px; }
 .modal .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: min(560px, 100%); max-height: calc(100% - 32px); overflow: auto; padding: 18px 20px; display: grid; gap: 12px; }
-.modal h2 { margin: 0; font-size: 17px; } .modal h3 { margin: 6px 0 0; font-size: 13.5px; }
+.modal h2 { margin: 0; font-size: 17px; }
+.modal .note a { color: var(--accent); font-weight: 500; } .modal h3 { margin: 6px 0 0; font-size: 13.5px; }
 .row { display: grid; gap: 4px; } .row.wide { gap: 12px; } .row label { font-size: 13px; color: var(--muted); }
 .chk { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
 .btns { display: flex; gap: 8px; flex-wrap: wrap; } .btns.end { justify-content: flex-end; }
@@ -257,7 +258,8 @@ math { font-size: 1.06em; }
     <div id="sApiRow" class="row wide">
       <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></div>
       <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"><option value="claude-sonnet-5-5"></option><option value="claude-opus-5-5"></option><option value="claude-haiku-5-5"></option></datalist></div>
-      <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>
+      <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
+        <p class="note"><a id="patLink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" data-i="patLink"></a><br><span data-i="patSteps"></span></p></div>
       <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
     </div>
     <p id="sNote" class="note"></p>

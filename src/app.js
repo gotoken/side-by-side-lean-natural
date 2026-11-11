@@ -44,6 +44,10 @@ const UI = {
     bundled: n => `リポジトリに同梱された訳を ${n} 件読み込みました。`,
     sExportHint: "いま開いているリポジトリの訳だけを書き出します。そのリポジトリの .lean-taiyaku/ja.json（言語ごとに 1 ファイル）として置くと、開いた人はキーなしで訳を読めます。",
     copyLink: "リンク", linkCopied: "リンクをコピーしました", lic: "ライセンスと帰属表示",
+    patLink: "GitHub でトークンを作る（読み取り専用の設定を記入済み）",
+    patSteps: "開いた画面で Repository access を「Only select repositories」にして読みたいリポジトリを選び、Generate token を押します。表示された github_pat_… をここに貼ってください。期限は 30 日です。",
+    ghPrivateHint: "非公開リポジトリを読むには、読み取り専用の GitHub トークンが要ります。",
+    patLinkShort: "トークンを作る（記入済み）", openSettings: "設定を開く", orZip: "または ZIP で開く",
   },
   en: {
     open: "Open", zip: "Open ZIP", folder: "Folder", settings: "Settings", files: "Files", filter: "Filter files",
@@ -82,6 +86,10 @@ const UI = {
     bundled: n => `Loaded ${n} translations bundled with the repository.`,
     sExportHint: "Exports translations for the repository that is open now. Commit it to that repository as .lean-taiyaku/<lang>.json and anyone who opens it sees the translations without a key.",
     copyLink: "Link", linkCopied: "Link copied", lic: "Licenses and attribution",
+    patLink: "Create a token on GitHub (read-only, pre-filled)",
+    patSteps: "On the page that opens, set Repository access to \"Only select repositories\", pick the repositories to read, and press Generate token. Paste the github_pat_… it shows here. It expires in 30 days.",
+    ghPrivateHint: "Reading a private repository needs a read-only GitHub token.",
+    patLinkShort: "Create a token (pre-filled)", openSettings: "Open settings", orZip: "or open a ZIP",
   }
 };
 const LANGS = ["日本語", "English", "简体中文", "繁體中文", "한국어", "Français", "Deutsch", "Español", "Português", "Русский"];
@@ -175,8 +183,8 @@ class GitHubSource {
     let r;
     try { r = await fetch("https://api.github.com" + path, { headers: this.hdr(accept) }); }
     catch (e) { const er = new Error(S.inArtifact ? t("ghInArtifact") : t("ghNet")); er.net = true; throw er; }
-    if (r.status === 404) throw new Error(t("gh404"));
-    if (r.status === 401) throw new Error(t("gh401"));
+    if (r.status === 404) throw Object.assign(new Error(t("gh404")), { status: 404 });
+    if (r.status === 401) throw Object.assign(new Error(t("gh401")), { status: 401 });
     if (r.status === 403 || r.status === 429) { if (r.headers.get("x-ratelimit-remaining") === "0") throw new Error(t("ghRate")); throw new Error("GitHub " + r.status + ": " + (await r.text()).slice(0, 200)); }
     if (!r.ok) throw new Error("GitHub " + r.status);
     return r;
@@ -383,7 +391,7 @@ async function loadSource(src) {
   S.job && S.job.abort();
   try {
     const paths = await src.init();
-    S.source = src; S.paths = paths;
+    S.source = src; S.paths = paths; S.lastFailed = null; $("#hint").hidden = true;
     if (!S.inArtifact && src.kind !== "github" && location.search) { try { history.replaceState(null, "", location.pathname); } catch (e) { } } S.texts.clear(); S.blocks.clear(); S.idxFiles.clear(); S.idx = new Map(); S.hist = []; S.cur = null;
     $("#repoLabel").textContent = src.label;
     $("#repoNote").textContent = src.note || (src.truncated ? t("treeTrunc") : "");
@@ -405,7 +413,7 @@ async function loadSource(src) {
     if (first) await openFile(first, fid, false);
   } catch (e) {
     setStatus(e.message || String(e), "err");
-    if (src.kind === "github") showZipHint(src.p);
+    if (src.kind === "github") { S.lastFailed = (e.status === 404 || e.status === 401) ? src : null; showGhHint(src.p, e.status); }
   }
 }
 async function loadBundles(src, paths) {
@@ -441,11 +449,28 @@ async function copyText(txt) {
     try { const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e2) { return false; }
   }
 }
-function showZipHint(p) {
+const SITE = "https://side-by-side-lean-natural.pages.dev";
+function patURL(owner) {
+  const origin = /^https?:/.test(location.protocol) ? location.origin : SITE;
+  const q = new URLSearchParams({ name: "side-by-side-lean-natural (read)", description: `Read-only token for Lean 対訳ブラウザ (${origin}). Contents: read only.`, expires_in: "30", contents: "read" });
+  if (owner) q.set("target_name", owner);
+  return "https://github.com/settings/personal-access-tokens/new?" + q.toString();
+}
+function currentOwner() {
+  const p = CORE.parseGitHubURL($("#url").value) || (S.source && S.source.p) || null;
+  return p ? p.owner : "";
+}
+function showGhHint(p, status) {
   const el = $("#hint");
   if (!p) { el.hidden = true; return; }
-  const url = `https://github.com/${encodeURIComponent(p.owner)}/${encodeURIComponent(p.repo)}/archive/HEAD.zip`;
-  el.innerHTML = `${esc(S.inArtifact ? t("ghInArtifact") : "")} <a href="${url}" target="_blank" rel="noopener">${t("zipLink")}</a>`;
+  const zip = `https://github.com/${encodeURIComponent(p.owner)}/${encodeURIComponent(p.repo)}/archive/HEAD.zip`;
+  if (S.inArtifact) {
+    el.innerHTML = `${esc(t("ghInArtifact"))} <a href="${zip}" target="_blank" rel="noopener">${t("zipLink")}</a>`;
+  } else if (status === 404 || status === 401) {
+    el.innerHTML = `${esc(t("ghPrivateHint"))} <a href="${esc(patURL(p.owner))}" target="_blank" rel="noopener">${t("patLinkShort")}</a> → <button type="button" class="linkbtn" id="hintSettings">${t("openSettings")}</button> · <a href="${zip}" target="_blank" rel="noopener">${t("orZip")}</a>`;
+  } else {
+    el.innerHTML = `<a href="${zip}" target="_blank" rel="noopener">${t("zipLink")}</a>`;
+  }
   el.hidden = false;
 }
 
@@ -667,12 +692,15 @@ function openSettings() {
   $("#sClaudeRow").hidden = !S.sample;
   $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone");
   $("#apiKey").value = S.apiKey; $("#model").value = S.model; $("#ghToken").value = S.ghToken;
+  $("#patLink").href = patURL(currentOwner());
   $("#remember").checked = S.remember; $("#uiLang").value = S.ui;
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
 function saveSettings() {
+  const oldGh = S.ghToken;
   S.apiKey = $("#apiKey").value.trim(); S.model = $("#model").value.trim() || "claude-sonnet-5-5"; S.ghToken = $("#ghToken").value.trim();
+  if (S.ghToken && S.ghToken !== oldGh && S.lastFailed) { const f = S.lastFailed; S.lastFailed = null; $("#hint").hidden = true; setTimeout(() => { const gs = new GitHubSource(f.p, S.ghToken); gs.openPath = f.openPath; gs.focus = f.focus; loadSource(gs); }, 0); }
   S.remember = $("#remember").checked; S.tier = $("#tier").value || S.tier;
   LS.set("model", S.model); LS.set("tier", S.tier); LS.set("remember", S.remember);
   if (S.remember) { LS.set("apiKey", S.apiKey); LS.set("ghToken", S.ghToken); } else { LS.del("apiKey"); LS.del("ghToken"); }
@@ -728,6 +756,7 @@ function bind() {
   document.addEventListener("click", e => { if (!e.target.closest("#pop") && !e.target.closest(".tok")) hidePop(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") { hidePop(); $("#settings").hidden = true; $("#aboutBox").hidden = true; } });
   $("#settingsBtn").addEventListener("click", openSettings);
+  $("#hint").addEventListener("click", e => { if (e.target.closest("#hintSettings")) openSettings(); });
   $("#sClose").addEventListener("click", () => { saveSettings(); $("#settings").hidden = true; });
   $("#settings").addEventListener("click", e => { if (e.target.id === "settings") { saveSettings(); $("#settings").hidden = true; } });
   $("#sCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText(exportJSON()); toast(t("copied")); } catch (e) { $("#sImportTxt").value = exportJSON(); $("#sImportTxt").select(); } });
