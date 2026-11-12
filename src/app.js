@@ -199,13 +199,28 @@ class GitHubSource {
 }
 
 // ---------- translator ----------
+const sleep = (ms, signal) => new Promise((res, rej) => {
+  if (signal && signal.aborted) return rej({ code: "cancelled" });
+  const id = setTimeout(res, ms);
+  if (signal) signal.addEventListener("abort", () => { clearTimeout(id); rej({ code: "cancelled" }); }, { once: true });
+});
+// Busy or temporarily failing APIs (429, 5xx, Anthropic's 529) are retried a few times, waiting
+// as long as the server asks (Retry-After) or 2, 5 and 10 seconds.
+const RETRY_STATUS = new Set([429, 500, 502, 503, 504, 529]), RETRY_WAIT = [2000, 5000, 10000];
 async function postJSON(url, headers, body, signal) {
-  let r;
-  try { r = await fetch(url, { method: "POST", signal, headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) }); }
-  catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}`);
-  return data;
+  for (let attempt = 0; ; attempt++) {
+    let r;
+    try { r = await fetch(url, { method: "POST", signal, headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) }); }
+    catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) return data;
+    if (RETRY_STATUS.has(r.status) && attempt < RETRY_WAIT.length) {
+      const ra = Number(r.headers.get("retry-after"));
+      await sleep(ra > 0 && ra <= 60 ? ra * 1000 : RETRY_WAIT[attempt], signal);
+      continue;
+    }
+    throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}` + (attempt ? ` (${attempt + 1}×)` : ""));
+  }
 }
 // One request per provider: prompt in, { text, truncated, model } out. OpenAI and Gemini count
 // hidden reasoning against the output limit, so they get twice the room.
