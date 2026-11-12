@@ -67,6 +67,9 @@ function uiCode() {
 function trCode() { const L = LANGS.find(l => l.name === S.lang); return L ? L.ui : ""; }
 // A lang attribute for content in language c, only where it differs from the interface (fonts follow it).
 const langAttr = c => c === uiCode() ? "" : ` lang="${esc(c)}"`;
+// Language menus: each option is marked with its own language, and the closed control takes the
+// language of the selected option, so every language name is drawn in that language's fonts.
+const syncSelLang = sel => { const o = sel.selectedOptions[0]; sel.lang = o ? o.lang : ""; };
 const scroller = () => getComputedStyle($("#main")).overflowY === "auto" ? $("#main") : (document.scrollingElement || document.documentElement);
 const t = (k, ...a) => { const d = UI[uiCode()] || UI.en; let v = d[k]; if (v === undefined) v = UI.en[k]; return typeof v === "function" ? v(...a) : (v ?? k); };
 
@@ -277,7 +280,8 @@ function applyUI() {
   document.documentElement.lang = uiCode();
   $$("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
   $$("[data-ph]").forEach(el => el.placeholder = t(el.dataset.ph));
-  const ls = $("#lang"); ls.innerHTML = LANGS.map(l => `<option ${l.name === S.lang ? "selected" : ""}>${l.name}</option>`).join("") + (LANGS.some(l => l.name === S.lang) ? "" : `<option selected>${esc(S.lang)}</option>`) + `<option value="__other">${t("other")}</option>`;
+  const ls = $("#lang"); ls.innerHTML = LANGS.map(l => `<option lang="${l.ui}"${l.name === S.lang ? " selected" : ""}>${l.name}</option>`).join("") + (LANGS.some(l => l.name === S.lang) ? "" : `<option lang="" selected>${esc(S.lang)}</option>`) + `<option value="__other" lang="${uiCode()}">${t("other")}</option>`;
+  syncSelLang(ls);
   if (S.paths.length) $("#repoCount").textContent = t("repoLoaded", S.paths.filter(p => p.endsWith(".lean")).length);
   if (S.source && S.source.kind === "demo") $("#repoNote").textContent = t("demoNote");
   showGlossProg();
@@ -775,8 +779,9 @@ function openSettings() {
   $("#apiKey").value = S.apiKey; $("#model").value = S.model; $("#ghToken").value = S.ghToken;
   $("#patLink").href = patURL(currentOwner());
   $("#remember").checked = S.remember;
-  $("#uiLang").innerHTML = `<option value="auto">${esc(t("uiAuto"))}</option>` + LANGS.map(L => `<option value="${L.ui}">${L.name}</option>`).join("");
+  $("#uiLang").innerHTML = `<option value="auto" lang="${uiCode()}">${esc(t("uiAuto"))}</option>` + LANGS.map(L => `<option value="${L.ui}" lang="${L.ui}">${L.name}</option>`).join("");
   $("#uiLang").value = UI[S.uiMode] ? S.uiMode : "auto";
+  syncSelLang($("#uiLang"));
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
@@ -814,10 +819,11 @@ function bind() {
   document.addEventListener("dragover", e => { e.preventDefault(); });
   document.addEventListener("drop", e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && /\.zip$/i.test(f.name)) loadSource(new ZipSource(f)); });
   $("#lang").addEventListener("change", e => {
-    if (e.target.value === "__other") { $("#otherLang").hidden = false; $("#otherLang").focus(); return; }
+    if (e.target.value === "__other") { syncSelLang(e.target); $("#otherLang").hidden = false; $("#otherLang").focus(); return; }
     S.lang = e.target.value; LS.set("lang", S.lang); $("#otherLang").hidden = true; applyUI(); refresh(); startGlossJob();
   });
   $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); startGlossJob(); } e.target.hidden = true; });
+  $("#uiLang").addEventListener("change", e => syncSelLang(e.target));
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
