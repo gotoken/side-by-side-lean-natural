@@ -952,6 +952,7 @@ function openSettings() {
   $("#sApiRow").hidden = S.inArtifact;
   $("#sDownload").hidden = S.inArtifact;
   $("#sClaudeRow").hidden = !S.sample;
+  for (const b of document.querySelectorAll(".reveal")) if (b.getAttribute("aria-pressed") === "true") b.click();
   DRAFT = { provider: S.provider, keys: { ...S.keys }, models: { ...S.models } };
   $("#provider").innerHTML = Object.keys(PROVIDERS).map(id => `<option value="${id}">${esc(providerName(id))}</option>`).join("");
   showProvider();
@@ -1087,6 +1088,15 @@ function bind() {
   $("#modelRefresh").addEventListener("click", () => fillModels(true));
   $("#chromeDl").addEventListener("click", chromeDownload);
   $("#orConnect").addEventListener("click", orConnect);
+  // Masked key fields: see .secret in the stylesheet.
+  const cssMask = window.CSS && CSS.supports && CSS.supports("-webkit-text-security", "disc");
+  for (const btn of document.querySelectorAll(".reveal")) {
+    const inp = btn.previousElementSibling;
+    if (!cssMask) inp.type = "password";
+    const show = on => { btn.setAttribute("aria-pressed", on); inp.classList.toggle("shown", on); if (!cssMask) inp.type = on ? "text" : "password"; btn.title = btn.ariaLabel = t(on ? "hideKey" : "showKey"); };
+    show(false);
+    btn.addEventListener("click", () => show(btn.getAttribute("aria-pressed") !== "true"));
+  }
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
