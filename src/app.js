@@ -63,6 +63,10 @@ function uiCode() {
   const L = LANGS.find(l => l.name === S.lang);
   return L ? L.ui : "en";
 }
+// Language code of translations, the glossary and "Ask Claude" ("" = unknown, for a typed-in language).
+function trCode() { const L = LANGS.find(l => l.name === S.lang); return L ? L.ui : ""; }
+// A lang attribute for content in language c, only where it differs from the interface (fonts follow it).
+const langAttr = c => c === uiCode() ? "" : ` lang="${esc(c)}"`;
 const scroller = () => getComputedStyle($("#main")).overflowY === "auto" ? $("#main") : (document.scrollingElement || document.documentElement);
 const t = (k, ...a) => { const d = UI[uiCode()] || UI.en; let v = d[k]; if (v === undefined) v = UI.en[k]; return typeof v === "function" ? v(...a) : (v ?? k); };
 
@@ -487,12 +491,13 @@ function trHTML(p, b) {
   const v = getTr(p, b);
   if (!v) return `<div class="tr empty"><p class="muted">${t("notYet")}</p><button class="trOne" data-id="${b.id}">${t("translate")}</button></div>`;
   const tr = v.tr || {};
-  const sec = (k, cls) => tr[k] && String(tr[k]).trim() ? `<div class="sec ${cls}"><div class="lbl">${t(k)}</div>${renderRich(tr[k])}</div>` : "";
-  return `<div class="tr">
+  const tl = langAttr(trCode()), ul = tl ? ` lang="${uiCode()}"` : "";
+  const sec = (k, cls) => tr[k] && String(tr[k]).trim() ? `<div class="sec ${cls}"><div class="lbl"${ul}>${t(k)}</div>${renderRich(tr[k])}</div>` : "";
+  return `<div class="tr"${tl}>
     ${tr.title ? `<h3 class="tt">${renderRich(tr.title).replace(/^<p>|<\/p>$/g, "")}</h3>` : ""}
     ${tr.math ? `<div class="mathbody">${renderRich(tr.math)}</div>` : ""}
     ${sec("proof", "pf")}${sec("lean", "lnote")}${sec("src", "sr")}
-    <div class="foot"><span>${esc(v.model || "")}</span><button class="trOne ghost" data-id="${b.id}" data-re="1">${t("retranslate")}</button></div>
+    <div class="foot"${ul}><span>${esc(v.model || "")}</span><button class="trOne ghost" data-id="${b.id}" data-re="1">${t("retranslate")}</button></div>
   </div>`;
 }
 function blockHTML(p, b) {
@@ -599,7 +604,7 @@ function tokenPop(el) {
       const v = getTr(h.path, h.block);
       return `<div class="pdef"><div class="pk">${t("defIn")}</div><code>${esc(h.block.full || h.block.name)}</code>
         <div class="muted small">${esc(h.path)}:${h.block.start}</div>
-        ${v && v.tr.title ? `<div class="ptitle">${renderRich(v.tr.title)}</div>` : `<pre class="mini">${esc(CORE.statementPart(h.block.text).split("\n").filter(l => !/^\s*(\/--|--|@\[)/.test(l)).slice(0, 6).join("\n"))}</pre>`}
+        ${v && v.tr.title ? `<div class="ptitle"${langAttr(trCode())}>${renderRich(v.tr.title)}</div>` : `<pre class="mini">${esc(CORE.statementPart(h.block.text).split("\n").filter(l => !/^\s*(\/--|--|@\[)/.test(l)).slice(0, 6).join("\n"))}</pre>`}
         <button class="jump" data-p="${esc(h.path)}" data-id="${h.block.id}">${t("jumpDef")}</button></div>`;
     }).join("");
   }
@@ -635,8 +640,9 @@ function glossText(k) {
 function glossPending(k) { return !glossText(k).native && !!(S.sample || S.apiKey) && !GLFAIL.has(S.lang + "|" + k); }
 function glossHTML(k) {
   const g = glossText(k);
-  return `<div class="pg" data-g="${esc(k)}"><div class="pk">${t("glossary")}${g.native ? "" : ` · ${esc(t("glossInEnglish"))}`}</div><code>${esc(k)}</code> ${renderRich(g.text)}`
-    + (glossPending(k) ? `<div class="askstat"><span class="spin" aria-hidden="true"></span><span>${t("glossWorking")}</span></div>` : "") + `</div>`;
+  const gl = langAttr(g.native ? trCode() : "en"), ul = gl ? ` lang="${uiCode()}"` : "";
+  return `<div class="pg" data-g="${esc(k)}"${gl}><div class="pk"${ul}>${t("glossary")}${g.native ? "" : ` · ${esc(t("glossInEnglish"))}`}</div><code>${esc(k)}</code> ${renderRich(g.text)}`
+    + (glossPending(k) ? `<div class="askstat"${ul}><span class="spin" aria-hidden="true"></span><span>${t("glossWorking")}</span></div>` : "") + `</div>`;
 }
 function glossMissing(lang) { return GLOSS_KEYS.filter(k => !GL.has(lang + "|" + k)); }
 function showGlossProg() {
@@ -708,12 +714,12 @@ function askHTML(key) {
   if (!a) return `<button type="button" class="jump askc">${t("askClaude")}</button>`;
   if (a.state === "pending") {
     return `<div class="askstat"><span class="spin" aria-hidden="true"></span><span>${a.text ? t("askWriting") : t("askWaiting")}</span><span class="el">${t("secs", secs(a.t0))}</span><button type="button" class="linkbtn askstop">${t("stop")}</button></div>`
-      + (a.text ? `<div class="asktext">${esc(a.text)}</div>` : "");
+      + (a.text ? `<div class="asktext"${langAttr(trCode())}>${esc(a.text)}</div>` : "");
   }
   if (a.state === "error") {
     return `<div class="askstat err">${esc(a.err)}</div><button type="button" class="jump askc">${t("askRetry")}</button>`;
   }
-  return `<div class="asktext">${renderRich(a.text)}</div><div class="askfoot"><span class="dot" aria-hidden="true"></span>${t("askDone", secs(a.t0, a.t1))}${a.model ? " · " + esc(a.model) : ""}<button type="button" class="linkbtn askc">${t("askAgain")}</button></div>`;
+  return `<div class="asktext"${langAttr(trCode())}>${renderRich(a.text)}</div><div class="askfoot"><span class="dot" aria-hidden="true"></span>${t("askDone", secs(a.t0, a.t1))}${a.model ? " · " + esc(a.model) : ""}<button type="button" class="linkbtn askc">${t("askAgain")}</button></div>`;
 }
 function refreshAsk(key) {
   const out = $(`#pop:not([hidden]) .askout[data-k="${CSS.escape(key)}"]`);
