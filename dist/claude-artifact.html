@@ -293,9 +293,11 @@ math { font-size: 1.06em; }
     <div id="sClaudeRow" class="row"><label for="tier"><span data-i="sEngine"></span>: <span data-i="sClaude"></span></label><select id="tier"></select></div>
     <div id="sApiRow" class="row wide">
       <div class="row"><label for="provider" data-i="sProvider"></label><select id="provider"></select></div>
-      <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
+      <div id="keyRow" class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
         <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p></div>
-      <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist></div>
+      <div id="modelRow" class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist>
+        <p class="note"><span id="modelInfo"></span> <button id="modelRefresh" type="button" class="linkbtn" data-i="modelsRefresh"></button></p></div>
+      <div id="chromeRow" class="row" hidden><p class="note"><span id="chromeState"></span> <button id="chromeDl" type="button" class="btn ghost" data-i="chromeDownload" hidden></button></p></div>
       <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
         <p class="note"><a id="patLink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" data-i="patLink"></a><br><span data-i="patSteps"></span></p></div>
       <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
@@ -1086,6 +1088,9 @@ const UI = {
     sEngine: "翻訳エンジン", sClaude: "Claude（claude.ai のあなたのアカウント）",
     tierDefault: "標準", tierComplex: "高精度（時間がかかる）", tierQuick: "高速",
     sApi: "API キー", sProvider: "翻訳に使う API", keyLink: h => `${h} でキーを作る`, sModel: "モデル名", sGh: "GitHub トークン（private 用。fine-grained PAT で Contents: Read-only）",
+    chromeName: "Chrome 内蔵（Gemini Nano）", chromeNote: "この端末の中で動くモデルです。キーは要らず、コードも外に送りません。小さなモデルなので、訳の質は API より落ち、長い宣言は扱えないことがあります。",
+    chromeState: s => ({ missing: "このブラウザでは使えません（Chrome の Prompt API がありません）", unavailable: "この端末では使えません", downloadable: "モデルのダウンロードが必要です", downloading: "モデルをダウンロード中", available: "使えます" })[s] || s, chromeDownload: "モデルをダウンロード", chromeTooLong: (a, b) => `入力が長すぎます（${a} / ${b} トークン）`,
+    modelsFetched: (n) => `API から ${n} 個のモデルを取得しました`, modelsFailed: (e) => `モデル一覧を取得できませんでした（${e}）。既定の候補を表示しています`, modelsRefresh: "一覧を更新",
     sRemember: "このブラウザに保存する", sUi: "表示言語", uiAuto: "言語の選択に合わせる",
     sExport: "訳をエクスポート", sImport: "訳をインポート",
     sCopy: "JSON をコピー", sDownload: "ダウンロード", sClose: "閉じる", copied: "コピーしました",
@@ -1136,6 +1141,9 @@ const UI = {
     sEngine: "Translator", sClaude: "Claude (your claude.ai account)",
     tierDefault: "Default", tierComplex: "Most capable (slower)", tierQuick: "Fast",
     sApi: "API key", sProvider: "Translation API", keyLink: h => `Create a key at ${h}`, sModel: "Model", sGh: "GitHub token (for private repos; fine-grained PAT with Contents: Read-only)",
+    chromeName: "Chrome built-in (Gemini Nano)", chromeNote: "Runs on this device: no key, and the code never leaves it. It is a small model, so translations are weaker than the APIs' and long declarations may not fit.",
+    chromeState: s => ({ missing: "Not available in this browser (no Chrome Prompt API)", unavailable: "Not available on this device", downloadable: "The model needs to be downloaded", downloading: "Downloading the model", available: "Ready" })[s] || s, chromeDownload: "Download the model", chromeTooLong: (a, b) => `Input too long (${a} / ${b} tokens)`,
+    modelsFetched: (n) => `${n} models from the API`, modelsFailed: (e) => `Could not get the model list (${e}); showing the default suggestions`, modelsRefresh: "Refresh list",
     sRemember: "Remember in this browser", sUi: "Interface language", uiAuto: "Same as the selected language",
     sExport: "Export translations", sImport: "Import translations",
     sCopy: "Copy JSON", sDownload: "Download", sClose: "Close", copied: "Copied",
@@ -1186,6 +1194,9 @@ const UI = {
     sEngine: "翻译引擎", sClaude: "Claude（你在 claude.ai 的账户）",
     tierDefault: "标准", tierComplex: "高精度（较慢）", tierQuick: "快速",
     sApi: "API 密钥", sProvider: "翻译所用的 API", keyLink: h => `在 ${h} 创建密钥`, sModel: "模型", sGh: "GitHub 令牌（用于私有仓库；fine-grained PAT，Contents: Read-only）",
+    chromeName: "Chrome 内置（Gemini Nano）", chromeNote: "在本设备上运行：不需要密钥，代码也不会发送出去。由于模型较小，译文质量不如 API，较长的声明可能无法处理。",
+    chromeState: s => ({ missing: "此浏览器不可用（没有 Chrome Prompt API）", unavailable: "此设备不可用", downloadable: "需要下载模型", downloading: "正在下载模型", available: "可以使用" })[s] || s, chromeDownload: "下载模型", chromeTooLong: (a, b) => `输入过长（${a} / ${b} 词元）`,
+    modelsFetched: (n) => `已从 API 获取 ${n} 个模型`, modelsFailed: (e) => `无法获取模型列表（${e}），显示默认候选`, modelsRefresh: "刷新列表",
     sRemember: "保存在此浏览器中", sUi: "界面语言", uiAuto: "与所选语言一致",
     sExport: "导出译文", sImport: "导入译文",
     sCopy: "复制 JSON", sDownload: "下载", sClose: "关闭", copied: "已复制",
@@ -1236,6 +1247,9 @@ const UI = {
     sEngine: "翻譯引擎", sClaude: "Claude（你在 claude.ai 的帳號）",
     tierDefault: "標準", tierComplex: "高精度（較慢）", tierQuick: "快速",
     sApi: "API 金鑰", sProvider: "翻譯所用的 API", keyLink: h => `在 ${h} 建立金鑰`, sModel: "模型", sGh: "GitHub 權杖（用於私有儲存庫；fine-grained PAT，Contents: Read-only）",
+    chromeName: "Chrome 內建（Gemini Nano）", chromeNote: "在本裝置上執行：不需要金鑰，程式碼也不會傳送出去。由於模型較小，譯文品質不如 API，較長的宣告可能無法處理。",
+    chromeState: s => ({ missing: "此瀏覽器無法使用（沒有 Chrome Prompt API）", unavailable: "此裝置無法使用", downloadable: "需要下載模型", downloading: "正在下載模型", available: "可以使用" })[s] || s, chromeDownload: "下載模型", chromeTooLong: (a, b) => `輸入過長（${a} / ${b} 詞元）`,
+    modelsFetched: (n) => `已從 API 取得 ${n} 個模型`, modelsFailed: (e) => `無法取得模型清單（${e}），顯示預設候選`, modelsRefresh: "重新整理清單",
     sRemember: "儲存在此瀏覽器", sUi: "介面語言", uiAuto: "與所選語言一致",
     sExport: "匯出譯文", sImport: "匯入譯文",
     sCopy: "複製 JSON", sDownload: "下載", sClose: "關閉", copied: "已複製",
@@ -1286,6 +1300,9 @@ const UI = {
     sEngine: "번역 엔진", sClaude: "Claude (claude.ai의 내 계정)",
     tierDefault: "보통", tierComplex: "고정밀 (느림)", tierQuick: "빠름",
     sApi: "API 키", sProvider: "번역에 쓸 API", keyLink: h => `${h}에서 키 만들기`, sModel: "모델", sGh: "GitHub 토큰 (비공개 저장소용, fine-grained PAT, Contents: Read-only)",
+    chromeName: "Chrome 내장 (Gemini Nano)", chromeNote: "이 기기 안에서 실행됩니다. 키가 필요 없고 코드도 밖으로 보내지 않습니다. 작은 모델이라 번역 품질은 API보다 낮고, 긴 선언은 처리하지 못할 수 있습니다.",
+    chromeState: s => ({ missing: "이 브라우저에서는 쓸 수 없습니다 (Chrome Prompt API 없음)", unavailable: "이 기기에서는 쓸 수 없습니다", downloadable: "모델을 내려받아야 합니다", downloading: "모델을 내려받는 중", available: "사용할 수 있습니다" })[s] || s, chromeDownload: "모델 내려받기", chromeTooLong: (a, b) => `입력이 너무 깁니다 (${a} / ${b} 토큰)`,
+    modelsFetched: (n) => `API에서 모델 ${n}개를 가져왔습니다`, modelsFailed: (e) => `모델 목록을 가져오지 못했습니다 (${e}). 기본 후보를 표시합니다`, modelsRefresh: "목록 새로 고침",
     sRemember: "이 브라우저에 저장", sUi: "표시 언어", uiAuto: "선택한 언어에 맞춤",
     sExport: "번역 내보내기", sImport: "번역 가져오기",
     sCopy: "JSON 복사", sDownload: "다운로드", sClose: "닫기", copied: "복사했습니다",
@@ -1336,6 +1353,9 @@ const UI = {
     sEngine: "Traducteur", sClaude: "Claude (votre compte claude.ai)",
     tierDefault: "Standard", tierComplex: "Le plus capable (plus lent)", tierQuick: "Rapide",
     sApi: "Clé API", sProvider: "API de traduction", keyLink: h => `Créer une clé chez ${h}`, sModel: "Modèle", sGh: "Jeton GitHub (dépôts privés ; PAT fine-grained, Contents: Read-only)",
+    chromeName: "Intégré à Chrome (Gemini Nano)", chromeNote: "S'exécute sur cet appareil : pas de clé, et le code ne le quitte pas. C'est un petit modèle : les traductions sont moins bonnes qu'avec les API et les longues déclarations peuvent ne pas tenir.",
+    chromeState: s => ({ missing: "Indisponible dans ce navigateur (pas de Prompt API de Chrome)", unavailable: "Indisponible sur cet appareil", downloadable: "Le modèle doit être téléchargé", downloading: "Téléchargement du modèle", available: "Prêt" })[s] || s, chromeDownload: "Télécharger le modèle", chromeTooLong: (a, b) => `Entrée trop longue (${a} / ${b} jetons)`,
+    modelsFetched: (n) => `${n} modèles obtenus de l'API`, modelsFailed: (e) => `Impossible d'obtenir la liste des modèles (${e}) ; suggestions par défaut affichées`, modelsRefresh: "Actualiser la liste",
     sRemember: "Mémoriser dans ce navigateur", sUi: "Langue de l'interface", uiAuto: "Comme la langue choisie",
     sExport: "Exporter les traductions", sImport: "Importer des traductions",
     sCopy: "Copier le JSON", sDownload: "Télécharger", sClose: "Fermer", copied: "Copié",
@@ -1386,6 +1406,9 @@ const UI = {
     sEngine: "Übersetzer", sClaude: "Claude (Ihr claude.ai-Konto)",
     tierDefault: "Standard", tierComplex: "Am leistungsfähigsten (langsamer)", tierQuick: "Schnell",
     sApi: "API-Schlüssel", sProvider: "API für die Übersetzung", keyLink: h => `Schlüssel bei ${h} erstellen`, sModel: "Modell", sGh: "GitHub-Token (für private Repos; fine-grained PAT, Contents: Read-only)",
+    chromeName: "In Chrome integriert (Gemini Nano)", chromeNote: "Läuft auf diesem Gerät: kein Schlüssel, und der Code verlässt es nicht. Es ist ein kleines Modell, daher sind die Übersetzungen schwächer als bei den APIs, und lange Deklarationen passen eventuell nicht.",
+    chromeState: s => ({ missing: "In diesem Browser nicht verfügbar (keine Prompt API von Chrome)", unavailable: "Auf diesem Gerät nicht verfügbar", downloadable: "Das Modell muss heruntergeladen werden", downloading: "Modell wird heruntergeladen", available: "Bereit" })[s] || s, chromeDownload: "Modell herunterladen", chromeTooLong: (a, b) => `Eingabe zu lang (${a} / ${b} Token)`,
+    modelsFetched: (n) => `${n} Modelle von der API`, modelsFailed: (e) => `Modellliste nicht abrufbar (${e}); Standardvorschläge werden angezeigt`, modelsRefresh: "Liste aktualisieren",
     sRemember: "In diesem Browser speichern", sUi: "Sprache der Oberfläche", uiAuto: "Wie die gewählte Sprache",
     sExport: "Übersetzungen exportieren", sImport: "Übersetzungen importieren",
     sCopy: "JSON kopieren", sDownload: "Herunterladen", sClose: "Schließen", copied: "Kopiert",
@@ -1436,6 +1459,9 @@ const UI = {
     sEngine: "Traductor", sClaude: "Claude (su cuenta de claude.ai)",
     tierDefault: "Estándar", tierComplex: "El más capaz (más lento)", tierQuick: "Rápido",
     sApi: "Clave de API", sProvider: "API de traducción", keyLink: h => `Crear una clave en ${h}`, sModel: "Modelo", sGh: "Token de GitHub (repositorios privados; PAT fine-grained, Contents: Read-only)",
+    chromeName: "Integrado en Chrome (Gemini Nano)", chromeNote: "Se ejecuta en este dispositivo: sin clave y el código no sale de él. Es un modelo pequeño, así que las traducciones son peores que con las API y las declaraciones largas pueden no caber.",
+    chromeState: s => ({ missing: "No disponible en este navegador (sin Prompt API de Chrome)", unavailable: "No disponible en este dispositivo", downloadable: "Hay que descargar el modelo", downloading: "Descargando el modelo", available: "Listo" })[s] || s, chromeDownload: "Descargar el modelo", chromeTooLong: (a, b) => `Entrada demasiado larga (${a} / ${b} tokens)`,
+    modelsFetched: (n) => `${n} modelos obtenidos de la API`, modelsFailed: (e) => `No se pudo obtener la lista de modelos (${e}); se muestran las sugerencias predeterminadas`, modelsRefresh: "Actualizar lista",
     sRemember: "Recordar en este navegador", sUi: "Idioma de la interfaz", uiAuto: "Igual que el idioma elegido",
     sExport: "Exportar traducciones", sImport: "Importar traducciones",
     sCopy: "Copiar JSON", sDownload: "Descargar", sClose: "Cerrar", copied: "Copiado",
@@ -1486,6 +1512,9 @@ const UI = {
     sEngine: "Tradutor", sClaude: "Claude (sua conta do claude.ai)",
     tierDefault: "Padrão", tierComplex: "Mais capaz (mais lento)", tierQuick: "Rápido",
     sApi: "Chave de API", sProvider: "API de tradução", keyLink: h => `Criar uma chave em ${h}`, sModel: "Modelo", sGh: "Token do GitHub (repositórios privados; PAT fine-grained, Contents: Read-only)",
+    chromeName: "Integrado ao Chrome (Gemini Nano)", chromeNote: "Roda neste dispositivo: sem chave, e o código não sai dele. É um modelo pequeno, então as traduções são piores que as das APIs e declarações longas podem não caber.",
+    chromeState: s => ({ missing: "Indisponível neste navegador (sem Prompt API do Chrome)", unavailable: "Indisponível neste dispositivo", downloadable: "É preciso baixar o modelo", downloading: "Baixando o modelo", available: "Pronto" })[s] || s, chromeDownload: "Baixar o modelo", chromeTooLong: (a, b) => `Entrada longa demais (${a} / ${b} tokens)`,
+    modelsFetched: (n) => `${n} modelos obtidos da API`, modelsFailed: (e) => `Não foi possível obter a lista de modelos (${e}); mostrando as sugestões padrão`, modelsRefresh: "Atualizar lista",
     sRemember: "Lembrar neste navegador", sUi: "Idioma da interface", uiAuto: "Igual ao idioma escolhido",
     sExport: "Exportar traduções", sImport: "Importar traduções",
     sCopy: "Copiar JSON", sDownload: "Baixar", sClose: "Fechar", copied: "Copiado",
@@ -1536,6 +1565,9 @@ const UI = {
     sEngine: "Переводчик", sClaude: "Claude (ваша учётная запись claude.ai)",
     tierDefault: "Стандартная", tierComplex: "Самая мощная (медленнее)", tierQuick: "Быстрая",
     sApi: "Ключ API", sProvider: "API для перевода", keyLink: h => `Создать ключ в ${h}`, sModel: "Модель", sGh: "Токен GitHub (для приватных репозиториев; fine-grained PAT, Contents: Read-only)",
+    chromeName: "Встроенная в Chrome (Gemini Nano)", chromeNote: "Работает на этом устройстве: ключ не нужен, код никуда не отправляется. Модель небольшая, поэтому переводы хуже, чем через API, а длинные объявления могут не поместиться.",
+    chromeState: s => ({ missing: "Недоступно в этом браузере (нет Prompt API Chrome)", unavailable: "Недоступно на этом устройстве", downloadable: "Нужно скачать модель", downloading: "Модель скачивается", available: "Готово" })[s] || s, chromeDownload: "Скачать модель", chromeTooLong: (a, b) => `Слишком длинный ввод (${a} / ${b} токенов)`,
+    modelsFetched: (n) => `Получено моделей из API: ${n}`, modelsFailed: (e) => `Не удалось получить список моделей (${e}); показаны варианты по умолчанию`, modelsRefresh: "Обновить список",
     sRemember: "Запомнить в этом браузере", sUi: "Язык интерфейса", uiAuto: "Как выбранный язык",
     sExport: "Экспорт переводов", sImport: "Импорт переводов",
     sCopy: "Копировать JSON", sDownload: "Скачать", sClose: "Закрыть", copied: "Скопировано",
@@ -1641,7 +1673,59 @@ const PROVIDERS = {
     models: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-6-astra"] },
   google: { name: "Google Gemini", host: "generativelanguage.googleapis.com", ph: "AIza…", keyURL: "https://aistudio.google.com/apikey",
     models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"] },
+  // Gemini Nano inside Chrome (Prompt API): no key, nothing leaves the device, small context.
+  chrome: { local: true, models: ["gemini-nano"] },
 };
+const providerName = id => PROVIDERS[id].name || t("chromeName");
+const hasLM = () => typeof self.LanguageModel === "function" || typeof self.LanguageModel === "object" && !!self.LanguageModel;
+// Is there something to translate with? (the viewer's Claude, a key, or Chrome's built-in model)
+const engineOK = () => !!(S.sample || (PROVIDERS[S.provider].local ? hasLM() : S.apiKey));
+
+// Model names: the built-in list above is only a fallback. With a key, each API is asked which
+// models it offers; the answer is kept for a day.
+const MODEL_SKIP = /(audio|realtime|transcri|tts|image|embed|moderation|search|live|robotics|aqa|omni|banana|computer-use|diariz|instruct|veo|lyria|imagen)/i;
+const LIST_MODELS = {
+  async anthropic(key) {
+    const r = await fetch("https://api.anthropic.com/v1/models?limit=100", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" } });
+    if (!r.ok) throw new Error("API " + r.status);
+    return ((await r.json()).data || []).map(m => m.id);
+  },
+  async openai(key) {
+    const r = await fetch("https://api.openai.com/v1/models", { headers: { authorization: "Bearer " + key } });
+    if (!r.ok) throw new Error("API " + r.status);
+    return ((await r.json()).data || []).sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => m.id).filter(id => /^(gpt-|o\d|chatgpt-)/.test(id) && !MODEL_SKIP.test(id));
+  },
+  async google(key) {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": key } });
+    if (!r.ok) throw new Error("API " + r.status);
+    return ((await r.json()).models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map(m => String(m.name).replace(/^models\//, "")).filter(id => /^gemini-/.test(id) && !MODEL_SKIP.test(id));
+  },
+};
+async function modelList(provider, key, force) {
+  const P = PROVIDERS[provider];
+  if (P.local || !key || !LIST_MODELS[provider]) return { ids: P.models, from: "builtin" };
+  const cache = LS.get("modelList", {}), c = cache[provider];
+  if (!force && c && c.key === hashKey(key) && Date.now() - c.at < 864e5) return { ids: c.ids, from: "api" };
+  try {
+    const ids = [...new Set(await LIST_MODELS[provider](key))];
+    if (!ids.length) throw new Error("empty");
+    cache[provider] = { at: Date.now(), key: hashKey(key), ids }; LS.set("modelList", cache);
+    return { ids, from: "api" };
+  } catch (e) { return { ids: P.models, from: "failed", err: e.message }; }
+}
+const hashKey = k => CORE.hashStr("k:" + k); // so a new key refreshes the list without storing the key twice
+
+// Chrome's built-in model. Languages it accepts for output; others are asked for anyway, unmarked.
+const LM_LANGS = ["en", "ja", "es", "de", "fr"];
+const lmOptions = () => {
+  const c = trCode();
+  return { expectedInputs: [{ type: "text", languages: ["en"] }], expectedOutputs: [{ type: "text", languages: LM_LANGS.includes(c) ? [c] : ["en"] }] };
+};
+async function lmAvailability() {
+  if (!hasLM()) return "missing";
+  try { return await LanguageModel.availability(lmOptions()); } catch (e) { return "unavailable"; }
+}
 // Keys and model names are kept per provider; "apiKey" and "model" are the settings from before
 // there was a choice and count as Anthropic's.
 const savedKeys = () => { const k = LS.get("keys", null) || {}; const old = LS.get("apiKey", ""); if (old && !k.anthropic) k.anthropic = old; return k; };
@@ -1802,6 +1886,24 @@ const REQUEST = {
     const text = (d.output || []).filter(o => o.type === "message").flatMap(o => o.content || []).filter(c => c.type === "output_text").map(c => c.text).join("");
     return { text, truncated: d.status === "incomplete", model: d.model || S.model };
   },
+  async chrome(prompt, signal, max, onText) {
+    if (!hasLM()) throw new Error(t("chromeState", "missing"));
+    const st = await lmAvailability();
+    if (st !== "available") throw new Error(t("chromeState", st));
+    let session;
+    try { session = await LanguageModel.create({ ...lmOptions(), signal }); }
+    catch (e) { if (signal && signal.aborted) throw { code: "cancelled" }; throw new Error("Chrome: " + e.message); }
+    try {
+      const win = session.contextWindow || session.inputQuota, need = session.measureContextUsage ? await session.measureContextUsage(prompt) : session.measureInputUsage ? await session.measureInputUsage(prompt) : 0;
+      if (win && need > win) throw new Error(t("chromeTooLong", need, win));
+      let text = "";
+      for await (const part of session.promptStreaming(prompt, { signal })) { text += part; onText && onText(text); }
+      return { text, truncated: false, model: "gemini-nano (Chrome)" };
+    } catch (e) {
+      if (signal && signal.aborted || e && e.name === "AbortError") throw { code: "cancelled" };
+      throw e;
+    } finally { try { session.destroy(); } catch (e) { } }
+  },
   async google(prompt, signal, max) {
     const d = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:generateContent`, { "x-goog-api-key": S.apiKey },
       { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: max * 2 } }, signal);
@@ -1816,7 +1918,7 @@ async function callLLM(prompt, onText, signal, opts = {}) {
     const r = await S.sample(prompt, { onText: ({ text }) => onText && onText(text), signal, modelTier: opts.tier || S.tier, cache: false });
     return { text: r.text, truncated: r.truncated, model: "claude (" + (r.modelTierApplied || S.tier) + ")" };
   }
-  if (S.apiKey) return REQUEST[S.provider](prompt, signal, opts.maxTokens || 16000);
+  if (engineOK()) return REQUEST[S.provider](prompt, signal, opts.maxTokens || 16000, onText);
   throw new Error(t("noEngine"));
 }
 
@@ -2186,12 +2288,14 @@ function markRefs() {
 // ---------- translation jobs ----------
 async function translate(p, which, opts = {}) {
   if (S.job) return;
-  if (!S.sample && !S.apiKey) { setStatus(t("noEngine"), "err"); openSettings(); return; }
+  if (!engineOK()) { setStatus(t("noEngine"), "err"); openSettings(); return; }
   const all = await blocksOf(p);
   const fileText = await readFile(p);
   let todo = which.filter(b => b.cls !== "struct" && (opts.force || !getTr(p, b)));
   if (!todo.length) return;
-  const chunks = CORE.chunkBlocks(todo);
+  // Chrome's built-in model has a small context: a block or two at a time, little context, proofs elided.
+  const small = !S.sample && PROVIDERS[S.provider].local;
+  const chunks = small ? CORE.chunkBlocks(todo, 2500, 2) : CORE.chunkBlocks(todo);
   if (chunks.length > 6 && !opts.confirmed) {
     if (S.confirmArm !== chunks.length) { S.confirmArm = chunks.length; setStatus(t("confirmMany", chunks.length), "warn"); return; }
   }
@@ -2203,11 +2307,11 @@ async function translate(p, which, opts = {}) {
     setStatus(t("loading"));
     await loadImports(p);
     markRefs();
-    const ctx = CORE.collectContext(p, all, S.idx);
+    const ctx = CORE.collectContext(p, all, S.idx, small ? 2500 : undefined);
     for (let i = 0; i < chunks.length; i++) {
       if (ctl.signal.aborted) break;
       const chunk = chunks[i];
-      let prompt = CORE.buildPrompt({ repoLabel: S.source.label, path: p, lang: S.lang, style: S.style, blocks: chunk, allBlocks: all, context: ctx, fileText });
+      let prompt = CORE.buildPrompt({ repoLabel: S.source.label, path: p, lang: S.lang, style: S.style, blocks: chunk, allBlocks: all, context: ctx, fileText, elide: small });
       if (new Blob([prompt]).size > 230000) prompt = CORE.buildPrompt({ repoLabel: S.source.label, path: p, lang: S.lang, style: S.style, blocks: chunk, allBlocks: all, context: ctx.slice(0, 8000), fileText, elide: true });
       const pre = chunks.length > 1 ? t("chunkOf", i + 1, chunks.length) + " · " : "";
       setStatus(pre + t("thinking"));
@@ -2268,7 +2372,7 @@ function tokenPop(el) {
   if (GLOSSARY[w]) { html += glossHTML(w); needGloss = glossPending(w); }
   const blkEl = el.closest(".blk");
   let key = null;
-  if (!(hits && hits.length) && blkEl && (S.sample || S.apiKey)) {
+  if (!(hits && hits.length) && blkEl && engineOK()) {
     key = askKey(w, blkEl.dataset.id);
     html += `<div class="pg"><div class="pk">${t("claudeSays")}</div><div class="askout" aria-live="polite" data-k="${esc(key)}" data-t="${esc(w)}" data-b="${esc(blkEl.dataset.id)}">${askHTML(key)}</div></div>`;
   }
@@ -2293,7 +2397,7 @@ function glossText(k) {
   const v = GL.get(S.lang + "|" + k);
   return v ? { text: v, native: true } : { text: GLOSSARY[k][1], native: false };
 }
-function glossPending(k) { return !glossText(k).native && !!(S.sample || S.apiKey) && !GLFAIL.has(S.lang + "|" + k); }
+function glossPending(k) { return !glossText(k).native && !!engineOK() && !GLFAIL.has(S.lang + "|" + k); }
 function glossHTML(k) {
   const g = glossText(k);
   const gl = langAttr(g.native ? trCode() : "en"), ul = gl ? ` lang="${uiCode()}"` : "";
@@ -2334,7 +2438,7 @@ async function startGlossJob() {
   if (GJ.ctl && GJ.lang === lang) return;
   if (GJ.ctl) GJ.ctl.abort();
   GJ.ctl = null;
-  if (glossBuiltIn(lang) >= 0 || !(S.sample || S.apiKey) || !glossMissing(lang).length) { showGlossProg(); return; }
+  if (glossBuiltIn(lang) >= 0 || !engineOK() || !glossMissing(lang).length) { showGlossProg(); return; }
   const ctl = new AbortController();
   Object.assign(GJ, { lang, ctl, total: GLOSS_KEYS.length, done: GLOSS_KEYS.length - glossMissing(lang).length });
   showGlossProg();
@@ -2428,7 +2532,7 @@ function openSettings() {
   $("#sDownload").hidden = S.inArtifact;
   $("#sClaudeRow").hidden = !S.sample;
   DRAFT = { provider: S.provider, keys: { ...S.keys }, models: { ...S.models } };
-  $("#provider").innerHTML = Object.entries(PROVIDERS).map(([id, p]) => `<option value="${id}">${esc(p.name)}</option>`).join("");
+  $("#provider").innerHTML = Object.keys(PROVIDERS).map(id => `<option value="${id}">${esc(providerName(id))}</option>`).join("");
   showProvider();
   $("#ghToken").value = S.ghToken;
   $("#patLink").href = patURL(currentOwner());
@@ -2447,17 +2551,43 @@ function stashProvider() {
   if (m) DRAFT.models[DRAFT.provider] = m; else delete DRAFT.models[DRAFT.provider];
 }
 function showProvider() {
-  const P = PROVIDERS[DRAFT.provider];
-  $("#provider").value = DRAFT.provider;
-  $("#apiKey").value = DRAFT.keys[DRAFT.provider] || ""; $("#apiKey").placeholder = P.ph;
-  $("#model").value = DRAFT.models[DRAFT.provider] || P.models[0];
-  $("#models").innerHTML = P.models.map(m => `<option value="${esc(m)}"></option>`).join("");
+  const id = DRAFT.provider, P = PROVIDERS[id];
+  $("#provider").value = id;
+  $("#keyRow").hidden = $("#modelRow").hidden = !!P.local; $("#chromeRow").hidden = !P.local;
+  if (P.local) { $("#sNote").textContent = t("chromeNote"); showChrome(); return; }
+  $("#apiKey").value = DRAFT.keys[id] || ""; $("#apiKey").placeholder = P.ph;
+  $("#model").value = DRAFT.models[id] || P.models[0];
   $("#keyLink").href = P.keyURL; $("#keyLink").textContent = t("keyLink", P.name);
   $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone", P.host);
+  fillModels(false);
+}
+let MLSEQ = 0;
+async function fillModels(force) {
+  const id = DRAFT.provider, key = $("#apiKey").value.trim(), seq = ++MLSEQ;
+  if (key && !force) $("#modelInfo").textContent = "";
+  const r = await modelList(id, key, force);
+  if (seq !== MLSEQ || DRAFT.provider !== id) return;
+  $("#models").innerHTML = r.ids.map(m => `<option value="${esc(m)}"></option>`).join("");
+  $("#modelInfo").textContent = r.from === "api" ? t("modelsFetched", r.ids.length) : r.from === "failed" ? t("modelsFailed", r.err) : "";
+}
+async function showChrome() {
+  const st = await lmAvailability();
+  if (DRAFT.provider !== "chrome") return;
+  $("#chromeState").textContent = t("chromeState", st);
+  $("#chromeDl").hidden = st !== "downloadable";
+}
+// Downloading the model needs a click (user activation), so it is started from Settings.
+async function chromeDownload() {
+  $("#chromeDl").hidden = true;
+  try {
+    const sess = await LanguageModel.create({ ...lmOptions(), monitor(m) { m.addEventListener("downloadprogress", e => { $("#chromeState").textContent = t("chromeState", "downloading") + ` ${Math.round((e.loaded || 0) * 100)}%`; }); } });
+    sess.destroy();
+  } catch (e) { $("#chromeState").textContent = "Chrome: " + e.message; return; }
+  showChrome(); setEngineLabel();
 }
 function saveSettings() {
-  const oldGh = S.ghToken, hadKey = !!S.apiKey;
-  stashProvider();
+  const oldGh = S.ghToken, hadKey = engineOK();
+  if (!PROVIDERS[DRAFT.provider].local) stashProvider();
   S.provider = DRAFT.provider; S.keys = DRAFT.keys; S.models = DRAFT.models; S.ghToken = $("#ghToken").value.trim();
   if (S.ghToken && S.ghToken !== oldGh && S.lastFailed) { const f = S.lastFailed; S.lastFailed = null; $("#hint").hidden = true; setTimeout(() => { const gs = new GitHubSource(f.p, S.ghToken); gs.openPath = f.openPath; gs.focus = f.focus; loadSource(gs); }, 0); }
   S.remember = $("#remember").checked; S.tier = $("#tier").value || S.tier;
@@ -2466,7 +2596,7 @@ function saveSettings() {
   if (S.remember) { LS.set("keys", S.keys); LS.set("ghToken", S.ghToken); } else { LS.del("keys"); LS.del("ghToken"); }
   setEngineLabel();
   const um = $("#uiLang").value; if (um !== S.uiMode) { S.uiMode = um; LS.set("uiMode", um); LS.del("ui"); applyUI(); refresh(); }
-  if (!hadKey && S.apiKey) startGlossJob();
+  if (!hadKey && engineOK()) startGlossJob();
 }
 function exportJSON() {
   const have = new Set(S.paths);
@@ -2496,7 +2626,10 @@ function bind() {
   });
   $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); startGlossJob(); } e.target.hidden = true; });
   $("#uiLang").addEventListener("change", e => syncSelLang(e.target));
-  $("#provider").addEventListener("change", e => { stashProvider(); DRAFT.provider = e.target.value; showProvider(); });
+  $("#provider").addEventListener("change", e => { if (!PROVIDERS[DRAFT.provider].local) stashProvider(); DRAFT.provider = e.target.value; showProvider(); });
+  $("#apiKey").addEventListener("change", () => fillModels(false));
+  $("#modelRefresh").addEventListener("click", () => fillModels(true));
+  $("#chromeDl").addEventListener("click", chromeDownload);
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
@@ -2584,8 +2717,8 @@ async function boot() {
 }
 function setEngineLabel() {
   const el = $("#engine");
-  el.textContent = S.sample ? "Claude" : (S.apiKey ? S.model : "—");
-  el.classList.toggle("off", !S.sample && !S.apiKey);
+  el.textContent = S.sample ? "Claude" : (engineOK() ? S.model : "—");
+  el.classList.toggle("off", !engineOK());
 }
 if (!MOVED) document.addEventListener("DOMContentLoaded", boot);
 })();

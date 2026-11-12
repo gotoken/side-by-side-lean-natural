@@ -76,7 +76,59 @@ const PROVIDERS = {
     models: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-6-astra"] },
   google: { name: "Google Gemini", host: "generativelanguage.googleapis.com", ph: "AIza…", keyURL: "https://aistudio.google.com/apikey",
     models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"] },
+  // Gemini Nano inside Chrome (Prompt API): no key, nothing leaves the device, small context.
+  chrome: { local: true, models: ["gemini-nano"] },
 };
+const providerName = id => PROVIDERS[id].name || t("chromeName");
+const hasLM = () => typeof self.LanguageModel === "function" || typeof self.LanguageModel === "object" && !!self.LanguageModel;
+// Is there something to translate with? (the viewer's Claude, a key, or Chrome's built-in model)
+const engineOK = () => !!(S.sample || (PROVIDERS[S.provider].local ? hasLM() : S.apiKey));
+
+// Model names: the built-in list above is only a fallback. With a key, each API is asked which
+// models it offers; the answer is kept for a day.
+const MODEL_SKIP = /(audio|realtime|transcri|tts|image|embed|moderation|search|live|robotics|aqa|omni|banana|computer-use|diariz|instruct|veo|lyria|imagen)/i;
+const LIST_MODELS = {
+  async anthropic(key) {
+    const r = await fetch("https://api.anthropic.com/v1/models?limit=100", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" } });
+    if (!r.ok) throw new Error("API " + r.status);
+    return ((await r.json()).data || []).map(m => m.id);
+  },
+  async openai(key) {
+    const r = await fetch("https://api.openai.com/v1/models", { headers: { authorization: "Bearer " + key } });
+    if (!r.ok) throw new Error("API " + r.status);
+    return ((await r.json()).data || []).sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => m.id).filter(id => /^(gpt-|o\d|chatgpt-)/.test(id) && !MODEL_SKIP.test(id));
+  },
+  async google(key) {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": key } });
+    if (!r.ok) throw new Error("API " + r.status);
+    return ((await r.json()).models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map(m => String(m.name).replace(/^models\//, "")).filter(id => /^gemini-/.test(id) && !MODEL_SKIP.test(id));
+  },
+};
+async function modelList(provider, key, force) {
+  const P = PROVIDERS[provider];
+  if (P.local || !key || !LIST_MODELS[provider]) return { ids: P.models, from: "builtin" };
+  const cache = LS.get("modelList", {}), c = cache[provider];
+  if (!force && c && c.key === hashKey(key) && Date.now() - c.at < 864e5) return { ids: c.ids, from: "api" };
+  try {
+    const ids = [...new Set(await LIST_MODELS[provider](key))];
+    if (!ids.length) throw new Error("empty");
+    cache[provider] = { at: Date.now(), key: hashKey(key), ids }; LS.set("modelList", cache);
+    return { ids, from: "api" };
+  } catch (e) { return { ids: P.models, from: "failed", err: e.message }; }
+}
+const hashKey = k => CORE.hashStr("k:" + k); // so a new key refreshes the list without storing the key twice
+
+// Chrome's built-in model. Languages it accepts for output; others are asked for anyway, unmarked.
+const LM_LANGS = ["en", "ja", "es", "de", "fr"];
+const lmOptions = () => {
+  const c = trCode();
+  return { expectedInputs: [{ type: "text", languages: ["en"] }], expectedOutputs: [{ type: "text", languages: LM_LANGS.includes(c) ? [c] : ["en"] }] };
+};
+async function lmAvailability() {
+  if (!hasLM()) return "missing";
+  try { return await LanguageModel.availability(lmOptions()); } catch (e) { return "unavailable"; }
+}
 // Keys and model names are kept per provider; "apiKey" and "model" are the settings from before
 // there was a choice and count as Anthropic's.
 const savedKeys = () => { const k = LS.get("keys", null) || {}; const old = LS.get("apiKey", ""); if (old && !k.anthropic) k.anthropic = old; return k; };
@@ -237,6 +289,24 @@ const REQUEST = {
     const text = (d.output || []).filter(o => o.type === "message").flatMap(o => o.content || []).filter(c => c.type === "output_text").map(c => c.text).join("");
     return { text, truncated: d.status === "incomplete", model: d.model || S.model };
   },
+  async chrome(prompt, signal, max, onText) {
+    if (!hasLM()) throw new Error(t("chromeState", "missing"));
+    const st = await lmAvailability();
+    if (st !== "available") throw new Error(t("chromeState", st));
+    let session;
+    try { session = await LanguageModel.create({ ...lmOptions(), signal }); }
+    catch (e) { if (signal && signal.aborted) throw { code: "cancelled" }; throw new Error("Chrome: " + e.message); }
+    try {
+      const win = session.contextWindow || session.inputQuota, need = session.measureContextUsage ? await session.measureContextUsage(prompt) : session.measureInputUsage ? await session.measureInputUsage(prompt) : 0;
+      if (win && need > win) throw new Error(t("chromeTooLong", need, win));
+      let text = "";
+      for await (const part of session.promptStreaming(prompt, { signal })) { text += part; onText && onText(text); }
+      return { text, truncated: false, model: "gemini-nano (Chrome)" };
+    } catch (e) {
+      if (signal && signal.aborted || e && e.name === "AbortError") throw { code: "cancelled" };
+      throw e;
+    } finally { try { session.destroy(); } catch (e) { } }
+  },
   async google(prompt, signal, max) {
     const d = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:generateContent`, { "x-goog-api-key": S.apiKey },
       { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: max * 2 } }, signal);
@@ -251,7 +321,7 @@ async function callLLM(prompt, onText, signal, opts = {}) {
     const r = await S.sample(prompt, { onText: ({ text }) => onText && onText(text), signal, modelTier: opts.tier || S.tier, cache: false });
     return { text: r.text, truncated: r.truncated, model: "claude (" + (r.modelTierApplied || S.tier) + ")" };
   }
-  if (S.apiKey) return REQUEST[S.provider](prompt, signal, opts.maxTokens || 16000);
+  if (engineOK()) return REQUEST[S.provider](prompt, signal, opts.maxTokens || 16000, onText);
   throw new Error(t("noEngine"));
 }
 
@@ -621,12 +691,14 @@ function markRefs() {
 // ---------- translation jobs ----------
 async function translate(p, which, opts = {}) {
   if (S.job) return;
-  if (!S.sample && !S.apiKey) { setStatus(t("noEngine"), "err"); openSettings(); return; }
+  if (!engineOK()) { setStatus(t("noEngine"), "err"); openSettings(); return; }
   const all = await blocksOf(p);
   const fileText = await readFile(p);
   let todo = which.filter(b => b.cls !== "struct" && (opts.force || !getTr(p, b)));
   if (!todo.length) return;
-  const chunks = CORE.chunkBlocks(todo);
+  // Chrome's built-in model has a small context: a block or two at a time, little context, proofs elided.
+  const small = !S.sample && PROVIDERS[S.provider].local;
+  const chunks = small ? CORE.chunkBlocks(todo, 2500, 2) : CORE.chunkBlocks(todo);
   if (chunks.length > 6 && !opts.confirmed) {
     if (S.confirmArm !== chunks.length) { S.confirmArm = chunks.length; setStatus(t("confirmMany", chunks.length), "warn"); return; }
   }
@@ -638,11 +710,11 @@ async function translate(p, which, opts = {}) {
     setStatus(t("loading"));
     await loadImports(p);
     markRefs();
-    const ctx = CORE.collectContext(p, all, S.idx);
+    const ctx = CORE.collectContext(p, all, S.idx, small ? 2500 : undefined);
     for (let i = 0; i < chunks.length; i++) {
       if (ctl.signal.aborted) break;
       const chunk = chunks[i];
-      let prompt = CORE.buildPrompt({ repoLabel: S.source.label, path: p, lang: S.lang, style: S.style, blocks: chunk, allBlocks: all, context: ctx, fileText });
+      let prompt = CORE.buildPrompt({ repoLabel: S.source.label, path: p, lang: S.lang, style: S.style, blocks: chunk, allBlocks: all, context: ctx, fileText, elide: small });
       if (new Blob([prompt]).size > 230000) prompt = CORE.buildPrompt({ repoLabel: S.source.label, path: p, lang: S.lang, style: S.style, blocks: chunk, allBlocks: all, context: ctx.slice(0, 8000), fileText, elide: true });
       const pre = chunks.length > 1 ? t("chunkOf", i + 1, chunks.length) + " · " : "";
       setStatus(pre + t("thinking"));
@@ -703,7 +775,7 @@ function tokenPop(el) {
   if (GLOSSARY[w]) { html += glossHTML(w); needGloss = glossPending(w); }
   const blkEl = el.closest(".blk");
   let key = null;
-  if (!(hits && hits.length) && blkEl && (S.sample || S.apiKey)) {
+  if (!(hits && hits.length) && blkEl && engineOK()) {
     key = askKey(w, blkEl.dataset.id);
     html += `<div class="pg"><div class="pk">${t("claudeSays")}</div><div class="askout" aria-live="polite" data-k="${esc(key)}" data-t="${esc(w)}" data-b="${esc(blkEl.dataset.id)}">${askHTML(key)}</div></div>`;
   }
@@ -728,7 +800,7 @@ function glossText(k) {
   const v = GL.get(S.lang + "|" + k);
   return v ? { text: v, native: true } : { text: GLOSSARY[k][1], native: false };
 }
-function glossPending(k) { return !glossText(k).native && !!(S.sample || S.apiKey) && !GLFAIL.has(S.lang + "|" + k); }
+function glossPending(k) { return !glossText(k).native && !!engineOK() && !GLFAIL.has(S.lang + "|" + k); }
 function glossHTML(k) {
   const g = glossText(k);
   const gl = langAttr(g.native ? trCode() : "en"), ul = gl ? ` lang="${uiCode()}"` : "";
@@ -769,7 +841,7 @@ async function startGlossJob() {
   if (GJ.ctl && GJ.lang === lang) return;
   if (GJ.ctl) GJ.ctl.abort();
   GJ.ctl = null;
-  if (glossBuiltIn(lang) >= 0 || !(S.sample || S.apiKey) || !glossMissing(lang).length) { showGlossProg(); return; }
+  if (glossBuiltIn(lang) >= 0 || !engineOK() || !glossMissing(lang).length) { showGlossProg(); return; }
   const ctl = new AbortController();
   Object.assign(GJ, { lang, ctl, total: GLOSS_KEYS.length, done: GLOSS_KEYS.length - glossMissing(lang).length });
   showGlossProg();
@@ -863,7 +935,7 @@ function openSettings() {
   $("#sDownload").hidden = S.inArtifact;
   $("#sClaudeRow").hidden = !S.sample;
   DRAFT = { provider: S.provider, keys: { ...S.keys }, models: { ...S.models } };
-  $("#provider").innerHTML = Object.entries(PROVIDERS).map(([id, p]) => `<option value="${id}">${esc(p.name)}</option>`).join("");
+  $("#provider").innerHTML = Object.keys(PROVIDERS).map(id => `<option value="${id}">${esc(providerName(id))}</option>`).join("");
   showProvider();
   $("#ghToken").value = S.ghToken;
   $("#patLink").href = patURL(currentOwner());
@@ -882,17 +954,43 @@ function stashProvider() {
   if (m) DRAFT.models[DRAFT.provider] = m; else delete DRAFT.models[DRAFT.provider];
 }
 function showProvider() {
-  const P = PROVIDERS[DRAFT.provider];
-  $("#provider").value = DRAFT.provider;
-  $("#apiKey").value = DRAFT.keys[DRAFT.provider] || ""; $("#apiKey").placeholder = P.ph;
-  $("#model").value = DRAFT.models[DRAFT.provider] || P.models[0];
-  $("#models").innerHTML = P.models.map(m => `<option value="${esc(m)}"></option>`).join("");
+  const id = DRAFT.provider, P = PROVIDERS[id];
+  $("#provider").value = id;
+  $("#keyRow").hidden = $("#modelRow").hidden = !!P.local; $("#chromeRow").hidden = !P.local;
+  if (P.local) { $("#sNote").textContent = t("chromeNote"); showChrome(); return; }
+  $("#apiKey").value = DRAFT.keys[id] || ""; $("#apiKey").placeholder = P.ph;
+  $("#model").value = DRAFT.models[id] || P.models[0];
   $("#keyLink").href = P.keyURL; $("#keyLink").textContent = t("keyLink", P.name);
   $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone", P.host);
+  fillModels(false);
+}
+let MLSEQ = 0;
+async function fillModels(force) {
+  const id = DRAFT.provider, key = $("#apiKey").value.trim(), seq = ++MLSEQ;
+  if (key && !force) $("#modelInfo").textContent = "";
+  const r = await modelList(id, key, force);
+  if (seq !== MLSEQ || DRAFT.provider !== id) return;
+  $("#models").innerHTML = r.ids.map(m => `<option value="${esc(m)}"></option>`).join("");
+  $("#modelInfo").textContent = r.from === "api" ? t("modelsFetched", r.ids.length) : r.from === "failed" ? t("modelsFailed", r.err) : "";
+}
+async function showChrome() {
+  const st = await lmAvailability();
+  if (DRAFT.provider !== "chrome") return;
+  $("#chromeState").textContent = t("chromeState", st);
+  $("#chromeDl").hidden = st !== "downloadable";
+}
+// Downloading the model needs a click (user activation), so it is started from Settings.
+async function chromeDownload() {
+  $("#chromeDl").hidden = true;
+  try {
+    const sess = await LanguageModel.create({ ...lmOptions(), monitor(m) { m.addEventListener("downloadprogress", e => { $("#chromeState").textContent = t("chromeState", "downloading") + ` ${Math.round((e.loaded || 0) * 100)}%`; }); } });
+    sess.destroy();
+  } catch (e) { $("#chromeState").textContent = "Chrome: " + e.message; return; }
+  showChrome(); setEngineLabel();
 }
 function saveSettings() {
-  const oldGh = S.ghToken, hadKey = !!S.apiKey;
-  stashProvider();
+  const oldGh = S.ghToken, hadKey = engineOK();
+  if (!PROVIDERS[DRAFT.provider].local) stashProvider();
   S.provider = DRAFT.provider; S.keys = DRAFT.keys; S.models = DRAFT.models; S.ghToken = $("#ghToken").value.trim();
   if (S.ghToken && S.ghToken !== oldGh && S.lastFailed) { const f = S.lastFailed; S.lastFailed = null; $("#hint").hidden = true; setTimeout(() => { const gs = new GitHubSource(f.p, S.ghToken); gs.openPath = f.openPath; gs.focus = f.focus; loadSource(gs); }, 0); }
   S.remember = $("#remember").checked; S.tier = $("#tier").value || S.tier;
@@ -901,7 +999,7 @@ function saveSettings() {
   if (S.remember) { LS.set("keys", S.keys); LS.set("ghToken", S.ghToken); } else { LS.del("keys"); LS.del("ghToken"); }
   setEngineLabel();
   const um = $("#uiLang").value; if (um !== S.uiMode) { S.uiMode = um; LS.set("uiMode", um); LS.del("ui"); applyUI(); refresh(); }
-  if (!hadKey && S.apiKey) startGlossJob();
+  if (!hadKey && engineOK()) startGlossJob();
 }
 function exportJSON() {
   const have = new Set(S.paths);
@@ -931,7 +1029,10 @@ function bind() {
   });
   $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); startGlossJob(); } e.target.hidden = true; });
   $("#uiLang").addEventListener("change", e => syncSelLang(e.target));
-  $("#provider").addEventListener("change", e => { stashProvider(); DRAFT.provider = e.target.value; showProvider(); });
+  $("#provider").addEventListener("change", e => { if (!PROVIDERS[DRAFT.provider].local) stashProvider(); DRAFT.provider = e.target.value; showProvider(); });
+  $("#apiKey").addEventListener("change", () => fillModels(false));
+  $("#modelRefresh").addEventListener("click", () => fillModels(true));
+  $("#chromeDl").addEventListener("click", chromeDownload);
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
@@ -1019,8 +1120,8 @@ async function boot() {
 }
 function setEngineLabel() {
   const el = $("#engine");
-  el.textContent = S.sample ? "Claude" : (S.apiKey ? S.model : "—");
-  el.classList.toggle("off", !S.sample && !S.apiKey);
+  el.textContent = S.sample ? "Claude" : (engineOK() ? S.model : "—");
+  el.classList.toggle("off", !engineOK());
 }
 if (!MOVED) document.addEventListener("DOMContentLoaded", boot);
 })();
