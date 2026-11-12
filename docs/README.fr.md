@@ -1,10 +1,10 @@
-# side-by-side-lean-natural
+# Taiyak
 
 [English](../README.md) · [日本語](README.ja.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [한국어](README.ko.md) · **Français** · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-Un navigateur qui découpe un source Lean 4 en déclarations et affiche chacune à côté d'une traduction mathématique dans la langue naturelle de votre choix. Il se contente de lire le source : aucune compilation Lean n'est nécessaire.
+Un navigateur qui découpe un source Lean 4 en déclarations et affiche chacune à côté d'une traduction mathématique dans la langue naturelle de votre choix. Il se contente de lire le source : aucune compilation Lean n'est nécessaire. Le nom vient du japonais 対訳 (*taiyaku*), un texte présenté en regard de sa traduction.
 
-**Version web : <https://side-by-side-lean-natural.pages.dev/>**
+**Version web : <https://taiyak.pages.dev/>**
 
 ![Impl.lean de la démo, avec le Lean et sa traduction côte à côte](screenshot.png)
 
@@ -24,7 +24,7 @@ Un navigateur qui découpe un source Lean 4 en déclarations et affiche chacune 
 
 ### Version web (Cloudflare Pages)
 
-Ouvrez <https://side-by-side-lean-natural.pages.dev/>.
+Ouvrez <https://taiyak.pages.dev/>.
 
 1. Saisissez une URL GitHub et appuyez sur « Ouvrir »
 2. Dans « Réglages », saisissez une clé API Anthropic (nécessaire pour traduire). Pour un dépôt privé, saisissez aussi un jeton GitHub. « Créer un jeton sur GitHub » dans les réglages ouvre la page de création de jeton de GitHub avec l'accès en lecture seule (Contents: read) et une expiration de 30 jours déjà remplis : choisissez les dépôts à lire et créez-le
@@ -48,15 +48,15 @@ Quand la version web affiche un dépôt GitHub, l'URL de la barre d'adresse est 
 | `decl` | Nom de la déclaration à afficher (les blocs sans nom utilisent la forme `id=b12`) |
 | `lang` | Langue de traduction |
 
-Exemple : <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=Fran%C3%A7ais>
+Exemple : <https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=Fran%C3%A7ais>
 
 ### Livrer les traductions avec un dépôt
 
 1. Traduisez les fichiers voulus
 2. Utilisez « Réglages » → « Exporter les traductions » pour obtenir un fichier JSON (seul le dépôt ouvert est exporté)
-3. Validez-le dans le dépôt cible sous `.lean-taiyaku/fr.json` (un fichier par langue ; le nom est libre)
+3. Validez-le dans le dépôt cible sous `.taiyak/fr.json` (un fichier par langue ; le nom est libre)
 
-À l'ouverture d'un dépôt, `.lean-taiyaku/*.json` est chargé automatiquement. Une traduction que vous avez faite vous-même pour le même bloc a la priorité. Les traductions sont appariées par langue, niveau de détail et empreinte du chemin du fichier et du texte du bloc : quand le code d'un bloc change, son ancienne traduction n'est plus utilisée.
+À l'ouverture d'un dépôt, `.taiyak/*.json` est chargé automatiquement. Une traduction que vous avez faite vous-même pour le même bloc a la priorité. Les traductions sont appariées par langue, niveau de détail et empreinte du chemin du fichier et du texte du bloc : quand le code d'un bloc change, son ancienne traduction n'est plus utilisée.
 
 ## Clés et données
 

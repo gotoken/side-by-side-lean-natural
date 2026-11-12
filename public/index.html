@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lean 対訳ブラウザ</title>
+<title>Taiyak</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b6e69'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%88%80%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -254,7 +254,7 @@ math { font-size: 1.06em; }
 <body>
 <header class="top">
   <button id="drawerBtn" class="btn only-m" type="button" data-i="files"></button>
-  <div class="brand"><span class="logo" aria-hidden="true">∀↔</span><b lang="ja">Lean 対訳ブラウザ</b></div>
+  <div class="brand"><span class="logo" aria-hidden="true">∀↔</span><b>Taiyak</b></div>
   <form id="srcForm"><input id="url" type="text" inputmode="url" data-ph="urlPh" aria-label="GitHub URL" autocomplete="off" spellcheck="false"><button type="submit" data-i="open"></button></form>
   <label class="btn" for="zipIn"><span data-i="zip"></span></label><input type="file" id="zipIn" accept=".zip,application/zip" hidden>
   <label class="btn only-d" for="dirIn"><span data-i="folder"></span></label><input type="file" id="dirIn" webkitdirectory multiple hidden>
@@ -1095,7 +1095,7 @@ const UI = {
     otherLangPh: "例: Italiano",
     partial: n => `${n} 件は訳せませんでした（返答が長さの上限で切れた可能性）。もう一度押すと残りだけ訳します。`,
     bundled: n => `リポジトリに同梱された訳を ${n} 件読み込みました。`,
-    sExportHint: "いま開いているリポジトリの訳だけを書き出します。そのリポジトリの .lean-taiyaku/ja.json（言語ごとに 1 ファイル）として置くと、開いた人はキーなしで訳を読めます。",
+    sExportHint: "いま開いているリポジトリの訳だけを書き出します。そのリポジトリの .taiyak/ja.json（言語ごとに 1 ファイル）として置くと、開いた人はキーなしで訳を読めます。",
     copyLink: "リンク", linkCopied: "リンクをコピーしました", lic: "ライセンスと帰属表示",
     patLink: "GitHub でトークンを作る（読み取り専用の設定を記入済み）",
     patSteps: "開いた画面で Repository access を「Only select repositories」にして読みたいリポジトリを選び、Generate token を押します。表示された github_pat_… をここに貼ってください。期限は 30 日です。",
@@ -1145,7 +1145,7 @@ const UI = {
     otherLangPh: "e.g. Italiano",
     partial: n => `${n} blocks were not translated (the reply may have hit the length limit). Press again to translate only the rest.`,
     bundled: n => `Loaded ${n} translations bundled with the repository.`,
-    sExportHint: "Exports translations for the repository that is open now. Commit it to that repository as .lean-taiyaku/<lang>.json and anyone who opens it sees the translations without a key.",
+    sExportHint: "Exports translations for the repository that is open now. Commit it to that repository as .taiyak/<lang>.json and anyone who opens it sees the translations without a key.",
     copyLink: "Link", linkCopied: "Link copied", lic: "Licenses and attribution",
     patLink: "Create a token on GitHub (read-only, pre-filled)",
     patSteps: "On the page that opens, set Repository access to \"Only select repositories\", pick the repositories to read, and press Generate token. Paste the github_pat_… it shows here. It expires in 30 days.",
@@ -1195,7 +1195,7 @@ const UI = {
     otherLangPh: "例：Italiano",
     partial: n => `有 ${n} 个块未能翻译（回复可能超出长度上限）。再按一次只翻译剩余部分。`,
     bundled: n => `已读取仓库附带的译文 ${n} 条。`,
-    sExportHint: "只导出当前打开仓库的译文。将其作为 .lean-taiyaku/<lang>.json 提交到该仓库后，任何人打开都能无需密钥看到译文。",
+    sExportHint: "只导出当前打开仓库的译文。将其作为 .taiyak/<lang>.json 提交到该仓库后，任何人打开都能无需密钥看到译文。",
     copyLink: "链接", linkCopied: "已复制链接", lic: "许可与署名",
     patLink: "在 GitHub 上创建令牌（已填好只读设置）",
     patSteps: "在打开的页面中，将 Repository access 设为 “Only select repositories” 并选择要读取的仓库，然后点击 Generate token。把显示的 github_pat_… 粘贴到这里。有效期 30 天。",
@@ -1245,7 +1245,7 @@ const UI = {
     otherLangPh: "例：Italiano",
     partial: n => `有 ${n} 個區塊未能翻譯（回覆可能超出長度上限）。再按一次只翻譯其餘部分。`,
     bundled: n => `已讀取儲存庫附帶的譯文 ${n} 筆。`,
-    sExportHint: "只匯出目前開啟之儲存庫的譯文。將其作為 .lean-taiyaku/<lang>.json 提交到該儲存庫後，任何人開啟都能不需金鑰就看到譯文。",
+    sExportHint: "只匯出目前開啟之儲存庫的譯文。將其作為 .taiyak/<lang>.json 提交到該儲存庫後，任何人開啟都能不需金鑰就看到譯文。",
     copyLink: "連結", linkCopied: "已複製連結", lic: "授權與署名",
     patLink: "在 GitHub 上建立權杖（已填好唯讀設定）",
     patSteps: "在開啟的頁面中，將 Repository access 設為「Only select repositories」並選擇要讀取的儲存庫，然後按 Generate token。把顯示的 github_pat_… 貼到這裡。有效期限 30 天。",
@@ -1295,7 +1295,7 @@ const UI = {
     otherLangPh: "예: Italiano",
     partial: n => `${n}개 블록을 번역하지 못했습니다(응답이 길이 한도에 걸렸을 수 있음). 한 번 더 누르면 나머지만 번역합니다.`,
     bundled: n => `저장소에 포함된 번역 ${n}건을 불러왔습니다.`,
-    sExportHint: "지금 열려 있는 저장소의 번역만 내보냅니다. 그 저장소에 .lean-taiyaku/<lang>.json으로 커밋하면, 여는 사람은 키 없이 번역을 볼 수 있습니다.",
+    sExportHint: "지금 열려 있는 저장소의 번역만 내보냅니다. 그 저장소에 .taiyak/<lang>.json으로 커밋하면, 여는 사람은 키 없이 번역을 볼 수 있습니다.",
     copyLink: "링크", linkCopied: "링크를 복사했습니다", lic: "라이선스와 저작자 표시",
     patLink: "GitHub에서 토큰 만들기 (읽기 전용 설정 입력됨)",
     patSteps: "열린 화면에서 Repository access를 'Only select repositories'로 하고 읽을 저장소를 고른 뒤 Generate token을 누르세요. 표시된 github_pat_…를 여기에 붙여 넣으세요. 유효 기간은 30일입니다.",
@@ -1345,7 +1345,7 @@ const UI = {
     otherLangPh: "ex. Italiano",
     partial: n => `${n} blocs n'ont pas été traduits (la réponse a peut-être atteint la limite de longueur). Appuyez encore pour traduire le reste.`,
     bundled: n => `${n} traductions fournies avec le dépôt ont été chargées.`,
-    sExportHint: "Exporte les traductions du dépôt ouvert. Validez-les dans ce dépôt sous .lean-taiyaku/<lang>.json : quiconque l'ouvre les verra sans clé.",
+    sExportHint: "Exporte les traductions du dépôt ouvert. Validez-les dans ce dépôt sous .taiyak/<lang>.json : quiconque l'ouvre les verra sans clé.",
     copyLink: "Lien", linkCopied: "Lien copié", lic: "Licences et attributions",
     patLink: "Créer un jeton sur GitHub (lecture seule, pré-rempli)",
     patSteps: "Sur la page qui s'ouvre, réglez Repository access sur « Only select repositories », choisissez les dépôts à lire et appuyez sur Generate token. Collez ici le github_pat_… affiché. Il expire dans 30 jours.",
@@ -1395,7 +1395,7 @@ const UI = {
     otherLangPh: "z. B. Italiano",
     partial: n => `${n} Blöcke wurden nicht übersetzt (die Antwort hat womöglich das Längenlimit erreicht). Erneut drücken übersetzt nur den Rest.`,
     bundled: n => `${n} mit dem Repository ausgelieferte Übersetzungen geladen.`,
-    sExportHint: "Exportiert die Übersetzungen des geöffneten Repositorys. Als .lean-taiyaku/<lang>.json in dieses Repository eingecheckt, sieht sie jeder ohne Schlüssel.",
+    sExportHint: "Exportiert die Übersetzungen des geöffneten Repositorys. Als .taiyak/<lang>.json in dieses Repository eingecheckt, sieht sie jeder ohne Schlüssel.",
     copyLink: "Link", linkCopied: "Link kopiert", lic: "Lizenzen und Namensnennung",
     patLink: "Token auf GitHub erstellen (nur lesend, vorausgefüllt)",
     patSteps: "Stellen Sie auf der geöffneten Seite Repository access auf „Only select repositories“, wählen Sie die zu lesenden Repositories und drücken Sie Generate token. Fügen Sie das angezeigte github_pat_… hier ein. Es läuft nach 30 Tagen ab.",
@@ -1445,7 +1445,7 @@ const UI = {
     otherLangPh: "p. ej. Italiano",
     partial: n => `${n} bloques no se tradujeron (la respuesta pudo alcanzar el límite de longitud). Pulse de nuevo para traducir solo el resto.`,
     bundled: n => `Se cargaron ${n} traducciones incluidas en el repositorio.`,
-    sExportHint: "Exporta las traducciones del repositorio abierto. Si se confirman en ese repositorio como .lean-taiyaku/<lang>.json, cualquiera que lo abra las verá sin clave.",
+    sExportHint: "Exporta las traducciones del repositorio abierto. Si se confirman en ese repositorio como .taiyak/<lang>.json, cualquiera que lo abra las verá sin clave.",
     copyLink: "Enlace", linkCopied: "Enlace copiado", lic: "Licencias y atribución",
     patLink: "Crear un token en GitHub (solo lectura, ya rellenado)",
     patSteps: "En la página que se abre, ponga Repository access en «Only select repositories», elija los repositorios que quiere leer y pulse Generate token. Pegue aquí el github_pat_… que aparece. Caduca en 30 días.",
@@ -1495,7 +1495,7 @@ const UI = {
     otherLangPh: "ex.: Italiano",
     partial: n => `${n} blocos não foram traduzidos (a resposta pode ter atingido o limite de tamanho). Pressione de novo para traduzir só o restante.`,
     bundled: n => `${n} traduções incluídas no repositório foram carregadas.`,
-    sExportHint: "Exporta as traduções do repositório aberto. Se forem enviadas a esse repositório como .lean-taiyaku/<lang>.json, quem o abrir verá as traduções sem chave.",
+    sExportHint: "Exporta as traduções do repositório aberto. Se forem enviadas a esse repositório como .taiyak/<lang>.json, quem o abrir verá as traduções sem chave.",
     copyLink: "Link", linkCopied: "Link copiado", lic: "Licenças e atribuição",
     patLink: "Criar um token no GitHub (somente leitura, já preenchido)",
     patSteps: "Na página que abrir, defina Repository access como \"Only select repositories\", escolha os repositórios a ler e clique em Generate token. Cole aqui o github_pat_… exibido. Ele expira em 30 dias.",
@@ -1545,7 +1545,7 @@ const UI = {
     otherLangPh: "напр., Italiano",
     partial: n => `Не переведено блоков: ${n} (ответ мог упереться в лимит длины). Нажмите ещё раз, чтобы перевести только остальное.`,
     bundled: n => `Загружено переводов из репозитория: ${n}.`,
-    sExportHint: "Экспортирует переводы открытого репозитория. Если закоммитить их в этот репозиторий как .lean-taiyaku/<lang>.json, любой открывший увидит переводы без ключа.",
+    sExportHint: "Экспортирует переводы открытого репозитория. Если закоммитить их в этот репозиторий как .taiyak/<lang>.json, любой открывший увидит переводы без ключа.",
     copyLink: "Ссылка", linkCopied: "Ссылка скопирована", lic: "Лицензии и авторство",
     patLink: "Создать токен на GitHub (только чтение, уже заполнено)",
     patSteps: "На открывшейся странице выберите в Repository access пункт «Only select repositories», отметьте нужные репозитории и нажмите Generate token. Вставьте сюда показанный github_pat_…. Срок действия — 30 дней.",
@@ -1581,7 +1581,7 @@ let idb = null;
 function openDB() {
   return new Promise(res => {
     try {
-      const r = indexedDB.open("lean-taiyaku", 1);
+      const r = indexedDB.open("lean-taiyaku", 1); // name from before the rename, kept so saved translations stay
       r.onupgradeneeded = () => r.result.createObjectStore("tr");
       r.onsuccess = () => { idb = r.result; res(idb); };
       r.onerror = () => res(null);
@@ -1914,7 +1914,10 @@ async function loadSource(src) {
 }
 async function loadBundles(src, paths) {
   let n = 0;
-  for (const bp of paths.filter(p => /^\.lean-taiyaku\/[^/]+\.json$/.test(p))) {
+  // .taiyak/*.json; .lean-taiyaku/ is the directory name from before the rename and is still read.
+  // The legacy files go first, so .taiyak/ wins where both have a block.
+  const isNew = p => p.startsWith(".taiyak/");
+  for (const bp of paths.filter(p => /^\.(taiyak|lean-taiyaku)\/[^/]+\.json$/.test(p)).sort((a, b) => isNew(a) - isNew(b))) {
     try {
       const d = JSON.parse(await src.read(bp));
       for (const [k, v] of Object.entries(d.entries || {})) {
@@ -1945,10 +1948,13 @@ async function copyText(txt) {
     try { const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e2) { return false; }
   }
 }
-const SITE = "https://side-by-side-lean-natural.pages.dev";
+const SITE = "https://taiyak.pages.dev";
+// The site moved from side-by-side-lean-natural.pages.dev: send old links (with their query) to the new one.
+const MOVED = location.hostname === "side-by-side-lean-natural.pages.dev";
+if (MOVED) location.replace(SITE + location.pathname + location.search + location.hash);
 function patURL(owner) {
   const origin = /^https?:/.test(location.protocol) ? location.origin : SITE;
-  const q = new URLSearchParams({ name: "side-by-side-lean-natural (read)", description: `Read-only token for Lean 対訳ブラウザ (${origin}). Contents: read only.`, expires_in: "30", contents: "read" });
+  const q = new URLSearchParams({ name: "Taiyak (read)", description: `Read-only token for Taiyak (${origin}). Contents: read only.`, expires_in: "30", contents: "read" });
   if (owner) q.set("target_name", owner);
   return "https://github.com/settings/personal-access-tokens/new?" + q.toString();
 }
@@ -2365,7 +2371,7 @@ function exportJSON() {
   rows.sort((a, b) => (a[1].lang + a[1].path).localeCompare(b[1].lang + b[1].path) || (parseInt(String(a[1].id).slice(1)) - parseInt(String(b[1].id).slice(1))));
   const entries = {};
   for (const [k, v] of rows) entries[k] = { path: v.path, id: v.id, name: v.name || "", lang: v.lang, style: v.style, model: String(v.model || "").replace(/ · bundled$/, ""), at: v.at || null, tr: v.tr };
-  return JSON.stringify({ format: "lean-taiyaku/1", repo: S.source ? S.source.label : "", exported: new Date().toISOString(), entries }, null, 1);
+  return JSON.stringify({ format: "taiyak/1", repo: S.source ? S.source.label : "", exported: new Date().toISOString(), entries }, null, 1);
 }
 
 // ---------- events ----------
@@ -2419,7 +2425,7 @@ function bind() {
   $("#settings").addEventListener("click", e => { if (e.target.id === "settings") { saveSettings(); $("#settings").hidden = true; } });
   $("#sCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText(exportJSON()); toast(t("copied")); } catch (e) { $("#sImportTxt").value = exportJSON(); $("#sImportTxt").select(); } });
   $("#sDownload").addEventListener("click", () => {
-    try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([exportJSON()], { type: "application/json" })); a.download = "lean-taiyaku.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { }
+    try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([exportJSON()], { type: "application/json" })); a.download = "taiyak.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { }
   });
   const doImport = txt => {
     try { const d = JSON.parse(txt); let n = 0; for (const [k, v] of Object.entries(d.entries || {})) { MEM.set(k, v); idbPut(k, v); n++; } toast(t("imported", n)); refresh(); } catch (e) { toast(e.message); }
@@ -2477,7 +2483,7 @@ function setEngineLabel() {
   el.textContent = S.sample ? "Claude" : (S.apiKey ? S.model : "—");
   el.classList.toggle("off", !S.sample && !S.apiKey);
 }
-document.addEventListener("DOMContentLoaded", boot);
+if (!MOVED) document.addEventListener("DOMContentLoaded", boot);
 })();
 
 </script>

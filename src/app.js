@@ -18,7 +18,7 @@ let idb = null;
 function openDB() {
   return new Promise(res => {
     try {
-      const r = indexedDB.open("lean-taiyaku", 1);
+      const r = indexedDB.open("lean-taiyaku", 1); // name from before the rename, kept so saved translations stay
       r.onupgradeneeded = () => r.result.createObjectStore("tr");
       r.onsuccess = () => { idb = r.result; res(idb); };
       r.onerror = () => res(null);
@@ -351,7 +351,10 @@ async function loadSource(src) {
 }
 async function loadBundles(src, paths) {
   let n = 0;
-  for (const bp of paths.filter(p => /^\.lean-taiyaku\/[^/]+\.json$/.test(p))) {
+  // .taiyak/*.json; .lean-taiyaku/ is the directory name from before the rename and is still read.
+  // The legacy files go first, so .taiyak/ wins where both have a block.
+  const isNew = p => p.startsWith(".taiyak/");
+  for (const bp of paths.filter(p => /^\.(taiyak|lean-taiyaku)\/[^/]+\.json$/.test(p)).sort((a, b) => isNew(a) - isNew(b))) {
     try {
       const d = JSON.parse(await src.read(bp));
       for (const [k, v] of Object.entries(d.entries || {})) {
@@ -382,10 +385,13 @@ async function copyText(txt) {
     try { const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e2) { return false; }
   }
 }
-const SITE = "https://side-by-side-lean-natural.pages.dev";
+const SITE = "https://taiyak.pages.dev";
+// The site moved from side-by-side-lean-natural.pages.dev: send old links (with their query) to the new one.
+const MOVED = location.hostname === "side-by-side-lean-natural.pages.dev";
+if (MOVED) location.replace(SITE + location.pathname + location.search + location.hash);
 function patURL(owner) {
   const origin = /^https?:/.test(location.protocol) ? location.origin : SITE;
-  const q = new URLSearchParams({ name: "side-by-side-lean-natural (read)", description: `Read-only token for Lean 対訳ブラウザ (${origin}). Contents: read only.`, expires_in: "30", contents: "read" });
+  const q = new URLSearchParams({ name: "Taiyak (read)", description: `Read-only token for Taiyak (${origin}). Contents: read only.`, expires_in: "30", contents: "read" });
   if (owner) q.set("target_name", owner);
   return "https://github.com/settings/personal-access-tokens/new?" + q.toString();
 }
@@ -802,7 +808,7 @@ function exportJSON() {
   rows.sort((a, b) => (a[1].lang + a[1].path).localeCompare(b[1].lang + b[1].path) || (parseInt(String(a[1].id).slice(1)) - parseInt(String(b[1].id).slice(1))));
   const entries = {};
   for (const [k, v] of rows) entries[k] = { path: v.path, id: v.id, name: v.name || "", lang: v.lang, style: v.style, model: String(v.model || "").replace(/ · bundled$/, ""), at: v.at || null, tr: v.tr };
-  return JSON.stringify({ format: "lean-taiyaku/1", repo: S.source ? S.source.label : "", exported: new Date().toISOString(), entries }, null, 1);
+  return JSON.stringify({ format: "taiyak/1", repo: S.source ? S.source.label : "", exported: new Date().toISOString(), entries }, null, 1);
 }
 
 // ---------- events ----------
@@ -856,7 +862,7 @@ function bind() {
   $("#settings").addEventListener("click", e => { if (e.target.id === "settings") { saveSettings(); $("#settings").hidden = true; } });
   $("#sCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText(exportJSON()); toast(t("copied")); } catch (e) { $("#sImportTxt").value = exportJSON(); $("#sImportTxt").select(); } });
   $("#sDownload").addEventListener("click", () => {
-    try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([exportJSON()], { type: "application/json" })); a.download = "lean-taiyaku.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { }
+    try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([exportJSON()], { type: "application/json" })); a.download = "taiyak.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { }
   });
   const doImport = txt => {
     try { const d = JSON.parse(txt); let n = 0; for (const [k, v] of Object.entries(d.entries || {})) { MEM.set(k, v); idbPut(k, v); n++; } toast(t("imported", n)); refresh(); } catch (e) { toast(e.message); }
@@ -914,5 +920,5 @@ function setEngineLabel() {
   el.textContent = S.sample ? "Claude" : (S.apiKey ? S.model : "—");
   el.classList.toggle("off", !S.sample && !S.apiKey);
 }
-document.addEventListener("DOMContentLoaded", boot);
+if (!MOVED) document.addEventListener("DOMContentLoaded", boot);
 })();
