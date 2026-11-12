@@ -3,17 +3,18 @@
 // The interface strings below are built in. The glossary is built in for Japanese and
 // English; other languages get it translated by Claude on first use (see app.js).
 
+// Listed by total number of speakers (Ethnologue 2025), Chinese scripts together.
 const LANGS = [
-  { name: "日本語", ui: "ja" },
   { name: "English", ui: "en" },
   { name: "简体中文", ui: "zh-Hans" },
   { name: "繁體中文", ui: "zh-Hant" },
-  { name: "한국어", ui: "ko" },
-  { name: "Français", ui: "fr" },
-  { name: "Deutsch", ui: "de" },
   { name: "Español", ui: "es" },
+  { name: "Français", ui: "fr" },
   { name: "Português", ui: "pt" },
   { name: "Русский", ui: "ru" },
+  { name: "Deutsch", ui: "de" },
+  { name: "日本語", ui: "ja" },
+  { name: "한국어", ui: "ko" },
 ];
 
 const UI = {
