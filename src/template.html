@@ -75,6 +75,15 @@ code, pre { font-family: var(--font-code); }
 input[type=text], input[type=search], input[type=password], input:not([type]), select, textarea {
   background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; min-height: 34px;
 }
+/* Keys and tokens are masked with CSS rather than type=password, so password managers (Chrome, Safari,
+   iCloud Keychain…) do not offer to save or fill them. Browsers without -webkit-text-security get
+   type=password back from the script. The eye button shows the value to check a pasted key. */
+.secretWrap { display: flex; gap: 4px; align-items: stretch; }
+.secretWrap input { flex: 1; min-width: 0; }
+input.secret:not(.shown) { -webkit-text-security: disc; }
+.reveal { flex: none; width: 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--muted); cursor: pointer; position: relative; padding: 0; }
+.reveal::before { content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat; }
+.reveal[aria-pressed=true] { color: var(--accent); border-color: var(--accent); }
 textarea { width: 100%; font-family: var(--font-code); font-size: 12px; }
 .grp { display: flex; align-items: center; gap: 6px; }
 .grp label { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
@@ -293,13 +302,13 @@ math { font-size: 1.06em; }
     <div id="sClaudeRow" class="row"><label for="tier"><span data-i="sEngine"></span>: <span data-i="sClaude"></span></label><select id="tier"></select></div>
     <div id="sApiRow" class="row wide">
       <div class="row"><label for="provider" data-i="sProvider"></label><select id="provider"></select></div>
-      <div id="keyRow" class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
+      <div id="keyRow" class="row"><label for="apiKey" data-i="sApi"></label><span class="secretWrap"><input id="apiKey" type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"><button type="button" class="reveal" aria-pressed="false"></button></span>
         <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p>
         <p id="orRow" class="note" hidden><button id="orConnect" type="button" class="btn" data-i="orConnect"></button><br><span data-i="orHint"></span></p></div>
       <div id="modelRow" class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist>
         <p class="note"><span id="modelInfo"></span> <button id="modelRefresh" type="button" class="linkbtn" data-i="modelsRefresh"></button></p></div>
       <div id="chromeRow" class="row" hidden><p class="note"><span id="chromeState"></span> <button id="chromeDl" type="button" class="btn ghost" data-i="chromeDownload" hidden></button></p></div>
-      <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
+      <div class="row"><label for="ghToken" data-i="sGh"></label><span class="secretWrap"><input id="ghToken" type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" placeholder="github_pat_…"><button type="button" class="reveal" aria-pressed="false"></button></span>
         <p class="note"><a id="patLink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" data-i="patLink"></a><br><span data-i="patSteps"></span></p></div>
       <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
     </div>
