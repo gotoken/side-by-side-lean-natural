@@ -49,14 +49,11 @@ const S = {
   sample: null, inArtifact: !!(window.claude && typeof window.claude.use === "function"),
   job: null, confirmArm: 0,
 };
+// First visit: Japanese if the browser ranks any Japanese above any English, otherwise English.
 function defaultLang() {
-  const prefixes = LANGS.flatMap(L => L.nav.map(n => [n, L.name])).sort((a, b) => b[0].length - a[0].length);
-  for (const bl of (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"])) {
-    const n = String(bl).toLowerCase();
-    const hit = prefixes.find(([p]) => n === p || n.startsWith(p + "-"));
-    if (hit) return hit[1];
-  }
-  return "English";
+  const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"]).map(x => String(x).toLowerCase());
+  const rank = p => { const i = prefs.findIndex(n => n === p || n.startsWith(p + "-")); return i < 0 ? Infinity : i; };
+  return rank("ja") < rank("en") ? "日本語" : "English";
 }
 if (!S.lang) S.lang = defaultLang();
 // The interface follows the selected language unless Settings pins one; languages without
@@ -867,9 +864,11 @@ async function boot() {
   // demo data
   const demo = JSON.parse(document.getElementById("demo-data").textContent);
   const demoTr = JSON.parse(document.getElementById("demo-tr").textContent);
-  for (const [p, m] of Object.entries(demoTr)) {
-    const bl = CORE.splitLean(demo.files[p]);
-    for (const b of bl) { const tr = m[b.id]; if (!tr) continue; const k = `日本語|normal|${CORE.hashStr(p + "\n" + b.text)}`; MEM.set(k, { tr, path: p, id: b.id, name: b.name || "", repo: demo.label, lang: "日本語", style: "normal", model: "Claude (demo)", demo: true }); }
+  for (const [lang, byPath] of Object.entries(demoTr)) {
+    for (const [p, m] of Object.entries(byPath)) {
+      const bl = CORE.splitLean(demo.files[p]);
+      for (const b of bl) { const tr = m[b.id]; if (!tr) continue; const k = `${lang}|normal|${CORE.hashStr(p + "\n" + b.text)}`; MEM.set(k, { tr, path: p, id: b.id, name: b.name || "", repo: demo.label, lang, style: "normal", model: "Claude (demo)", demo: true }); }
+    }
   }
   await openDB();
   for (const [k, v] of await idbAll()) {

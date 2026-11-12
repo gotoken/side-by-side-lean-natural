@@ -34,13 +34,22 @@ def script_body():
     return "\n" + "\n".join((SRC / f).read_text("utf-8") for f in ("core.js", "glossary.js", "i18n.js", "app.js")) + "\n"
 
 
+# Bundled demo translations, keyed by the language name used in LANGS (src/i18n.js).
+DEMO_LANGS = {"日本語": "ja", "English": "en"}
+
+
+def demo_translations():
+    return {name: json.loads((DEMO / f"translations.{code}.json").read_text("utf-8"))
+            for name, code in DEMO_LANGS.items()}
+
+
 def render(libs, license_links):
     tpl = (SRC / "template.html").read_text("utf-8")
     body = script_body()
     out = (tpl.replace("<!--LIBS-->", libs)
               .replace("<!--LICENSE_LINKS-->", license_links)
               .replace("/*DEMO_DATA*/", j(demo_payload()))
-              .replace("/*DEMO_TR*/", j(json.loads((DEMO / "translations.ja.json").read_text("utf-8"))))
+              .replace("/*DEMO_TR*/", j(demo_translations()))
               .replace("<script>\n/*CORE*/\n/*GLOSSARY*/\n/*APP*/\n</script>", "<script>" + body + "</script>"))
     assert "/*" + "APP*/" not in out and out.lower().count("</script") == 5, "template placeholders"
     return out, body
