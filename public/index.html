@@ -1571,33 +1571,63 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 // Interface strings and the language list live in i18n.js (UI, LANGS).
 
 // ---------- storage helpers ----------
+// Settings live in localStorage under "taiyak:" and translations in the IndexedDB database "taiyak".
+// What was saved under the names used before the rename ("lt:" keys, the "lean-taiyaku" database)
+// is moved over once.
+const LS_PREFIX = "taiyak:", OLD_LS_PREFIX = "lt:";
+const DB_NAME = "taiyak", OLD_DB_NAME = "lean-taiyaku";
+try {
+  const old = [];
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(OLD_LS_PREFIX)) old.push(k); }
+  for (const k of old) {
+    const nk = LS_PREFIX + k.slice(OLD_LS_PREFIX.length);
+    if (localStorage.getItem(nk) == null) localStorage.setItem(nk, localStorage.getItem(k));
+    localStorage.removeItem(k);
+  }
+} catch (e) { }
 const LS = {
-  get(k, d) { try { const v = localStorage.getItem("lt:" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem("lt:" + k, JSON.stringify(v)); } catch (e) { } },
-  del(k) { try { localStorage.removeItem("lt:" + k); } catch (e) { } }
+  get(k, d) { try { const v = localStorage.getItem(LS_PREFIX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(LS_PREFIX + k, JSON.stringify(v)); } catch (e) { } },
+  del(k) { try { localStorage.removeItem(LS_PREFIX + k); } catch (e) { } }
 };
 const MEM = new Map(); // translation cache in memory
 let idb = null;
 function openDB() {
   return new Promise(res => {
     try {
-      const r = indexedDB.open("lean-taiyaku", 1); // name from before the rename, kept so saved translations stay
+      const r = indexedDB.open(DB_NAME, 1);
       r.onupgradeneeded = () => r.result.createObjectStore("tr");
       r.onsuccess = () => { idb = r.result; res(idb); };
       r.onerror = () => res(null);
     } catch (e) { res(null); }
   });
 }
-function idbAll() {
+function idbAll(db = idb) {
   return new Promise(res => {
-    if (!idb) return res([]);
+    if (!db) return res([]);
     try {
-      const out = []; const tx = idb.transaction("tr"); const st = tx.objectStore("tr");
+      const out = []; const tx = db.transaction("tr"); const st = tx.objectStore("tr");
       const rq = st.openCursor();
       rq.onsuccess = () => { const c = rq.result; if (c) { out.push([c.key, c.value]); c.continue(); } else res(out); };
       rq.onerror = () => res(out);
     } catch (e) { res([]); }
   });
+}
+// Copies translations from the database used before the rename (keeping any already in the new
+// one), then deletes the old database once the copy has been committed.
+async function migrateOldDB() {
+  try {
+    if (!idb || !indexedDB.databases || !(await indexedDB.databases()).some(d => d.name === OLD_DB_NAME)) return;
+    const old = await new Promise((res, rej) => { const r = indexedDB.open(OLD_DB_NAME); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const rows = old.objectStoreNames.contains("tr") ? await idbAll(old) : [];
+    old.close();
+    const ok = await new Promise(res => {
+      const tx = idb.transaction("tr", "readwrite"); const st = tx.objectStore("tr");
+      for (const [k, v] of rows) { const rq = st.add(v, k); rq.onerror = e => { e.preventDefault(); e.stopPropagation(); }; }
+      tx.oncomplete = () => res(true); tx.onerror = tx.onabort = () => res(false);
+    });
+    if (ok) indexedDB.deleteDatabase(OLD_DB_NAME);
+  } catch (e) { }
 }
 function idbPut(k, v) { try { if (idb) idb.transaction("tr", "readwrite").objectStore("tr").put(v, k); } catch (e) { } }
 
@@ -2451,7 +2481,7 @@ async function boot() {
       for (const b of bl) { const tr = m[b.id]; if (!tr) continue; const k = `${lang}|normal|${CORE.hashStr(p + "\n" + b.text)}`; MEM.set(k, { tr, path: p, id: b.id, name: b.name || "", repo: demo.label, lang, style: "normal", model: "Claude (demo)", demo: true }); }
     }
   }
-  await openDB();
+  await openDB(); await migrateOldDB();
   for (const [k, v] of await idbAll()) {
     if (String(k).startsWith("g|")) { if (v && v.gloss && GLOSSARY[v.k] && v.h === CORE.hashStr(GLOSSARY[v.k][1])) GL.set(v.lang + "|" + v.k, v.gloss); }
     else if (!MEM.has(k)) MEM.set(k, v);
