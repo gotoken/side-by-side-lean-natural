@@ -27,7 +27,7 @@ Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言�
 <https://taiyak.pages.dev/> を開きます。
 
 1. GitHub の URL を入れて「開く」を押す
-2. 「設定」で Anthropic・OpenAI・Google のいずれかの API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる。設定にある「GitHub でトークンを作る」から開くと、読み取り専用（Contents: read）・期限 30 日の設定が記入済みの作成画面になるので、読みたいリポジトリを選んで作るだけです
+2. 「設定」で Anthropic・OpenAI・Google・OpenRouter のいずれかの API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる。設定にある「GitHub でトークンを作る」から開くと、読み取り専用（Contents: read）・期限 30 日の設定が記入済みの作成画面になるので、読みたいリポジトリを選んで作るだけです
 3. 「このファイルを訳す」、または各ブロックの「訳す」を押す
 
 URL を入れずに開くと、デモが表示されます。CRuby の `range.c` にある `rb_range_component_beg_len`（範囲引数の正規化）を Lean に写したモデルと、仕様・性質 P1〜P4・修正版のモデルです（作者の実験リポジトリ `gotoken/cruby-formalized-trial` @74e11c6 から。リポジトリ自体は非公開）。`Basic`・`Cases`・`Spec`・`Impl`・`Statements`・`Fixed` は日本語訳と英訳つきで、ほかのファイルはその場で訳せます。
@@ -61,8 +61,8 @@ Web 版で GitHub から開いている間は、アドレスバーの URL がそ
 ## キーとデータの扱い
 
 - API キーと GitHub トークンはブラウザの中だけで使います。「このブラウザに保存する」を選んだときだけ localStorage に保存します。共用の PC では保存しないでください。
-- ページが通信する先は `api.github.com`, `api.anthropic.com`, `api.openai.com` と `generativelanguage.googleapis.com` だけです。Web 版では `public/_headers` の Content-Security-Policy でこれを固定しているので、ブラウザはそれ以外への送信を拒否します。インラインスクリプトもハッシュで固定しています。
-- 翻訳するとき、対象ファイルと参照している定義の Lean ソースを、選んだ API（Anthropic・OpenAI・Google のいずれか）に送ります。private なコードを訳すときは、所属組織の方針を確認してください。
+- ページが通信する先は `api.github.com`, `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` と `openrouter.ai` だけです。Web 版では `public/_headers` の Content-Security-Policy でこれを固定しているので、ブラウザはそれ以外への送信を拒否します。インラインスクリプトもハッシュで固定しています。
+- 翻訳するとき、対象ファイルと参照している定義の Lean ソースを、選んだ API（Anthropic・OpenAI・Google・OpenRouter のいずれか）に送ります。private なコードを訳すときは、所属組織の方針を確認してください。
 - GitHub トークンは fine-grained personal access token をおすすめします。対象のリポジトリだけを選び、権限は Contents: Read-only にしてください。
 
 ## 仕組みと限界

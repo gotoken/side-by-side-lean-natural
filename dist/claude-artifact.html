@@ -294,7 +294,8 @@ math { font-size: 1.06em; }
     <div id="sApiRow" class="row wide">
       <div class="row"><label for="provider" data-i="sProvider"></label><select id="provider"></select></div>
       <div id="keyRow" class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
-        <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p></div>
+        <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p>
+        <p id="orRow" class="note" hidden><button id="orConnect" type="button" class="btn" data-i="orConnect"></button><br><span data-i="orHint"></span></p></div>
       <div id="modelRow" class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist>
         <p class="note"><span id="modelInfo"></span> <button id="modelRefresh" type="button" class="linkbtn" data-i="modelsRefresh"></button></p></div>
       <div id="chromeRow" class="row" hidden><p class="note"><span id="chromeState"></span> <button id="chromeDl" type="button" class="btn ghost" data-i="chromeDownload" hidden></button></p></div>
@@ -1088,6 +1089,7 @@ const UI = {
     sEngine: "翻訳エンジン", sClaude: "Claude（claude.ai のあなたのアカウント）",
     tierDefault: "標準", tierComplex: "高精度（時間がかかる）", tierQuick: "高速",
     sApi: "API キー", sProvider: "翻訳に使う API", keyLink: h => `${h} でキーを作る`, sModel: "モデル名", sGh: "GitHub トークン（private 用。fine-grained PAT で Contents: Read-only）",
+    orConnect: "OpenRouter に接続", orHint: "キーをコピーする代わりに、OpenRouter で承認するとキーが入ります。末尾が :free のモデルは無料です（1 日 50 回まで）。", orConnected: "OpenRouter に接続しました", orFailed: e => `OpenRouter に接続できませんでした（${e}）`,
     chromeName: "Chrome 内蔵（Gemini Nano）", chromeNote: "この端末の中で動くモデルです。キーは要らず、コードも外に送りません。小さなモデルなので、訳の質は API より落ち、長い宣言は扱えないことがあります。",
     chromeState: s => ({ missing: "このブラウザでは使えません（Chrome の Prompt API がありません）", unavailable: "この端末では使えません", downloadable: "モデルのダウンロードが必要です", downloading: "モデルをダウンロード中", available: "使えます" })[s] || s, chromeDownload: "モデルをダウンロード", chromeTooLong: (a, b) => `入力が長すぎます（${a} / ${b} トークン）`,
     modelsFetched: (n) => `API から ${n} 個のモデルを取得しました`, modelsFailed: (e) => `モデル一覧を取得できませんでした（${e}）。既定の候補を表示しています`, modelsRefresh: "一覧を更新",
@@ -1141,6 +1143,7 @@ const UI = {
     sEngine: "Translator", sClaude: "Claude (your claude.ai account)",
     tierDefault: "Default", tierComplex: "Most capable (slower)", tierQuick: "Fast",
     sApi: "API key", sProvider: "Translation API", keyLink: h => `Create a key at ${h}`, sModel: "Model", sGh: "GitHub token (for private repos; fine-grained PAT with Contents: Read-only)",
+    orConnect: "Connect OpenRouter", orHint: "Instead of copying a key, approve on OpenRouter and the key is filled in. Models ending in :free cost nothing (up to 50 requests a day).", orConnected: "Connected to OpenRouter", orFailed: e => `Could not connect to OpenRouter (${e})`,
     chromeName: "Chrome built-in (Gemini Nano)", chromeNote: "Runs on this device: no key, and the code never leaves it. It is a small model, so translations are weaker than the APIs' and long declarations may not fit.",
     chromeState: s => ({ missing: "Not available in this browser (no Chrome Prompt API)", unavailable: "Not available on this device", downloadable: "The model needs to be downloaded", downloading: "Downloading the model", available: "Ready" })[s] || s, chromeDownload: "Download the model", chromeTooLong: (a, b) => `Input too long (${a} / ${b} tokens)`,
     modelsFetched: (n) => `${n} models from the API`, modelsFailed: (e) => `Could not get the model list (${e}); showing the default suggestions`, modelsRefresh: "Refresh list",
@@ -1194,6 +1197,7 @@ const UI = {
     sEngine: "翻译引擎", sClaude: "Claude（你在 claude.ai 的账户）",
     tierDefault: "标准", tierComplex: "高精度（较慢）", tierQuick: "快速",
     sApi: "API 密钥", sProvider: "翻译所用的 API", keyLink: h => `在 ${h} 创建密钥`, sModel: "模型", sGh: "GitHub 令牌（用于私有仓库；fine-grained PAT，Contents: Read-only）",
+    orConnect: "连接 OpenRouter", orHint: "无需复制密钥：在 OpenRouter 上授权后会自动填入密钥。名称以 :free 结尾的模型免费（每天最多 50 次）。", orConnected: "已连接 OpenRouter", orFailed: e => `无法连接 OpenRouter（${e}）`,
     chromeName: "Chrome 内置（Gemini Nano）", chromeNote: "在本设备上运行：不需要密钥，代码也不会发送出去。由于模型较小，译文质量不如 API，较长的声明可能无法处理。",
     chromeState: s => ({ missing: "此浏览器不可用（没有 Chrome Prompt API）", unavailable: "此设备不可用", downloadable: "需要下载模型", downloading: "正在下载模型", available: "可以使用" })[s] || s, chromeDownload: "下载模型", chromeTooLong: (a, b) => `输入过长（${a} / ${b} 词元）`,
     modelsFetched: (n) => `已从 API 获取 ${n} 个模型`, modelsFailed: (e) => `无法获取模型列表（${e}），显示默认候选`, modelsRefresh: "刷新列表",
@@ -1247,6 +1251,7 @@ const UI = {
     sEngine: "翻譯引擎", sClaude: "Claude（你在 claude.ai 的帳號）",
     tierDefault: "標準", tierComplex: "高精度（較慢）", tierQuick: "快速",
     sApi: "API 金鑰", sProvider: "翻譯所用的 API", keyLink: h => `在 ${h} 建立金鑰`, sModel: "模型", sGh: "GitHub 權杖（用於私有儲存庫；fine-grained PAT，Contents: Read-only）",
+    orConnect: "連接 OpenRouter", orHint: "不必複製金鑰：在 OpenRouter 上授權後會自動填入金鑰。名稱以 :free 結尾的模型免費（每天最多 50 次）。", orConnected: "已連接 OpenRouter", orFailed: e => `無法連接 OpenRouter（${e}）`,
     chromeName: "Chrome 內建（Gemini Nano）", chromeNote: "在本裝置上執行：不需要金鑰，程式碼也不會傳送出去。由於模型較小，譯文品質不如 API，較長的宣告可能無法處理。",
     chromeState: s => ({ missing: "此瀏覽器無法使用（沒有 Chrome Prompt API）", unavailable: "此裝置無法使用", downloadable: "需要下載模型", downloading: "正在下載模型", available: "可以使用" })[s] || s, chromeDownload: "下載模型", chromeTooLong: (a, b) => `輸入過長（${a} / ${b} 詞元）`,
     modelsFetched: (n) => `已從 API 取得 ${n} 個模型`, modelsFailed: (e) => `無法取得模型清單（${e}），顯示預設候選`, modelsRefresh: "重新整理清單",
@@ -1300,6 +1305,7 @@ const UI = {
     sEngine: "번역 엔진", sClaude: "Claude (claude.ai의 내 계정)",
     tierDefault: "보통", tierComplex: "고정밀 (느림)", tierQuick: "빠름",
     sApi: "API 키", sProvider: "번역에 쓸 API", keyLink: h => `${h}에서 키 만들기`, sModel: "모델", sGh: "GitHub 토큰 (비공개 저장소용, fine-grained PAT, Contents: Read-only)",
+    orConnect: "OpenRouter 연결", orHint: "키를 복사하는 대신 OpenRouter에서 승인하면 키가 입력됩니다. 이름이 :free로 끝나는 모델은 무료입니다(하루 50회까지).", orConnected: "OpenRouter에 연결했습니다", orFailed: e => `OpenRouter에 연결하지 못했습니다 (${e})`,
     chromeName: "Chrome 내장 (Gemini Nano)", chromeNote: "이 기기 안에서 실행됩니다. 키가 필요 없고 코드도 밖으로 보내지 않습니다. 작은 모델이라 번역 품질은 API보다 낮고, 긴 선언은 처리하지 못할 수 있습니다.",
     chromeState: s => ({ missing: "이 브라우저에서는 쓸 수 없습니다 (Chrome Prompt API 없음)", unavailable: "이 기기에서는 쓸 수 없습니다", downloadable: "모델을 내려받아야 합니다", downloading: "모델을 내려받는 중", available: "사용할 수 있습니다" })[s] || s, chromeDownload: "모델 내려받기", chromeTooLong: (a, b) => `입력이 너무 깁니다 (${a} / ${b} 토큰)`,
     modelsFetched: (n) => `API에서 모델 ${n}개를 가져왔습니다`, modelsFailed: (e) => `모델 목록을 가져오지 못했습니다 (${e}). 기본 후보를 표시합니다`, modelsRefresh: "목록 새로 고침",
@@ -1353,6 +1359,7 @@ const UI = {
     sEngine: "Traducteur", sClaude: "Claude (votre compte claude.ai)",
     tierDefault: "Standard", tierComplex: "Le plus capable (plus lent)", tierQuick: "Rapide",
     sApi: "Clé API", sProvider: "API de traduction", keyLink: h => `Créer une clé chez ${h}`, sModel: "Modèle", sGh: "Jeton GitHub (dépôts privés ; PAT fine-grained, Contents: Read-only)",
+    orConnect: "Connecter OpenRouter", orHint: "Au lieu de copier une clé, approuvez sur OpenRouter et la clé est renseignée. Les modèles finissant par :free sont gratuits (jusqu'à 50 requêtes par jour).", orConnected: "Connecté à OpenRouter", orFailed: e => `Connexion à OpenRouter impossible (${e})`,
     chromeName: "Intégré à Chrome (Gemini Nano)", chromeNote: "S'exécute sur cet appareil : pas de clé, et le code ne le quitte pas. C'est un petit modèle : les traductions sont moins bonnes qu'avec les API et les longues déclarations peuvent ne pas tenir.",
     chromeState: s => ({ missing: "Indisponible dans ce navigateur (pas de Prompt API de Chrome)", unavailable: "Indisponible sur cet appareil", downloadable: "Le modèle doit être téléchargé", downloading: "Téléchargement du modèle", available: "Prêt" })[s] || s, chromeDownload: "Télécharger le modèle", chromeTooLong: (a, b) => `Entrée trop longue (${a} / ${b} jetons)`,
     modelsFetched: (n) => `${n} modèles obtenus de l'API`, modelsFailed: (e) => `Impossible d'obtenir la liste des modèles (${e}) ; suggestions par défaut affichées`, modelsRefresh: "Actualiser la liste",
@@ -1406,6 +1413,7 @@ const UI = {
     sEngine: "Übersetzer", sClaude: "Claude (Ihr claude.ai-Konto)",
     tierDefault: "Standard", tierComplex: "Am leistungsfähigsten (langsamer)", tierQuick: "Schnell",
     sApi: "API-Schlüssel", sProvider: "API für die Übersetzung", keyLink: h => `Schlüssel bei ${h} erstellen`, sModel: "Modell", sGh: "GitHub-Token (für private Repos; fine-grained PAT, Contents: Read-only)",
+    orConnect: "Mit OpenRouter verbinden", orHint: "Statt einen Schlüssel zu kopieren, bei OpenRouter bestätigen – der Schlüssel wird eingetragen. Modelle mit der Endung :free sind kostenlos (bis zu 50 Anfragen am Tag).", orConnected: "Mit OpenRouter verbunden", orFailed: e => `Verbindung mit OpenRouter fehlgeschlagen (${e})`,
     chromeName: "In Chrome integriert (Gemini Nano)", chromeNote: "Läuft auf diesem Gerät: kein Schlüssel, und der Code verlässt es nicht. Es ist ein kleines Modell, daher sind die Übersetzungen schwächer als bei den APIs, und lange Deklarationen passen eventuell nicht.",
     chromeState: s => ({ missing: "In diesem Browser nicht verfügbar (keine Prompt API von Chrome)", unavailable: "Auf diesem Gerät nicht verfügbar", downloadable: "Das Modell muss heruntergeladen werden", downloading: "Modell wird heruntergeladen", available: "Bereit" })[s] || s, chromeDownload: "Modell herunterladen", chromeTooLong: (a, b) => `Eingabe zu lang (${a} / ${b} Token)`,
     modelsFetched: (n) => `${n} Modelle von der API`, modelsFailed: (e) => `Modellliste nicht abrufbar (${e}); Standardvorschläge werden angezeigt`, modelsRefresh: "Liste aktualisieren",
@@ -1459,6 +1467,7 @@ const UI = {
     sEngine: "Traductor", sClaude: "Claude (su cuenta de claude.ai)",
     tierDefault: "Estándar", tierComplex: "El más capaz (más lento)", tierQuick: "Rápido",
     sApi: "Clave de API", sProvider: "API de traducción", keyLink: h => `Crear una clave en ${h}`, sModel: "Modelo", sGh: "Token de GitHub (repositorios privados; PAT fine-grained, Contents: Read-only)",
+    orConnect: "Conectar OpenRouter", orHint: "En vez de copiar una clave, apruebe en OpenRouter y la clave se rellena sola. Los modelos que terminan en :free son gratuitos (hasta 50 solicitudes al día).", orConnected: "Conectado a OpenRouter", orFailed: e => `No se pudo conectar con OpenRouter (${e})`,
     chromeName: "Integrado en Chrome (Gemini Nano)", chromeNote: "Se ejecuta en este dispositivo: sin clave y el código no sale de él. Es un modelo pequeño, así que las traducciones son peores que con las API y las declaraciones largas pueden no caber.",
     chromeState: s => ({ missing: "No disponible en este navegador (sin Prompt API de Chrome)", unavailable: "No disponible en este dispositivo", downloadable: "Hay que descargar el modelo", downloading: "Descargando el modelo", available: "Listo" })[s] || s, chromeDownload: "Descargar el modelo", chromeTooLong: (a, b) => `Entrada demasiado larga (${a} / ${b} tokens)`,
     modelsFetched: (n) => `${n} modelos obtenidos de la API`, modelsFailed: (e) => `No se pudo obtener la lista de modelos (${e}); se muestran las sugerencias predeterminadas`, modelsRefresh: "Actualizar lista",
@@ -1512,6 +1521,7 @@ const UI = {
     sEngine: "Tradutor", sClaude: "Claude (sua conta do claude.ai)",
     tierDefault: "Padrão", tierComplex: "Mais capaz (mais lento)", tierQuick: "Rápido",
     sApi: "Chave de API", sProvider: "API de tradução", keyLink: h => `Criar uma chave em ${h}`, sModel: "Modelo", sGh: "Token do GitHub (repositórios privados; PAT fine-grained, Contents: Read-only)",
+    orConnect: "Conectar ao OpenRouter", orHint: "Em vez de copiar uma chave, aprove no OpenRouter e a chave é preenchida. Modelos terminados em :free são gratuitos (até 50 solicitações por dia).", orConnected: "Conectado ao OpenRouter", orFailed: e => `Não foi possível conectar ao OpenRouter (${e})`,
     chromeName: "Integrado ao Chrome (Gemini Nano)", chromeNote: "Roda neste dispositivo: sem chave, e o código não sai dele. É um modelo pequeno, então as traduções são piores que as das APIs e declarações longas podem não caber.",
     chromeState: s => ({ missing: "Indisponível neste navegador (sem Prompt API do Chrome)", unavailable: "Indisponível neste dispositivo", downloadable: "É preciso baixar o modelo", downloading: "Baixando o modelo", available: "Pronto" })[s] || s, chromeDownload: "Baixar o modelo", chromeTooLong: (a, b) => `Entrada longa demais (${a} / ${b} tokens)`,
     modelsFetched: (n) => `${n} modelos obtidos da API`, modelsFailed: (e) => `Não foi possível obter a lista de modelos (${e}); mostrando as sugestões padrão`, modelsRefresh: "Atualizar lista",
@@ -1565,6 +1575,7 @@ const UI = {
     sEngine: "Переводчик", sClaude: "Claude (ваша учётная запись claude.ai)",
     tierDefault: "Стандартная", tierComplex: "Самая мощная (медленнее)", tierQuick: "Быстрая",
     sApi: "Ключ API", sProvider: "API для перевода", keyLink: h => `Создать ключ в ${h}`, sModel: "Модель", sGh: "Токен GitHub (для приватных репозиториев; fine-grained PAT, Contents: Read-only)",
+    orConnect: "Подключить OpenRouter", orHint: "Вместо копирования ключа подтвердите доступ в OpenRouter, и ключ подставится сам. Модели с окончанием :free бесплатны (до 50 запросов в день).", orConnected: "OpenRouter подключён", orFailed: e => `Не удалось подключиться к OpenRouter (${e})`,
     chromeName: "Встроенная в Chrome (Gemini Nano)", chromeNote: "Работает на этом устройстве: ключ не нужен, код никуда не отправляется. Модель небольшая, поэтому переводы хуже, чем через API, а длинные объявления могут не поместиться.",
     chromeState: s => ({ missing: "Недоступно в этом браузере (нет Prompt API Chrome)", unavailable: "Недоступно на этом устройстве", downloadable: "Нужно скачать модель", downloading: "Модель скачивается", available: "Готово" })[s] || s, chromeDownload: "Скачать модель", chromeTooLong: (a, b) => `Слишком длинный ввод (${a} / ${b} токенов)`,
     modelsFetched: (n) => `Получено моделей из API: ${n}`, modelsFailed: (e) => `Не удалось получить список моделей (${e}); показаны варианты по умолчанию`, modelsRefresh: "Обновить список",
@@ -1673,6 +1684,9 @@ const PROVIDERS = {
     models: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-6-astra"] },
   google: { name: "Google Gemini", host: "generativelanguage.googleapis.com", ph: "AIza…", keyURL: "https://aistudio.google.com/apikey",
     models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"] },
+  // One key for many vendors' models, obtainable with a button (OAuth PKCE) instead of copying a key.
+  openrouter: { name: "OpenRouter", host: "openrouter.ai", ph: "sk-or-…", keyURL: "https://openrouter.ai/settings/keys", oauth: true,
+    models: ["google/gemma-4-31b-it:free", "nvidia/nemotron-3-super:free", "anthropic/claude-sonnet-5-5", "openai/gpt-5.6-terra", "google/gemini-3.8-flash"] },
   // Gemini Nano inside Chrome (Prompt API): no key, nothing leaves the device, small context.
   chrome: { local: true, models: ["gemini-nano"] },
 };
@@ -1694,6 +1708,14 @@ const LIST_MODELS = {
     const r = await fetch("https://api.openai.com/v1/models", { headers: { authorization: "Bearer " + key } });
     if (!r.ok) throw new Error("API " + r.status);
     return ((await r.json()).data || []).sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => m.id).filter(id => /^(gpt-|o\d|chatgpt-)/.test(id) && !MODEL_SKIP.test(id));
+  },
+  // Free models (":free", 50 requests a day without a purchase) come first, then the newest.
+  async openrouter(key) {
+    const r = await fetch("https://openrouter.ai/api/v1/models?output_modalities=text", { headers: { authorization: "Bearer " + key } });
+    if (!r.ok) throw new Error("API " + r.status);
+    const free = m => /:free$/.test(m.id);
+    return ((await r.json()).data || []).filter(m => !m.architecture || !m.architecture.output_modalities || m.architecture.output_modalities.includes("text"))
+      .filter(m => !MODEL_SKIP.test(m.id)).sort((a, b) => free(b) - free(a) || (b.created || 0) - (a.created || 0)).map(m => m.id);
   },
   async google(key) {
     const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": key } });
@@ -1885,6 +1907,13 @@ const REQUEST = {
       { model: S.model, input: prompt, max_output_tokens: max * 2, store: false }, signal);
     const text = (d.output || []).filter(o => o.type === "message").flatMap(o => o.content || []).filter(c => c.type === "output_text").map(c => c.text).join("");
     return { text, truncated: d.status === "incomplete", model: d.model || S.model };
+  },
+  async openrouter(prompt, signal, max) {
+    const d = await postJSON("https://openrouter.ai/api/v1/chat/completions", { authorization: "Bearer " + S.apiKey, "x-title": "Taiyak" },
+      { model: S.model, messages: [{ role: "user", content: prompt }], max_tokens: max * 2 }, signal);
+    if (d.error) throw new Error("API: " + (d.error.message || d.error.code));
+    const c = (d.choices || [])[0] || {};
+    return { text: (c.message && c.message.content) || "", truncated: c.finish_reason === "length", model: d.model || S.model };
   },
   async chrome(prompt, signal, max, onText) {
     if (!hasLM()) throw new Error(t("chromeState", "missing"));
@@ -2543,6 +2572,40 @@ function openSettings() {
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
+// ---------- "Connect OpenRouter" (OAuth PKCE: no client registration, no server) ----------
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const OR_PENDING = "taiyak:orPending"; // sessionStorage: verifier, state and where to come back to
+async function orConnect() {
+  if (!PROVIDERS[DRAFT.provider].local) stashProvider();
+  DRAFT.provider = "openrouter"; saveSettings();
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  const state = b64url(crypto.getRandomValues(new Uint8Array(16)));
+  // Come back to the same address, with the language even where the address does not carry it (the demo).
+  const back = new URL(location.href); if (!back.searchParams.has("lang")) back.searchParams.set("lang", S.lang);
+  try { sessionStorage.setItem(OR_PENDING, JSON.stringify({ verifier, state, back: back.pathname + back.search + back.hash })); } catch (e) { }
+  const q = new URLSearchParams({ callback_url: location.origin + location.pathname, code_challenge: challenge, code_challenge_method: "S256", state, key_label: "Taiyak" });
+  location.assign("https://openrouter.ai/auth?" + q);
+}
+// Back from OpenRouter with ?code=…: exchange it for a key, then restore the address the user left from.
+async function orCallback() {
+  const q = new URLSearchParams(location.search), code = q.get("code");
+  let pend = null; try { pend = JSON.parse(sessionStorage.getItem(OR_PENDING) || "null"); } catch (e) { }
+  if (!code && !(pend && q.has("state"))) return;
+  try { sessionStorage.removeItem(OR_PENDING); } catch (e) { }
+  try { history.replaceState(null, "", pend ? pend.back : location.pathname); } catch (e) { }
+  if (!pend || !code || q.get("state") !== pend.state) { if (pend) setStatus(t("orFailed", code ? "state" : "denied"), "err"); return; }
+  try {
+    const r = await fetch("https://openrouter.ai/api/v1/auth/keys", { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code, code_verifier: pend.verifier, code_challenge_method: "S256" }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.key) throw new Error(r.status + " " + ((d.error && d.error.message) || ""));
+    S.provider = "openrouter"; S.keys.openrouter = d.key;
+    LS.set("provider", S.provider); if (S.remember) LS.set("keys", S.keys);
+    setEngineLabel(); toast(t("orConnected"));
+  } catch (e) { setStatus(t("orFailed", e.message), "err"); }
+}
+
 // The settings dialog edits a draft, so each provider's key and model survive switching between them.
 let DRAFT = null;
 function stashProvider() {
@@ -2558,6 +2621,7 @@ function showProvider() {
   $("#apiKey").value = DRAFT.keys[id] || ""; $("#apiKey").placeholder = P.ph;
   $("#model").value = DRAFT.models[id] || P.models[0];
   $("#keyLink").href = P.keyURL; $("#keyLink").textContent = t("keyLink", P.name);
+  $("#orRow").hidden = !P.oauth;
   $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone", P.host);
   fillModels(false);
 }
@@ -2630,6 +2694,7 @@ function bind() {
   $("#apiKey").addEventListener("change", () => fillModels(false));
   $("#modelRefresh").addEventListener("click", () => fillModels(true));
   $("#chromeDl").addEventListener("click", chromeDownload);
+  $("#orConnect").addEventListener("click", orConnect);
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
@@ -2688,6 +2753,7 @@ async function boot() {
       for (const b of bl) { const tr = m[b.id]; if (!tr) continue; const k = `${lang}|normal|${CORE.hashStr(p + "\n" + b.text)}`; MEM.set(k, { tr, path: p, id: b.id, name: b.name || "", repo: demo.label, lang, style: "normal", model: "Claude (demo)", demo: true }); }
     }
   }
+  if (!S.inArtifact) await orCallback();
   await openDB(); await migrateOldDB();
   for (const [k, v] of await idbAll()) {
     if (String(k).startsWith("g|")) { if (v && v.gloss && GLOSSARY[v.k] && v.h === CORE.hashStr(GLOSSARY[v.k][1])) GL.set(v.lang + "|" + v.k, v.gloss); }

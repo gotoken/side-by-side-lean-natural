@@ -294,7 +294,8 @@ math { font-size: 1.06em; }
     <div id="sApiRow" class="row wide">
       <div class="row"><label for="provider" data-i="sProvider"></label><select id="provider"></select></div>
       <div id="keyRow" class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
-        <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p></div>
+        <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p>
+        <p id="orRow" class="note" hidden><button id="orConnect" type="button" class="btn" data-i="orConnect"></button><br><span data-i="orHint"></span></p></div>
       <div id="modelRow" class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist>
         <p class="note"><span id="modelInfo"></span> <button id="modelRefresh" type="button" class="linkbtn" data-i="modelsRefresh"></button></p></div>
       <div id="chromeRow" class="row" hidden><p class="note"><span id="chromeState"></span> <button id="chromeDl" type="button" class="btn ghost" data-i="chromeDownload" hidden></button></p></div>

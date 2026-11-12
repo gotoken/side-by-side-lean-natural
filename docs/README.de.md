@@ -27,7 +27,7 @@ Ein Browser, der Lean-4-Quelltext in Deklarationen zerlegt und jede neben einer 
 Öffnen Sie <https://taiyak.pages.dev/>.
 
 1. Eine GitHub-URL eingeben und „Öffnen“ drücken
-2. Unter „Einstellungen“ einen API-Schlüssel von Anthropic, OpenAI oder Google eingeben (nötig zum Übersetzen). Bei einem privaten Repository zusätzlich ein GitHub-Token eingeben. „Token auf GitHub erstellen“ in den Einstellungen öffnet die Token-Seite von GitHub mit Lesezugriff (Contents: read) und 30 Tagen Gültigkeit bereits ausgefüllt: die gewünschten Repositories auswählen und erstellen
+2. Unter „Einstellungen“ einen API-Schlüssel von Anthropic, OpenAI, Google oder OpenRouter eingeben (nötig zum Übersetzen). Bei einem privaten Repository zusätzlich ein GitHub-Token eingeben. „Token auf GitHub erstellen“ in den Einstellungen öffnet die Token-Seite von GitHub mit Lesezugriff (Contents: read) und 30 Tagen Gültigkeit bereits ausgefüllt: die gewünschten Repositories auswählen und erstellen
 3. „Diese Datei übersetzen“ drücken oder „Übersetzen“ bei einem einzelnen Block
 
 Ohne URL geöffnet, zeigt die Seite eine Demo: ein Lean-Modell von `rb_range_component_beg_len` (der Normalisierung von Bereichsargumenten) aus CRubys `range.c`, mit Spezifikation, den Eigenschaften P1–P4 und einem Modell der Korrektur. Sie stammt aus dem nicht öffentlichen Experiment-Repository des Autors, `gotoken/cruby-formalized-trial` @74e11c6. `Basic`, `Cases`, `Spec`, `Impl`, `Statements` und `Fixed` liegen mit englischer und japanischer Übersetzung bei; die übrigen Dateien lassen sich direkt übersetzen.
@@ -61,8 +61,8 @@ Beim Öffnen eines Repositorys wird `.taiyak/*.json` automatisch geladen. Eine s
 ## Schlüssel und Daten
 
 - API-Schlüssel und GitHub-Token werden nur im Browser verwendet. In localStorage gespeichert werden sie nur, wenn Sie „In diesem Browser speichern“ wählen. Speichern Sie sie nicht auf gemeinsam genutzten Rechnern.
-- Die Seite kommuniziert nur mit `api.github.com`, `api.anthropic.com`, `api.openai.com` und `generativelanguage.googleapis.com`. In der Webversion erzwingt das die Content-Security-Policy in `public/_headers`, sodass der Browser Übertragungen an andere Ziele verweigert. Inline-Skripte sind zusätzlich per Hash festgelegt.
-- Beim Übersetzen wird der Lean-Quelltext der Datei und der referenzierten Definitionen an die gewählte API (Anthropic, OpenAI oder Google) gesendet. Prüfen Sie vor dem Übersetzen privaten Codes die Richtlinien Ihrer Organisation.
+- Die Seite kommuniziert nur mit `api.github.com`, `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` und `openrouter.ai`. In der Webversion erzwingt das die Content-Security-Policy in `public/_headers`, sodass der Browser Übertragungen an andere Ziele verweigert. Inline-Skripte sind zusätzlich per Hash festgelegt.
+- Beim Übersetzen wird der Lean-Quelltext der Datei und der referenzierten Definitionen an die gewählte API (Anthropic, OpenAI, Google oder OpenRouter) gesendet. Prüfen Sie vor dem Übersetzen privaten Codes die Richtlinien Ihrer Organisation.
 - Verwenden Sie als GitHub-Token ein fine-grained personal access token: nur die nötigen Repositories auswählen, mit Contents: Read-only.
 
 ## Funktionsweise und Grenzen
