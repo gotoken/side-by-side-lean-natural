@@ -59,6 +59,7 @@
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.65 var(--font-body); display: flex; flex-direction: column; overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
+select[lang] { font-family: var(--font-body); }
 code, pre { font-family: var(--font-code); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
@@ -82,6 +83,18 @@ textarea { width: 100%; font-family: var(--font-code); font-size: 12px; }
 .btn.primary, #srcForm button { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 500; }
 .btn.ghost { background: transparent; }
 #engine { font-family: var(--font-code); font-size: 12px; color: var(--accent); }
+/* Where the browser supports it, menus are drawn by the page rather than the OS, so each option
+   (the language names in particular) can use its own fonts; elsewhere they stay native. */
+@supports (appearance: base-select) {
+  select, ::picker(select) { appearance: base-select; }
+  select { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  select::picker-icon { color: var(--muted); font-size: .75em; }
+  ::picker(select) { margin-block: 4px; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgb(0 0 0 / .18); }
+  option { padding: 5px 12px 5px 8px; border-radius: 6px; gap: 6px; cursor: pointer; }
+  option:hover, option:focus-visible { background: color-mix(in srgb, var(--accent) 14%, transparent); outline: none; }
+  option:checked { color: var(--accent); font-weight: 600; }
+  option::checkmark { color: var(--accent); }
+}
 #engine.off { color: var(--err); }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .only-m { display: none; }
