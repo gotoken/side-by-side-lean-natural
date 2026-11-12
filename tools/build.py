@@ -96,7 +96,7 @@ def build_public():
         f"  Content-Security-Policy: {csp}\n"
         "  X-Content-Type-Options: nosniff\n"
         "  Referrer-Policy: no-referrer\n"
-        "  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()\n"
+        "  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
         "  Cross-Origin-Opener-Policy: same-origin\n", "utf-8")
     return html
 
