@@ -68,12 +68,29 @@ async function migrateOldDB() {
 }
 function idbPut(k, v) { try { if (idb) idb.transaction("tr", "readwrite").objectStore("tr").put(v, k); } catch (e) { } }
 
+// ---------- translation providers (web version; the claude.ai version uses the viewer's Claude) ----------
+const PROVIDERS = {
+  anthropic: { name: "Anthropic", host: "api.anthropic.com", ph: "sk-ant-…", keyURL: "https://console.anthropic.com/settings/keys",
+    models: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"] },
+  openai: { name: "OpenAI", host: "api.openai.com", ph: "sk-…", keyURL: "https://platform.openai.com/api-keys",
+    models: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-6-astra"] },
+  google: { name: "Google Gemini", host: "generativelanguage.googleapis.com", ph: "AIza…", keyURL: "https://aistudio.google.com/apikey",
+    models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"] },
+};
+// Keys and model names are kept per provider; "apiKey" and "model" are the settings from before
+// there was a choice and count as Anthropic's.
+const savedKeys = () => { const k = LS.get("keys", null) || {}; const old = LS.get("apiKey", ""); if (old && !k.anthropic) k.anthropic = old; return k; };
+const savedModels = () => { const m = LS.get("models", null) || {}; const old = LS.get("model", ""); if (old && !m.anthropic) m.anthropic = old; return m; };
+
 // ---------- state ----------
 const S = {
+  provider: PROVIDERS[LS.get("provider", "")] ? LS.get("provider", "") : "anthropic", keys: savedKeys(), models: savedModels(),
+  get apiKey() { return this.keys[this.provider] || ""; },
+  get model() { return this.models[this.provider] || PROVIDERS[this.provider].models[0]; },
   uiMode: LS.get("uiMode", LS.get("ui", "auto")),
   lang: LS.get("lang", null), style: LS.get("style", "normal"), view: LS.get("view", "both"),
-  tier: LS.get("tier", "default"), model: LS.get("model", "claude-sonnet-5-5"),
-  apiKey: LS.get("apiKey", ""), ghToken: LS.get("ghToken", ""), remember: LS.get("remember", false),
+  tier: LS.get("tier", "default"),
+  ghToken: LS.get("ghToken", ""), remember: LS.get("remember", false),
   source: null, paths: [], texts: new Map(), blocks: new Map(), cur: null, hist: [],
   idxFiles: new Map(), idx: new Map(), ctxCount: 0,
   sample: null, inArtifact: !!(window.claude && typeof window.claude.use === "function"),
@@ -182,25 +199,44 @@ class GitHubSource {
 }
 
 // ---------- translator ----------
+async function postJSON(url, headers, body, signal) {
+  let r;
+  try { r = await fetch(url, { method: "POST", signal, headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) }); }
+  catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}`);
+  return data;
+}
+// One request per provider: prompt in, { text, truncated, model } out. OpenAI and Gemini count
+// hidden reasoning against the output limit, so they get twice the room.
+const REQUEST = {
+  async anthropic(prompt, signal, max) {
+    const d = await postJSON("https://api.anthropic.com/v1/messages",
+      { "x-api-key": S.apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      { model: S.model, max_tokens: max, messages: [{ role: "user", content: prompt }] }, signal);
+    return { text: (d.content || []).filter(c => c.type === "text").map(c => c.text).join(""), truncated: d.stop_reason === "max_tokens", model: d.model || S.model };
+  },
+  async openai(prompt, signal, max) {
+    const d = await postJSON("https://api.openai.com/v1/responses", { authorization: "Bearer " + S.apiKey },
+      { model: S.model, input: prompt, max_output_tokens: max * 2, store: false }, signal);
+    const text = (d.output || []).filter(o => o.type === "message").flatMap(o => o.content || []).filter(c => c.type === "output_text").map(c => c.text).join("");
+    return { text, truncated: d.status === "incomplete", model: d.model || S.model };
+  },
+  async google(prompt, signal, max) {
+    const d = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:generateContent`, { "x-goog-api-key": S.apiKey },
+      { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: max * 2 } }, signal);
+    const c = (d.candidates || [])[0];
+    if (!c) throw new Error("API: " + ((d.promptFeedback && d.promptFeedback.blockReason) || "no candidates"));
+    const text = ((c.content && c.content.parts) || []).filter(p => !p.thought && typeof p.text === "string").map(p => p.text).join("");
+    return { text, truncated: c.finishReason === "MAX_TOKENS", model: d.modelVersion || S.model };
+  },
+};
 async function callLLM(prompt, onText, signal, opts = {}) {
   if (S.sample) {
     const r = await S.sample(prompt, { onText: ({ text }) => onText && onText(text), signal, modelTier: opts.tier || S.tier, cache: false });
     return { text: r.text, truncated: r.truncated, model: "claude (" + (r.modelTierApplied || S.tier) + ")" };
   }
-  if (S.apiKey) {
-    let r;
-    try {
-      r = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", signal,
-        headers: { "x-api-key": S.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json", "anthropic-dangerous-direct-browser-access": "true" },
-        body: JSON.stringify({ model: S.model, max_tokens: opts.maxTokens || 16000, messages: [{ role: "user", content: prompt }] })
-      });
-    } catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error((S.inArtifact ? "claude.ai " : "") + "api.anthropic.com: " + e.message); }
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}`);
-    const text = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("");
-    return { text, truncated: data.stop_reason === "max_tokens", model: data.model || S.model };
-  }
+  if (S.apiKey) return REQUEST[S.provider](prompt, signal, opts.maxTokens || 16000);
   throw new Error(t("noEngine"));
 }
 
@@ -811,8 +847,10 @@ function openSettings() {
   $("#sApiRow").hidden = S.inArtifact;
   $("#sDownload").hidden = S.inArtifact;
   $("#sClaudeRow").hidden = !S.sample;
-  $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone");
-  $("#apiKey").value = S.apiKey; $("#model").value = S.model; $("#ghToken").value = S.ghToken;
+  DRAFT = { provider: S.provider, keys: { ...S.keys }, models: { ...S.models } };
+  $("#provider").innerHTML = Object.entries(PROVIDERS).map(([id, p]) => `<option value="${id}">${esc(p.name)}</option>`).join("");
+  showProvider();
+  $("#ghToken").value = S.ghToken;
   $("#patLink").href = patURL(currentOwner());
   $("#remember").checked = S.remember;
   $("#uiLang").innerHTML = `<option value="auto" lang="${uiCode()}">${esc(t("uiAuto"))}</option>` + LANGS.map(L => `<option value="${L.ui}" lang="${L.ui}">${L.name}</option>`).join("");
@@ -821,13 +859,31 @@ function openSettings() {
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
+// The settings dialog edits a draft, so each provider's key and model survive switching between them.
+let DRAFT = null;
+function stashProvider() {
+  const k = $("#apiKey").value.trim(), m = $("#model").value.trim();
+  if (k) DRAFT.keys[DRAFT.provider] = k; else delete DRAFT.keys[DRAFT.provider];
+  if (m) DRAFT.models[DRAFT.provider] = m; else delete DRAFT.models[DRAFT.provider];
+}
+function showProvider() {
+  const P = PROVIDERS[DRAFT.provider];
+  $("#provider").value = DRAFT.provider;
+  $("#apiKey").value = DRAFT.keys[DRAFT.provider] || ""; $("#apiKey").placeholder = P.ph;
+  $("#model").value = DRAFT.models[DRAFT.provider] || P.models[0];
+  $("#models").innerHTML = P.models.map(m => `<option value="${esc(m)}"></option>`).join("");
+  $("#keyLink").href = P.keyURL; $("#keyLink").textContent = t("keyLink", P.name);
+  $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone", P.host);
+}
 function saveSettings() {
   const oldGh = S.ghToken, hadKey = !!S.apiKey;
-  S.apiKey = $("#apiKey").value.trim(); S.model = $("#model").value.trim() || "claude-sonnet-5-5"; S.ghToken = $("#ghToken").value.trim();
+  stashProvider();
+  S.provider = DRAFT.provider; S.keys = DRAFT.keys; S.models = DRAFT.models; S.ghToken = $("#ghToken").value.trim();
   if (S.ghToken && S.ghToken !== oldGh && S.lastFailed) { const f = S.lastFailed; S.lastFailed = null; $("#hint").hidden = true; setTimeout(() => { const gs = new GitHubSource(f.p, S.ghToken); gs.openPath = f.openPath; gs.focus = f.focus; loadSource(gs); }, 0); }
   S.remember = $("#remember").checked; S.tier = $("#tier").value || S.tier;
-  LS.set("model", S.model); LS.set("tier", S.tier); LS.set("remember", S.remember);
-  if (S.remember) { LS.set("apiKey", S.apiKey); LS.set("ghToken", S.ghToken); } else { LS.del("apiKey"); LS.del("ghToken"); }
+  LS.set("provider", S.provider); LS.set("models", S.models); LS.set("tier", S.tier); LS.set("remember", S.remember);
+  LS.del("apiKey"); LS.del("model");
+  if (S.remember) { LS.set("keys", S.keys); LS.set("ghToken", S.ghToken); } else { LS.del("keys"); LS.del("ghToken"); }
   setEngineLabel();
   const um = $("#uiLang").value; if (um !== S.uiMode) { S.uiMode = um; LS.set("uiMode", um); LS.del("ui"); applyUI(); refresh(); }
   if (!hadKey && S.apiKey) startGlossJob();
@@ -860,6 +916,7 @@ function bind() {
   });
   $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); startGlossJob(); } e.target.hidden = true; });
   $("#uiLang").addEventListener("change", e => syncSelLang(e.target));
+  $("#provider").addEventListener("change", e => { stashProvider(); DRAFT.provider = e.target.value; showProvider(); });
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);

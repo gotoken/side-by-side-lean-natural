@@ -27,7 +27,7 @@ Un navigateur qui découpe un source Lean 4 en déclarations et affiche chacune 
 Ouvrez <https://taiyak.pages.dev/>.
 
 1. Saisissez une URL GitHub et appuyez sur « Ouvrir »
-2. Dans « Réglages », saisissez une clé API Anthropic (nécessaire pour traduire). Pour un dépôt privé, saisissez aussi un jeton GitHub. « Créer un jeton sur GitHub » dans les réglages ouvre la page de création de jeton de GitHub avec l'accès en lecture seule (Contents: read) et une expiration de 30 jours déjà remplis : choisissez les dépôts à lire et créez-le
+2. Dans « Réglages », saisissez une clé API d'Anthropic, d'OpenAI ou de Google (nécessaire pour traduire). Pour un dépôt privé, saisissez aussi un jeton GitHub. « Créer un jeton sur GitHub » dans les réglages ouvre la page de création de jeton de GitHub avec l'accès en lecture seule (Contents: read) et une expiration de 30 jours déjà remplis : choisissez les dépôts à lire et créez-le
 3. Appuyez sur « Traduire ce fichier », ou sur « Traduire » pour un seul bloc
 
 Ouverte sans URL, la page affiche une démo : un modèle Lean de `rb_range_component_beg_len` (la normalisation des arguments de plage) du fichier `range.c` de CRuby, avec sa spécification, les propriétés P1–P4 et un modèle du correctif. Elle provient du dépôt d'expérimentation de l'auteur, `gotoken/cruby-formalized-trial` @74e11c6, qui n'est pas public. `Basic`, `Cases`, `Spec`, `Impl`, `Statements` et `Fixed` sont fournis avec des traductions anglaise et japonaise ; les autres fichiers peuvent être traduits sur place.
@@ -61,8 +61,8 @@ Exemple : <https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean
 ## Clés et données
 
 - La clé API et le jeton GitHub ne sont utilisés que dans le navigateur. Ils ne sont enregistrés dans localStorage que si vous choisissez « Mémoriser dans ce navigateur ». Ne les enregistrez pas sur un ordinateur partagé.
-- La page ne communique qu'avec `api.github.com` et `api.anthropic.com`. Dans la version web, la Content-Security-Policy de `public/_headers` l'impose : le navigateur refuse tout envoi ailleurs. Les scripts en ligne sont aussi fixés par empreinte.
-- La traduction envoie à Anthropic le source Lean du fichier et des définitions auxquelles il fait référence. Vérifiez la politique de votre organisation avant de traduire du code privé.
+- La page ne communique qu'avec `api.github.com`, `api.anthropic.com`, `api.openai.com` et `generativelanguage.googleapis.com`. Dans la version web, la Content-Security-Policy de `public/_headers` l'impose : le navigateur refuse tout envoi ailleurs. Les scripts en ligne sont aussi fixés par empreinte.
+- La traduction envoie à l'API choisie (Anthropic, OpenAI ou Google) le source Lean du fichier et des définitions auxquelles il fait référence. Vérifiez la politique de votre organisation avant de traduire du code privé.
 - Pour le jeton GitHub, utilisez un fine-grained personal access token : ne sélectionnez que les dépôts nécessaires, avec Contents: Read-only.
 
 ## Fonctionnement et limites

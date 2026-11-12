@@ -84,7 +84,7 @@ def build_public():
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src https://fonts.gstatic.com",
         "img-src 'self' data:",
-        "connect-src https://api.github.com https://api.anthropic.com",
+        "connect-src https://api.github.com https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com",
         "base-uri 'none'",
         "form-action 'none'",
         "frame-ancestors 'none'",

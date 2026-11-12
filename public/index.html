@@ -292,8 +292,10 @@ math { font-size: 1.06em; }
     <h2 id="sTitle" data-i="settings"></h2>
     <div id="sClaudeRow" class="row"><label for="tier"><span data-i="sEngine"></span>: <span data-i="sClaude"></span></label><select id="tier"></select></div>
     <div id="sApiRow" class="row wide">
-      <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></div>
-      <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"><option value="claude-sonnet-5-5"></option><option value="claude-opus-5-5"></option><option value="claude-haiku-5-5"></option></datalist></div>
+      <div class="row"><label for="provider" data-i="sProvider"></label><select id="provider"></select></div>
+      <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
+        <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p></div>
+      <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist></div>
       <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
         <p class="note"><a id="patLink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" data-i="patLink"></a><br><span data-i="patSteps"></span></p></div>
       <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
@@ -1070,7 +1072,7 @@ const UI = {
     lines: n => `${n} 行`, thinking: "考え中…", receiving: n => `受信中… ${n} 文字`,
     chunkOf: (i, n) => `${i} / ${n} 回目`, done: "完了", stopped: "停止しました",
     confirmMany: n => `${n} 回に分けて訳します。もう一度押すと開始`,
-    noEngine: "翻訳エンジンがありません。設定で Anthropic API キーを入れるか、claude.ai 上で開いてください。",
+    noEngine: "翻訳エンジンがありません。設定で API キーを入れるか、claude.ai 上で開いてください。",
     urlPh: "https://github.com/owner/repo（private 可）",
     jumpDef: "定義へ移動", defIn: "定義", glossary: "Lean の用語・記号",
     loading: "読み込み中…", repoLoaded: n => `${n} 個の .lean ファイル`,
@@ -1083,12 +1085,12 @@ const UI = {
     apiErr: "翻訳に失敗しました", parseErr: "返答を読み取れませんでした。もう一度試してください。",
     sEngine: "翻訳エンジン", sClaude: "Claude（claude.ai のあなたのアカウント）",
     tierDefault: "標準", tierComplex: "高精度（時間がかかる）", tierQuick: "高速",
-    sApi: "Anthropic API キー", sModel: "モデル名", sGh: "GitHub トークン（private 用。fine-grained PAT で Contents: Read-only）",
+    sApi: "API キー", sProvider: "翻訳に使う API", keyLink: h => `${h} でキーを作る`, sModel: "モデル名", sGh: "GitHub トークン（private 用。fine-grained PAT で Contents: Read-only）",
     sRemember: "このブラウザに保存する", sUi: "表示言語", uiAuto: "言語の選択に合わせる",
     sExport: "訳をエクスポート", sImport: "訳をインポート",
     sCopy: "JSON をコピー", sDownload: "ダウンロード", sClose: "閉じる", copied: "コピーしました",
     imported: n => `${n} 件取り込みました`, sNoteArtifact: "claude.ai 上では API キーは不要です。訳はこのブラウザに保存されます。",
-    sNoteStandalone: "キーはこのページから api.anthropic.com と api.github.com に直接送られるだけです。共用 PC では保存しないでください。",
+    sNoteStandalone: h => `キーはこのページから ${h} と api.github.com に直接送られるだけです。共用 PC では保存しないでください。`,
     about: "このツールについて",
     aboutText: "Lean 4 のソースを宣言ごとに区切り、各ブロックを指定した言語の数学的な文章に訳して並べます。import 先から参照している定義も文脈として渡します。Lean のビルドは不要です。訳は LLM によるもので、誤りがありえます。必ずコードと照らして読んでください。識別子や記号をタップすると定義や意味を表示します。",
     demoNote: "デモ: gotoken/cruby-formalized-trial @74e11c6 の Lean モデル（CRuby range.c の rb_range_component_beg_len）。BSD-2-Clause。Basic・Cases・Spec・Impl・Statements・Fixed は日本語訳と英訳つき。",
@@ -1120,7 +1122,7 @@ const UI = {
     lines: n => `${n} lines`, thinking: "Thinking…", receiving: n => `Receiving… ${n} chars`,
     chunkOf: (i, n) => `call ${i} of ${n}`, done: "Done", stopped: "Stopped",
     confirmMany: n => `This takes ${n} calls. Press again to start`,
-    noEngine: "No translator available. Add an Anthropic API key in Settings, or open this page on claude.ai.",
+    noEngine: "No translator available. Add an API key in Settings, or open this page on claude.ai.",
     urlPh: "https://github.com/owner/repo (private OK)",
     jumpDef: "Go to definition", defIn: "Defined", glossary: "Lean keywords and notation",
     loading: "Loading…", repoLoaded: n => `${n} .lean files`,
@@ -1133,12 +1135,12 @@ const UI = {
     apiErr: "Translation failed", parseErr: "Could not read the reply. Please try again.",
     sEngine: "Translator", sClaude: "Claude (your claude.ai account)",
     tierDefault: "Default", tierComplex: "Most capable (slower)", tierQuick: "Fast",
-    sApi: "Anthropic API key", sModel: "Model", sGh: "GitHub token (for private repos; fine-grained PAT with Contents: Read-only)",
+    sApi: "API key", sProvider: "Translation API", keyLink: h => `Create a key at ${h}`, sModel: "Model", sGh: "GitHub token (for private repos; fine-grained PAT with Contents: Read-only)",
     sRemember: "Remember in this browser", sUi: "Interface language", uiAuto: "Same as the selected language",
     sExport: "Export translations", sImport: "Import translations",
     sCopy: "Copy JSON", sDownload: "Download", sClose: "Close", copied: "Copied",
     imported: n => `Imported ${n} entries`, sNoteArtifact: "No API key is needed on claude.ai. Translations are kept in this browser.",
-    sNoteStandalone: "Keys are sent only from this page to api.anthropic.com and api.github.com. Do not save them on shared computers.",
+    sNoteStandalone: h => `Keys are sent only from this page to ${h} and api.github.com. Do not save them on shared computers.`,
     about: "About",
     aboutText: "Splits Lean 4 source into declarations and shows each next to a natural-language mathematical translation in the language you pick. Definitions referenced from imported files are passed as context. No Lean build is needed. Translations come from an LLM and can be wrong: read them against the code. Tap identifiers and symbols for their definition or meaning.",
     demoNote: "Demo: the Lean model from gotoken/cruby-formalized-trial @74e11c6 (CRuby range.c, rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements and Fixed come pre-translated into English and Japanese.",
@@ -1170,7 +1172,7 @@ const UI = {
     lines: n => `${n} 行`, thinking: "思考中…", receiving: n => `接收中… ${n} 字`,
     chunkOf: (i, n) => `第 ${i} / ${n} 次`, done: "完成", stopped: "已停止",
     confirmMany: n => `将分 ${n} 次翻译。再按一次开始`,
-    noEngine: "没有可用的翻译引擎。请在设置中填入 Anthropic API 密钥，或在 claude.ai 上打开本页。",
+    noEngine: "没有可用的翻译引擎。请在设置中填入 API 密钥，或在 claude.ai 上打开本页。",
     urlPh: "https://github.com/owner/repo（可为私有）",
     jumpDef: "跳转到定义", defIn: "定义", glossary: "Lean 术语与记号",
     loading: "加载中…", repoLoaded: n => `${n} 个 .lean 文件`,
@@ -1183,12 +1185,12 @@ const UI = {
     apiErr: "翻译失败", parseErr: "无法解析回复，请重试。",
     sEngine: "翻译引擎", sClaude: "Claude（你在 claude.ai 的账户）",
     tierDefault: "标准", tierComplex: "高精度（较慢）", tierQuick: "快速",
-    sApi: "Anthropic API 密钥", sModel: "模型", sGh: "GitHub 令牌（用于私有仓库；fine-grained PAT，Contents: Read-only）",
+    sApi: "API 密钥", sProvider: "翻译所用的 API", keyLink: h => `在 ${h} 创建密钥`, sModel: "模型", sGh: "GitHub 令牌（用于私有仓库；fine-grained PAT，Contents: Read-only）",
     sRemember: "保存在此浏览器中", sUi: "界面语言", uiAuto: "与所选语言一致",
     sExport: "导出译文", sImport: "导入译文",
     sCopy: "复制 JSON", sDownload: "下载", sClose: "关闭", copied: "已复制",
     imported: n => `已导入 ${n} 条`, sNoteArtifact: "在 claude.ai 上无需 API 密钥。译文保存在此浏览器中。",
-    sNoteStandalone: "密钥只会从本页直接发送到 api.anthropic.com 和 api.github.com。请勿在公用电脑上保存。",
+    sNoteStandalone: h => `密钥只会从本页直接发送到 ${h} 和 api.github.com。请勿在公用电脑上保存。`,
     about: "关于本工具",
     aboutText: "把 Lean 4 源代码按声明拆分，并在旁边列出所选语言的数学表述译文。从导入文件中引用的定义也会作为上下文提供。无需构建 Lean。译文由 LLM 生成，可能有误，请对照代码阅读。点击标识符或记号可查看其定义或含义。",
     demoNote: "演示：gotoken/cruby-formalized-trial @74e11c6 的 Lean 模型（CRuby range.c 中的 rb_range_component_beg_len）。BSD-2-Clause。Basic、Cases、Spec、Impl、Statements、Fixed 附有英语和日语译文。",
@@ -1220,7 +1222,7 @@ const UI = {
     lines: n => `${n} 行`, thinking: "思考中…", receiving: n => `接收中… ${n} 字`,
     chunkOf: (i, n) => `第 ${i} / ${n} 次`, done: "完成", stopped: "已停止",
     confirmMany: n => `將分 ${n} 次翻譯。再按一次開始`,
-    noEngine: "沒有可用的翻譯引擎。請在設定中填入 Anthropic API 金鑰，或在 claude.ai 上開啟本頁。",
+    noEngine: "沒有可用的翻譯引擎。請在設定中填入 API 金鑰，或在 claude.ai 上開啟本頁。",
     urlPh: "https://github.com/owner/repo（可為私有）",
     jumpDef: "跳至定義", defIn: "定義", glossary: "Lean 術語與記號",
     loading: "載入中…", repoLoaded: n => `${n} 個 .lean 檔案`,
@@ -1233,12 +1235,12 @@ const UI = {
     apiErr: "翻譯失敗", parseErr: "無法解析回覆，請再試一次。",
     sEngine: "翻譯引擎", sClaude: "Claude（你在 claude.ai 的帳號）",
     tierDefault: "標準", tierComplex: "高精度（較慢）", tierQuick: "快速",
-    sApi: "Anthropic API 金鑰", sModel: "模型", sGh: "GitHub 權杖（用於私有儲存庫；fine-grained PAT，Contents: Read-only）",
+    sApi: "API 金鑰", sProvider: "翻譯所用的 API", keyLink: h => `在 ${h} 建立金鑰`, sModel: "模型", sGh: "GitHub 權杖（用於私有儲存庫；fine-grained PAT，Contents: Read-only）",
     sRemember: "儲存在此瀏覽器", sUi: "介面語言", uiAuto: "與所選語言一致",
     sExport: "匯出譯文", sImport: "匯入譯文",
     sCopy: "複製 JSON", sDownload: "下載", sClose: "關閉", copied: "已複製",
     imported: n => `已匯入 ${n} 筆`, sNoteArtifact: "在 claude.ai 上不需要 API 金鑰。譯文會儲存在此瀏覽器。",
-    sNoteStandalone: "金鑰只會從本頁直接送到 api.anthropic.com 與 api.github.com。請勿在共用電腦上儲存。",
+    sNoteStandalone: h => `金鑰只會從本頁直接送到 ${h} 與 api.github.com。請勿在共用電腦上儲存。`,
     about: "關於本工具",
     aboutText: "將 Lean 4 原始碼依宣告切分，並在旁邊列出所選語言的數學敘述譯文。從匯入檔案中引用的定義也會作為上下文提供。不需要建置 Lean。譯文由 LLM 產生，可能有誤，請對照程式碼閱讀。點選識別字或記號可查看其定義或含義。",
     demoNote: "示範：gotoken/cruby-formalized-trial @74e11c6 的 Lean 模型（CRuby range.c 中的 rb_range_component_beg_len）。BSD-2-Clause。Basic、Cases、Spec、Impl、Statements、Fixed 附有英文與日文譯文。",
@@ -1270,7 +1272,7 @@ const UI = {
     lines: n => `${n}줄`, thinking: "생각 중…", receiving: n => `받는 중… ${n}자`,
     chunkOf: (i, n) => `${n}회 중 ${i}회째`, done: "완료", stopped: "중지했습니다",
     confirmMany: n => `${n}회로 나누어 번역합니다. 한 번 더 누르면 시작합니다`,
-    noEngine: "번역 엔진이 없습니다. 설정에서 Anthropic API 키를 입력하거나 claude.ai에서 여세요.",
+    noEngine: "번역 엔진이 없습니다. 설정에서 API 키를 입력하거나 claude.ai에서 여세요.",
     urlPh: "https://github.com/owner/repo (비공개 가능)",
     jumpDef: "정의로 이동", defIn: "정의", glossary: "Lean 용어와 기호",
     loading: "불러오는 중…", repoLoaded: n => `.lean 파일 ${n}개`,
@@ -1283,12 +1285,12 @@ const UI = {
     apiErr: "번역에 실패했습니다", parseErr: "응답을 읽을 수 없습니다. 다시 시도해 주세요.",
     sEngine: "번역 엔진", sClaude: "Claude (claude.ai의 내 계정)",
     tierDefault: "보통", tierComplex: "고정밀 (느림)", tierQuick: "빠름",
-    sApi: "Anthropic API 키", sModel: "모델", sGh: "GitHub 토큰 (비공개 저장소용, fine-grained PAT, Contents: Read-only)",
+    sApi: "API 키", sProvider: "번역에 쓸 API", keyLink: h => `${h}에서 키 만들기`, sModel: "모델", sGh: "GitHub 토큰 (비공개 저장소용, fine-grained PAT, Contents: Read-only)",
     sRemember: "이 브라우저에 저장", sUi: "표시 언어", uiAuto: "선택한 언어에 맞춤",
     sExport: "번역 내보내기", sImport: "번역 가져오기",
     sCopy: "JSON 복사", sDownload: "다운로드", sClose: "닫기", copied: "복사했습니다",
     imported: n => `${n}건을 가져왔습니다`, sNoteArtifact: "claude.ai에서는 API 키가 필요 없습니다. 번역은 이 브라우저에 저장됩니다.",
-    sNoteStandalone: "키는 이 페이지에서 api.anthropic.com과 api.github.com으로만 직접 전송됩니다. 공용 PC에는 저장하지 마세요.",
+    sNoteStandalone: h => `키는 이 페이지에서 ${h} 및 api.github.com으로만 직접 전송됩니다. 공용 PC에는 저장하지 마세요.`,
     about: "이 도구에 대하여",
     aboutText: "Lean 4 소스를 선언 단위로 나누고, 각 블록 옆에 선택한 언어의 수학적 문장으로 된 번역을 보여 줍니다. import한 파일에서 참조하는 정의도 문맥으로 함께 전달합니다. Lean 빌드는 필요 없습니다. 번역은 LLM이 만든 것이라 틀릴 수 있으니 반드시 코드와 대조해 읽으세요. 식별자나 기호를 누르면 정의나 뜻을 보여 줍니다.",
     demoNote: "데모: gotoken/cruby-formalized-trial @74e11c6의 Lean 모델 (CRuby range.c의 rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements, Fixed는 영어·일본어 번역이 들어 있습니다.",
@@ -1320,7 +1322,7 @@ const UI = {
     lines: n => `${n} lignes`, thinking: "Réflexion…", receiving: n => `Réception… ${n} caractères`,
     chunkOf: (i, n) => `appel ${i} sur ${n}`, done: "Terminé", stopped: "Arrêté",
     confirmMany: n => `Cela demande ${n} appels. Appuyez encore pour lancer`,
-    noEngine: "Aucun traducteur disponible. Saisissez une clé API Anthropic dans les réglages, ou ouvrez cette page sur claude.ai.",
+    noEngine: "Aucun traducteur disponible. Saisissez une clé API dans les réglages, ou ouvrez cette page sur claude.ai.",
     urlPh: "https://github.com/owner/repo (privé possible)",
     jumpDef: "Aller à la définition", defIn: "Défini", glossary: "Mots-clés et notations Lean",
     loading: "Chargement…", repoLoaded: n => `${n} fichiers .lean`,
@@ -1333,12 +1335,12 @@ const UI = {
     apiErr: "Échec de la traduction", parseErr: "Réponse illisible. Veuillez réessayer.",
     sEngine: "Traducteur", sClaude: "Claude (votre compte claude.ai)",
     tierDefault: "Standard", tierComplex: "Le plus capable (plus lent)", tierQuick: "Rapide",
-    sApi: "Clé API Anthropic", sModel: "Modèle", sGh: "Jeton GitHub (dépôts privés ; PAT fine-grained, Contents: Read-only)",
+    sApi: "Clé API", sProvider: "API de traduction", keyLink: h => `Créer une clé chez ${h}`, sModel: "Modèle", sGh: "Jeton GitHub (dépôts privés ; PAT fine-grained, Contents: Read-only)",
     sRemember: "Mémoriser dans ce navigateur", sUi: "Langue de l'interface", uiAuto: "Comme la langue choisie",
     sExport: "Exporter les traductions", sImport: "Importer des traductions",
     sCopy: "Copier le JSON", sDownload: "Télécharger", sClose: "Fermer", copied: "Copié",
     imported: n => `${n} entrées importées`, sNoteArtifact: "Aucune clé API n'est nécessaire sur claude.ai. Les traductions restent dans ce navigateur.",
-    sNoteStandalone: "Les clés ne sont envoyées que de cette page vers api.anthropic.com et api.github.com. Ne les mémorisez pas sur un ordinateur partagé.",
+    sNoteStandalone: h => `Les clés ne sont envoyées que de cette page vers ${h} et api.github.com. Ne les mémorisez pas sur un ordinateur partagé.`,
     about: "À propos",
     aboutText: "Découpe le source Lean 4 en déclarations et affiche chacune à côté d'une traduction en langage mathématique dans la langue choisie. Les définitions utilisées depuis les fichiers importés sont fournies comme contexte. Aucune compilation Lean n'est nécessaire. Les traductions viennent d'un LLM et peuvent être fausses : lisez-les en regard du code. Touchez un identifiant ou un symbole pour voir sa définition ou son sens.",
     demoNote: "Démo : le modèle Lean de gotoken/cruby-formalized-trial @74e11c6 (CRuby range.c, rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements et Fixed sont déjà traduits en anglais et en japonais.",
@@ -1370,7 +1372,7 @@ const UI = {
     lines: n => `${n} Zeilen`, thinking: "Denkt nach…", receiving: n => `Empfange… ${n} Zeichen`,
     chunkOf: (i, n) => `Aufruf ${i} von ${n}`, done: "Fertig", stopped: "Gestoppt",
     confirmMany: n => `Das braucht ${n} Aufrufe. Zum Starten erneut drücken`,
-    noEngine: "Kein Übersetzer verfügbar. Tragen Sie in den Einstellungen einen Anthropic-API-Schlüssel ein oder öffnen Sie die Seite auf claude.ai.",
+    noEngine: "Kein Übersetzer verfügbar. Tragen Sie in den Einstellungen einen API-Schlüssel ein oder öffnen Sie die Seite auf claude.ai.",
     urlPh: "https://github.com/owner/repo (auch privat)",
     jumpDef: "Zur Definition", defIn: "Definiert", glossary: "Lean-Schlüsselwörter und Notation",
     loading: "Lädt…", repoLoaded: n => `${n} .lean-Dateien`,
@@ -1383,12 +1385,12 @@ const UI = {
     apiErr: "Übersetzung fehlgeschlagen", parseErr: "Die Antwort war nicht lesbar. Bitte erneut versuchen.",
     sEngine: "Übersetzer", sClaude: "Claude (Ihr claude.ai-Konto)",
     tierDefault: "Standard", tierComplex: "Am leistungsfähigsten (langsamer)", tierQuick: "Schnell",
-    sApi: "Anthropic-API-Schlüssel", sModel: "Modell", sGh: "GitHub-Token (für private Repos; fine-grained PAT, Contents: Read-only)",
+    sApi: "API-Schlüssel", sProvider: "API für die Übersetzung", keyLink: h => `Schlüssel bei ${h} erstellen`, sModel: "Modell", sGh: "GitHub-Token (für private Repos; fine-grained PAT, Contents: Read-only)",
     sRemember: "In diesem Browser speichern", sUi: "Sprache der Oberfläche", uiAuto: "Wie die gewählte Sprache",
     sExport: "Übersetzungen exportieren", sImport: "Übersetzungen importieren",
     sCopy: "JSON kopieren", sDownload: "Herunterladen", sClose: "Schließen", copied: "Kopiert",
     imported: n => `${n} Einträge importiert`, sNoteArtifact: "Auf claude.ai ist kein API-Schlüssel nötig. Übersetzungen bleiben in diesem Browser.",
-    sNoteStandalone: "Schlüssel werden nur von dieser Seite an api.anthropic.com und api.github.com gesendet. Auf gemeinsam genutzten Rechnern nicht speichern.",
+    sNoteStandalone: h => `Schlüssel werden nur von dieser Seite an ${h} und api.github.com gesendet. Auf gemeinsam genutzten Rechnern nicht speichern.`,
     about: "Über dieses Werkzeug",
     aboutText: "Zerlegt Lean-4-Quellcode in Deklarationen und zeigt neben jeder eine Übersetzung in mathematische Sprache in der gewählten Sprache. Definitionen aus importierten Dateien werden als Kontext mitgegeben. Ein Lean-Build ist nicht nötig. Die Übersetzungen stammen von einem LLM und können falsch sein: Lesen Sie sie mit dem Code zusammen. Tippen Sie auf Bezeichner und Symbole, um Definition oder Bedeutung zu sehen.",
     demoNote: "Demo: das Lean-Modell aus gotoken/cruby-formalized-trial @74e11c6 (CRuby range.c, rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements und Fixed sind bereits ins Englische und Japanische übersetzt.",
@@ -1420,7 +1422,7 @@ const UI = {
     lines: n => `${n} líneas`, thinking: "Pensando…", receiving: n => `Recibiendo… ${n} caracteres`,
     chunkOf: (i, n) => `llamada ${i} de ${n}`, done: "Listo", stopped: "Detenido",
     confirmMany: n => `Esto requiere ${n} llamadas. Pulse de nuevo para empezar`,
-    noEngine: "No hay traductor disponible. Introduzca una clave de API de Anthropic en Ajustes o abra esta página en claude.ai.",
+    noEngine: "No hay traductor disponible. Introduzca una clave de API en Ajustes o abra esta página en claude.ai.",
     urlPh: "https://github.com/owner/repo (puede ser privado)",
     jumpDef: "Ir a la definición", defIn: "Definido", glossary: "Palabras clave y notación de Lean",
     loading: "Cargando…", repoLoaded: n => `${n} archivos .lean`,
@@ -1433,12 +1435,12 @@ const UI = {
     apiErr: "La traducción falló", parseErr: "No se pudo leer la respuesta. Inténtelo de nuevo.",
     sEngine: "Traductor", sClaude: "Claude (su cuenta de claude.ai)",
     tierDefault: "Estándar", tierComplex: "El más capaz (más lento)", tierQuick: "Rápido",
-    sApi: "Clave de API de Anthropic", sModel: "Modelo", sGh: "Token de GitHub (repositorios privados; PAT fine-grained, Contents: Read-only)",
+    sApi: "Clave de API", sProvider: "API de traducción", keyLink: h => `Crear una clave en ${h}`, sModel: "Modelo", sGh: "Token de GitHub (repositorios privados; PAT fine-grained, Contents: Read-only)",
     sRemember: "Recordar en este navegador", sUi: "Idioma de la interfaz", uiAuto: "Igual que el idioma elegido",
     sExport: "Exportar traducciones", sImport: "Importar traducciones",
     sCopy: "Copiar JSON", sDownload: "Descargar", sClose: "Cerrar", copied: "Copiado",
     imported: n => `${n} entradas importadas`, sNoteArtifact: "En claude.ai no hace falta clave de API. Las traducciones se guardan en este navegador.",
-    sNoteStandalone: "Las claves solo se envían desde esta página a api.anthropic.com y api.github.com. No las guarde en equipos compartidos.",
+    sNoteStandalone: h => `Las claves solo se envían desde esta página a ${h} y api.github.com. No las guarde en equipos compartidos.`,
     about: "Acerca de",
     aboutText: "Divide el código Lean 4 en declaraciones y muestra cada una junto a una traducción en lenguaje matemático en el idioma elegido. Las definiciones usadas de archivos importados se pasan como contexto. No hace falta compilar Lean. Las traducciones las genera un LLM y pueden contener errores: léalas junto al código. Toque identificadores y símbolos para ver su definición o significado.",
     demoNote: "Demo: el modelo Lean de gotoken/cruby-formalized-trial @74e11c6 (CRuby range.c, rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements y Fixed ya están traducidos al inglés y al japonés.",
@@ -1470,7 +1472,7 @@ const UI = {
     lines: n => `${n} linhas`, thinking: "Pensando…", receiving: n => `Recebendo… ${n} caracteres`,
     chunkOf: (i, n) => `chamada ${i} de ${n}`, done: "Concluído", stopped: "Interrompido",
     confirmMany: n => `Isto exige ${n} chamadas. Pressione de novo para começar`,
-    noEngine: "Nenhum tradutor disponível. Informe uma chave de API da Anthropic nas configurações ou abra esta página no claude.ai.",
+    noEngine: "Nenhum tradutor disponível. Informe uma chave de API nas configurações ou abra esta página no claude.ai.",
     urlPh: "https://github.com/owner/repo (pode ser privado)",
     jumpDef: "Ir para a definição", defIn: "Definido", glossary: "Palavras-chave e notação do Lean",
     loading: "Carregando…", repoLoaded: n => `${n} arquivos .lean`,
@@ -1483,12 +1485,12 @@ const UI = {
     apiErr: "A tradução falhou", parseErr: "Não foi possível ler a resposta. Tente de novo.",
     sEngine: "Tradutor", sClaude: "Claude (sua conta do claude.ai)",
     tierDefault: "Padrão", tierComplex: "Mais capaz (mais lento)", tierQuick: "Rápido",
-    sApi: "Chave de API da Anthropic", sModel: "Modelo", sGh: "Token do GitHub (repositórios privados; PAT fine-grained, Contents: Read-only)",
+    sApi: "Chave de API", sProvider: "API de tradução", keyLink: h => `Criar uma chave em ${h}`, sModel: "Modelo", sGh: "Token do GitHub (repositórios privados; PAT fine-grained, Contents: Read-only)",
     sRemember: "Lembrar neste navegador", sUi: "Idioma da interface", uiAuto: "Igual ao idioma escolhido",
     sExport: "Exportar traduções", sImport: "Importar traduções",
     sCopy: "Copiar JSON", sDownload: "Baixar", sClose: "Fechar", copied: "Copiado",
     imported: n => `${n} entradas importadas`, sNoteArtifact: "No claude.ai não é preciso chave de API. As traduções ficam neste navegador.",
-    sNoteStandalone: "As chaves só são enviadas desta página para api.anthropic.com e api.github.com. Não as salve em computadores compartilhados.",
+    sNoteStandalone: h => `As chaves só são enviadas desta página para ${h} e api.github.com. Não as salve em computadores compartilhados.`,
     about: "Sobre",
     aboutText: "Divide o código Lean 4 em declarações e mostra cada uma ao lado de uma tradução em linguagem matemática no idioma escolhido. Definições usadas de arquivos importados são passadas como contexto. Não é preciso compilar o Lean. As traduções vêm de um LLM e podem ter erros: leia-as junto com o código. Toque em identificadores e símbolos para ver a definição ou o significado.",
     demoNote: "Demonstração: o modelo Lean de gotoken/cruby-formalized-trial @74e11c6 (CRuby range.c, rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements e Fixed já estão traduzidos para o inglês e o japonês.",
@@ -1520,7 +1522,7 @@ const UI = {
     lines: n => `строк: ${n}`, thinking: "Думает…", receiving: n => `Получение… символов: ${n}`,
     chunkOf: (i, n) => `вызов ${i} из ${n}`, done: "Готово", stopped: "Остановлено",
     confirmMany: n => `Потребуется вызовов: ${n}. Нажмите ещё раз, чтобы начать`,
-    noEngine: "Нет доступного переводчика. Укажите ключ API Anthropic в настройках или откройте страницу на claude.ai.",
+    noEngine: "Нет доступного переводчика. Укажите ключ API в настройках или откройте страницу на claude.ai.",
     urlPh: "https://github.com/owner/repo (можно приватный)",
     jumpDef: "К определению", defIn: "Определено", glossary: "Ключевые слова и обозначения Lean",
     loading: "Загрузка…", repoLoaded: n => `Файлов .lean: ${n}`,
@@ -1533,12 +1535,12 @@ const UI = {
     apiErr: "Перевод не удался", parseErr: "Не удалось прочитать ответ. Попробуйте ещё раз.",
     sEngine: "Переводчик", sClaude: "Claude (ваша учётная запись claude.ai)",
     tierDefault: "Стандартная", tierComplex: "Самая мощная (медленнее)", tierQuick: "Быстрая",
-    sApi: "Ключ API Anthropic", sModel: "Модель", sGh: "Токен GitHub (для приватных репозиториев; fine-grained PAT, Contents: Read-only)",
+    sApi: "Ключ API", sProvider: "API для перевода", keyLink: h => `Создать ключ в ${h}`, sModel: "Модель", sGh: "Токен GitHub (для приватных репозиториев; fine-grained PAT, Contents: Read-only)",
     sRemember: "Запомнить в этом браузере", sUi: "Язык интерфейса", uiAuto: "Как выбранный язык",
     sExport: "Экспорт переводов", sImport: "Импорт переводов",
     sCopy: "Копировать JSON", sDownload: "Скачать", sClose: "Закрыть", copied: "Скопировано",
     imported: n => `Импортировано записей: ${n}`, sNoteArtifact: "На claude.ai ключ API не нужен. Переводы хранятся в этом браузере.",
-    sNoteStandalone: "Ключи отправляются только с этой страницы на api.anthropic.com и api.github.com. Не сохраняйте их на общих компьютерах.",
+    sNoteStandalone: h => `Ключи отправляются только с этой страницы на ${h} и api.github.com. Не сохраняйте их на общих компьютерах.`,
     about: "Об инструменте",
     aboutText: "Делит исходный код Lean 4 на объявления и показывает рядом с каждым перевод на язык математики на выбранном языке. Определения из импортированных файлов передаются как контекст. Сборка Lean не нужна. Переводы делает LLM, и в них возможны ошибки: читайте их вместе с кодом. Нажмите на идентификатор или символ, чтобы увидеть определение или смысл.",
     demoNote: "Демо: Lean-модель из gotoken/cruby-formalized-trial @74e11c6 (CRuby range.c, rb_range_component_beg_len). BSD-2-Clause. Basic, Cases, Spec, Impl, Statements и Fixed уже переведены на английский и японский.",
@@ -1631,12 +1633,29 @@ async function migrateOldDB() {
 }
 function idbPut(k, v) { try { if (idb) idb.transaction("tr", "readwrite").objectStore("tr").put(v, k); } catch (e) { } }
 
+// ---------- translation providers (web version; the claude.ai version uses the viewer's Claude) ----------
+const PROVIDERS = {
+  anthropic: { name: "Anthropic", host: "api.anthropic.com", ph: "sk-ant-…", keyURL: "https://console.anthropic.com/settings/keys",
+    models: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"] },
+  openai: { name: "OpenAI", host: "api.openai.com", ph: "sk-…", keyURL: "https://platform.openai.com/api-keys",
+    models: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-6-astra"] },
+  google: { name: "Google Gemini", host: "generativelanguage.googleapis.com", ph: "AIza…", keyURL: "https://aistudio.google.com/apikey",
+    models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"] },
+};
+// Keys and model names are kept per provider; "apiKey" and "model" are the settings from before
+// there was a choice and count as Anthropic's.
+const savedKeys = () => { const k = LS.get("keys", null) || {}; const old = LS.get("apiKey", ""); if (old && !k.anthropic) k.anthropic = old; return k; };
+const savedModels = () => { const m = LS.get("models", null) || {}; const old = LS.get("model", ""); if (old && !m.anthropic) m.anthropic = old; return m; };
+
 // ---------- state ----------
 const S = {
+  provider: PROVIDERS[LS.get("provider", "")] ? LS.get("provider", "") : "anthropic", keys: savedKeys(), models: savedModels(),
+  get apiKey() { return this.keys[this.provider] || ""; },
+  get model() { return this.models[this.provider] || PROVIDERS[this.provider].models[0]; },
   uiMode: LS.get("uiMode", LS.get("ui", "auto")),
   lang: LS.get("lang", null), style: LS.get("style", "normal"), view: LS.get("view", "both"),
-  tier: LS.get("tier", "default"), model: LS.get("model", "claude-sonnet-5-5"),
-  apiKey: LS.get("apiKey", ""), ghToken: LS.get("ghToken", ""), remember: LS.get("remember", false),
+  tier: LS.get("tier", "default"),
+  ghToken: LS.get("ghToken", ""), remember: LS.get("remember", false),
   source: null, paths: [], texts: new Map(), blocks: new Map(), cur: null, hist: [],
   idxFiles: new Map(), idx: new Map(), ctxCount: 0,
   sample: null, inArtifact: !!(window.claude && typeof window.claude.use === "function"),
@@ -1745,25 +1764,44 @@ class GitHubSource {
 }
 
 // ---------- translator ----------
+async function postJSON(url, headers, body, signal) {
+  let r;
+  try { r = await fetch(url, { method: "POST", signal, headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) }); }
+  catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}`);
+  return data;
+}
+// One request per provider: prompt in, { text, truncated, model } out. OpenAI and Gemini count
+// hidden reasoning against the output limit, so they get twice the room.
+const REQUEST = {
+  async anthropic(prompt, signal, max) {
+    const d = await postJSON("https://api.anthropic.com/v1/messages",
+      { "x-api-key": S.apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      { model: S.model, max_tokens: max, messages: [{ role: "user", content: prompt }] }, signal);
+    return { text: (d.content || []).filter(c => c.type === "text").map(c => c.text).join(""), truncated: d.stop_reason === "max_tokens", model: d.model || S.model };
+  },
+  async openai(prompt, signal, max) {
+    const d = await postJSON("https://api.openai.com/v1/responses", { authorization: "Bearer " + S.apiKey },
+      { model: S.model, input: prompt, max_output_tokens: max * 2, store: false }, signal);
+    const text = (d.output || []).filter(o => o.type === "message").flatMap(o => o.content || []).filter(c => c.type === "output_text").map(c => c.text).join("");
+    return { text, truncated: d.status === "incomplete", model: d.model || S.model };
+  },
+  async google(prompt, signal, max) {
+    const d = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:generateContent`, { "x-goog-api-key": S.apiKey },
+      { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: max * 2 } }, signal);
+    const c = (d.candidates || [])[0];
+    if (!c) throw new Error("API: " + ((d.promptFeedback && d.promptFeedback.blockReason) || "no candidates"));
+    const text = ((c.content && c.content.parts) || []).filter(p => !p.thought && typeof p.text === "string").map(p => p.text).join("");
+    return { text, truncated: c.finishReason === "MAX_TOKENS", model: d.modelVersion || S.model };
+  },
+};
 async function callLLM(prompt, onText, signal, opts = {}) {
   if (S.sample) {
     const r = await S.sample(prompt, { onText: ({ text }) => onText && onText(text), signal, modelTier: opts.tier || S.tier, cache: false });
     return { text: r.text, truncated: r.truncated, model: "claude (" + (r.modelTierApplied || S.tier) + ")" };
   }
-  if (S.apiKey) {
-    let r;
-    try {
-      r = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", signal,
-        headers: { "x-api-key": S.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json", "anthropic-dangerous-direct-browser-access": "true" },
-        body: JSON.stringify({ model: S.model, max_tokens: opts.maxTokens || 16000, messages: [{ role: "user", content: prompt }] })
-      });
-    } catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error((S.inArtifact ? "claude.ai " : "") + "api.anthropic.com: " + e.message); }
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}`);
-    const text = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("");
-    return { text, truncated: data.stop_reason === "max_tokens", model: data.model || S.model };
-  }
+  if (S.apiKey) return REQUEST[S.provider](prompt, signal, opts.maxTokens || 16000);
   throw new Error(t("noEngine"));
 }
 
@@ -2374,8 +2412,10 @@ function openSettings() {
   $("#sApiRow").hidden = S.inArtifact;
   $("#sDownload").hidden = S.inArtifact;
   $("#sClaudeRow").hidden = !S.sample;
-  $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone");
-  $("#apiKey").value = S.apiKey; $("#model").value = S.model; $("#ghToken").value = S.ghToken;
+  DRAFT = { provider: S.provider, keys: { ...S.keys }, models: { ...S.models } };
+  $("#provider").innerHTML = Object.entries(PROVIDERS).map(([id, p]) => `<option value="${id}">${esc(p.name)}</option>`).join("");
+  showProvider();
+  $("#ghToken").value = S.ghToken;
   $("#patLink").href = patURL(currentOwner());
   $("#remember").checked = S.remember;
   $("#uiLang").innerHTML = `<option value="auto" lang="${uiCode()}">${esc(t("uiAuto"))}</option>` + LANGS.map(L => `<option value="${L.ui}" lang="${L.ui}">${L.name}</option>`).join("");
@@ -2384,13 +2424,31 @@ function openSettings() {
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
+// The settings dialog edits a draft, so each provider's key and model survive switching between them.
+let DRAFT = null;
+function stashProvider() {
+  const k = $("#apiKey").value.trim(), m = $("#model").value.trim();
+  if (k) DRAFT.keys[DRAFT.provider] = k; else delete DRAFT.keys[DRAFT.provider];
+  if (m) DRAFT.models[DRAFT.provider] = m; else delete DRAFT.models[DRAFT.provider];
+}
+function showProvider() {
+  const P = PROVIDERS[DRAFT.provider];
+  $("#provider").value = DRAFT.provider;
+  $("#apiKey").value = DRAFT.keys[DRAFT.provider] || ""; $("#apiKey").placeholder = P.ph;
+  $("#model").value = DRAFT.models[DRAFT.provider] || P.models[0];
+  $("#models").innerHTML = P.models.map(m => `<option value="${esc(m)}"></option>`).join("");
+  $("#keyLink").href = P.keyURL; $("#keyLink").textContent = t("keyLink", P.name);
+  $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone", P.host);
+}
 function saveSettings() {
   const oldGh = S.ghToken, hadKey = !!S.apiKey;
-  S.apiKey = $("#apiKey").value.trim(); S.model = $("#model").value.trim() || "claude-sonnet-5-5"; S.ghToken = $("#ghToken").value.trim();
+  stashProvider();
+  S.provider = DRAFT.provider; S.keys = DRAFT.keys; S.models = DRAFT.models; S.ghToken = $("#ghToken").value.trim();
   if (S.ghToken && S.ghToken !== oldGh && S.lastFailed) { const f = S.lastFailed; S.lastFailed = null; $("#hint").hidden = true; setTimeout(() => { const gs = new GitHubSource(f.p, S.ghToken); gs.openPath = f.openPath; gs.focus = f.focus; loadSource(gs); }, 0); }
   S.remember = $("#remember").checked; S.tier = $("#tier").value || S.tier;
-  LS.set("model", S.model); LS.set("tier", S.tier); LS.set("remember", S.remember);
-  if (S.remember) { LS.set("apiKey", S.apiKey); LS.set("ghToken", S.ghToken); } else { LS.del("apiKey"); LS.del("ghToken"); }
+  LS.set("provider", S.provider); LS.set("models", S.models); LS.set("tier", S.tier); LS.set("remember", S.remember);
+  LS.del("apiKey"); LS.del("model");
+  if (S.remember) { LS.set("keys", S.keys); LS.set("ghToken", S.ghToken); } else { LS.del("keys"); LS.del("ghToken"); }
   setEngineLabel();
   const um = $("#uiLang").value; if (um !== S.uiMode) { S.uiMode = um; LS.set("uiMode", um); LS.del("ui"); applyUI(); refresh(); }
   if (!hadKey && S.apiKey) startGlossJob();
@@ -2423,6 +2481,7 @@ function bind() {
   });
   $("#otherLang").addEventListener("change", e => { const v = e.target.value.trim(); if (v) { S.lang = v; LS.set("lang", v); applyUI(); refresh(); startGlossJob(); } e.target.hidden = true; });
   $("#uiLang").addEventListener("change", e => syncSelLang(e.target));
+  $("#provider").addEventListener("change", e => { stashProvider(); DRAFT.provider = e.target.value; showProvider(); });
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);

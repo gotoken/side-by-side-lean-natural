@@ -27,7 +27,7 @@
 打开 <https://taiyak.pages.dev/>。
 
 1. 输入 GitHub URL，点击“打开”
-2. 在“设置”中填入 Anthropic API 密钥（翻译需要）。如果是私有仓库，还要填入 GitHub 令牌。点击设置中的“在 GitHub 上创建令牌”，会打开 GitHub 的令牌创建页面，并已填好只读权限（Contents: read）和 30 天有效期：只需选择要读取的仓库并创建
+2. 在“设置”中填入 Anthropic、OpenAI 或 Google 的 API 密钥（翻译需要）。如果是私有仓库，还要填入 GitHub 令牌。点击设置中的“在 GitHub 上创建令牌”，会打开 GitHub 的令牌创建页面，并已填好只读权限（Contents: read）和 30 天有效期：只需选择要读取的仓库并创建
 3. 点击“翻译此文件”，或单个代码块上的“翻译”
 
 不输入 URL 直接打开时，会显示一个演示：CRuby `range.c` 中 `rb_range_component_beg_len`（范围参数的规范化）的 Lean 模型，以及它的规格、性质 P1–P4 和修复版的模型。它来自作者未公开的实验仓库 `gotoken/cruby-formalized-trial` @74e11c6。`Basic`、`Cases`、`Spec`、`Impl`、`Statements` 和 `Fixed` 附有英语和日语译文；其他文件可以当场翻译。
@@ -61,8 +61,8 @@
 ## 密钥与数据
 
 - API 密钥和 GitHub 令牌只在浏览器内使用。只有选择“保存在此浏览器中”时才会存入 localStorage。请不要在共用电脑上保存。
-- 页面只与 `api.github.com` 和 `api.anthropic.com` 通信。网页版通过 `public/_headers` 中的 Content-Security-Policy 强制这一点，浏览器会拒绝向其他地址发送数据。内联脚本也用哈希固定。
-- 翻译时，会把当前文件及其引用的定义的 Lean 源代码发送给 Anthropic。翻译私有代码前，请确认所在组织的规定。
+- 页面只与 `api.github.com`, `api.anthropic.com`, `api.openai.com` 和 `generativelanguage.googleapis.com` 通信。网页版通过 `public/_headers` 中的 Content-Security-Policy 强制这一点，浏览器会拒绝向其他地址发送数据。内联脚本也用哈希固定。
+- 翻译时，会把当前文件及其引用的定义的 Lean 源代码发送给所选的 API（Anthropic、OpenAI 或 Google）。翻译私有代码前，请确认所在组织的规定。
 - GitHub 令牌建议使用 fine-grained personal access token：只选择需要的仓库，权限设为 Contents: Read-only。
 
 ## 工作原理与限制

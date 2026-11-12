@@ -27,7 +27,7 @@
 開啟 <https://taiyak.pages.dev/>。
 
 1. 輸入 GitHub URL，按下「開啟」
-2. 在「設定」中填入 Anthropic API 金鑰（翻譯需要）。若是私有儲存庫，還要填入 GitHub 權杖。按下設定中的「在 GitHub 上建立權杖」，會開啟 GitHub 的權杖建立頁面，並已填好唯讀權限（Contents: read）與 30 天期限：只要選擇要讀取的儲存庫並建立即可
+2. 在「設定」中填入 Anthropic、OpenAI 或 Google 的 API 金鑰（翻譯需要）。若是私有儲存庫，還要填入 GitHub 權杖。按下設定中的「在 GitHub 上建立權杖」，會開啟 GitHub 的權杖建立頁面，並已填好唯讀權限（Contents: read）與 30 天期限：只要選擇要讀取的儲存庫並建立即可
 3. 按下「翻譯此檔案」，或單一程式碼區塊上的「翻譯」
 
 不輸入 URL 直接開啟時，會顯示一個示範：CRuby `range.c` 中 `rb_range_component_beg_len`（範圍參數的正規化）的 Lean 模型，以及它的規格、性質 P1–P4 與修正版的模型。它來自作者未公開的實驗儲存庫 `gotoken/cruby-formalized-trial` @74e11c6。`Basic`、`Cases`、`Spec`、`Impl`、`Statements` 與 `Fixed` 附有英文與日文譯文；其他檔案可以當場翻譯。
@@ -61,8 +61,8 @@
 ## 金鑰與資料
 
 - API 金鑰與 GitHub 權杖只在瀏覽器內使用。只有選擇「儲存在此瀏覽器」時才會存入 localStorage。請勿在共用電腦上儲存。
-- 頁面只與 `api.github.com` 和 `api.anthropic.com` 通訊。網頁版以 `public/_headers` 中的 Content-Security-Policy 強制這一點，瀏覽器會拒絕傳送到其他位址。內嵌指令碼也以雜湊固定。
-- 翻譯時，會把目前檔案及其引用之定義的 Lean 原始碼傳送給 Anthropic。翻譯私有程式碼前，請確認所屬組織的規定。
+- 頁面只與 `api.github.com`, `api.anthropic.com`, `api.openai.com` 和 `generativelanguage.googleapis.com` 通訊。網頁版以 `public/_headers` 中的 Content-Security-Policy 強制這一點，瀏覽器會拒絕傳送到其他位址。內嵌指令碼也以雜湊固定。
+- 翻譯時，會把目前檔案及其引用之定義的 Lean 原始碼傳送給所選的 API（Anthropic、OpenAI 或 Google）。翻譯私有程式碼前，請確認所屬組織的規定。
 - GitHub 權杖建議使用 fine-grained personal access token：只選擇需要的儲存庫，權限設為 Contents: Read-only。
 
 ## 運作方式與限制
