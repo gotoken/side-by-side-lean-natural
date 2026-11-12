@@ -23,7 +23,8 @@
   --k: #6a35c9; --t: #0a6a8a; --ty: #8a4b00; --c: #5f7a5a; --s: #a6400f; --n: #9a3412; --y: #b0186a;
   --theorem: #3f51b5; --def: #0b6e69; --prop: #8a3fb5; --structure: #a35a00; --prose: #6b7280;
   --err: #b42318; --warn: #8a5a00;
-  --font-body: "IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+  /* Latin and Cyrillic: each OS's UI font, named (system-ui can pick a CJK font for Latin on Windows). */
+  --font-latin: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial;
   --font-code: "JetBrains Mono", "Noto Sans Math", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   color-scheme: light;
 }
@@ -45,6 +46,15 @@
   --err: #ff8b80; --warn: #f3c46b;
   color-scheme: dark;
 }
+/* Body font by language. Han characters take a different shape in each of ja, zh-Hans, zh-Hant
+   and ko, so each gets its own UI fonts and Japanese fonts never come first for the others.
+   Elements whose content is in another language than the interface carry their own lang. */
+:root, [lang] { --font-body: var(--font-latin), sans-serif; }
+:lang(ja) { --font-body: "IBM Plex Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", Meiryo, "Noto Sans CJK JP", "Noto Sans JP", sans-serif; }
+:lang(zh-Hans), :lang(zh-CN), :lang(zh-SG) { --font-body: var(--font-latin), "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Noto Sans SC", sans-serif; }
+:lang(zh-Hant), :lang(zh-TW), :lang(zh-HK), :lang(zh-MO) { --font-body: var(--font-latin), "PingFang TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans CJK TC", "Source Han Sans TC", "Noto Sans TC", sans-serif; }
+:lang(ko) { --font-body: var(--font-latin), "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", "Source Han Sans K", "Noto Sans KR", sans-serif; }
+:where([lang]) { font-family: var(--font-body); }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.65 var(--font-body); display: flex; flex-direction: column; overflow: hidden; }
@@ -231,7 +241,7 @@ math { font-size: 1.06em; }
 <body>
 <header class="top">
   <button id="drawerBtn" class="btn only-m" type="button" data-i="files"></button>
-  <div class="brand"><span class="logo" aria-hidden="true">∀↔</span><b>Lean 対訳ブラウザ</b></div>
+  <div class="brand"><span class="logo" aria-hidden="true">∀↔</span><b lang="ja">Lean 対訳ブラウザ</b></div>
   <form id="srcForm"><input id="url" type="text" inputmode="url" data-ph="urlPh" aria-label="GitHub URL" autocomplete="off" spellcheck="false"><button type="submit" data-i="open"></button></form>
   <label class="btn" for="zipIn"><span data-i="zip"></span></label><input type="file" id="zipIn" accept=".zip,application/zip" hidden>
   <label class="btn only-d" for="dirIn"><span data-i="folder"></span></label><input type="file" id="dirIn" webkitdirectory multiple hidden>
