@@ -43,11 +43,15 @@ test("column-0 text inside doc comments does not start a block", () => {
   assert.deepEqual([impl[1].cls, impl[1].start, impl[1].end], ["prose", 3, 33]); // quotes C code
 });
 
-test("demo translations match the block ids", () => {
-  const tr = JSON.parse(fs.readFileSync(path.join(DEMO, "translations.ja.json"), "utf8"));
-  for (const [p, m] of Object.entries(tr)) {
-    const need = byPath[p].blocks.filter(b => b.cls !== "struct").map(b => b.id).sort();
-    assert.deepEqual(Object.keys(m).sort(), need, p);
+test("demo translations (ja, en) match the block ids", () => {
+  const all = ["ja", "en"].map(c => JSON.parse(fs.readFileSync(path.join(DEMO, `translations.${c}.json`), "utf8")));
+  assert.deepEqual(Object.keys(all[1]).sort(), Object.keys(all[0]).sort());
+  for (const tr of all) {
+    for (const [p, m] of Object.entries(tr)) {
+      const need = byPath[p].blocks.filter(b => b.cls !== "struct").map(b => b.id).sort();
+      assert.deepEqual(Object.keys(m).sort(), need, p);
+      for (const [id, e] of Object.entries(m)) assert.ok(e.id === id && e.title, `${p} ${id}`);
+    }
   }
 });
 

@@ -1,129 +1,113 @@
-# Lean 対訳ブラウザ（side-by-side-lean-natural）
+# side-by-side-lean-natural
 
-Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言語の数学的な文章に訳して横に並べるブラウザです。Lean のビルドは要りません。ソースを読むだけで動きます。
+**English** · [日本語](docs/README.ja.md) · [简体中文](docs/README.zh-Hans.md) · [繁體中文](docs/README.zh-Hant.md) · [한국어](docs/README.ko.md) · [Français](docs/README.fr.md) · [Deutsch](docs/README.de.md) · [Español](docs/README.es.md) · [Português](docs/README.pt.md) · [Русский](docs/README.ru.md)
 
-**Web 版: <https://side-by-side-lean-natural.pages.dev/>**
+A browser that splits Lean 4 source into declarations and shows each one next to a mathematical translation in the natural language you choose. It only reads the source: no Lean build is needed.
 
-![Length.lean の対訳表示](docs/screenshot.png)
+**Web version: <https://side-by-side-lean-natural.pages.dev/>**
 
-[English summary](#english)
+![The demo's Impl.lean, with Lean and its translation side by side](docs/screenshot.png)
 
-## できること
+## Features
 
-- GitHub の URL（private リポジトリも可）、ZIP、フォルダから Lean 4 のリポジトリを開く
-- 宣言（`def`、`theorem`、`structure` など）ごとに、Lean のコードと訳を並べて表示する。言語は日本語、英語、中国語（簡体・繁体）、韓国語、フランス語、ドイツ語、スペイン語、ポルトガル語、ロシア語から選べて、自由入力もできる
-- 言語の選択は 1 つで、訳・画面の文言・用語解説・「Claude に聞く」の説明がすべてその言語になる。画面の文言は上の 10 言語を内蔵（それ以外は英語）。用語解説は日本語と英語を内蔵し、ほかの言語は初めて選んだときに Claude で訳してブラウザに保存する（押した語を先に訳し、残りはバックグラウンドで進めて進み具合を表示）。設定で画面の言語だけを固定することもできる
-- 訳すとき、import 先で定義されていて対象ファイルが参照しているものを、文脈として一緒に渡す
-- 識別子をタップすると定義の要約を表示し、定義元へ移動できる。`∀`、`omega`、`rcases` などの記号やタクティクには短い解説が出る
-- 長い証明は最初たたんで表示する
-- 訳はブラウザに保存する。書き出してリポジトリに同梱すれば、開いた人は API キーなしで訳を読める
-- ファイルや宣言を直接開く共有リンクを作れる
+- Open a Lean 4 repository from a GitHub URL (private repositories too), a ZIP file or a folder
+- Show the Lean code and its translation side by side, one declaration (`def`, `theorem`, `structure`, …) at a time. Translate into Japanese, English, Chinese (Simplified or Traditional), Korean, French, German, Spanish, Portuguese or Russian, or type in any other language
+- One language choice sets the translations, the interface, the glossary and the "Ask Claude" explanations. Interface text is built in for the ten languages above (English otherwise). The glossary is built in for Japanese and English; for other languages, Claude translates it the first time you choose the language and the browser keeps it (the word you tapped comes first, the rest continue in the background with a progress indicator). Settings can also fix the interface language on its own
+- On a first visit the page opens in Japanese if your browser prefers Japanese over English, and in English otherwise
+- When translating, definitions from imported files that the current file refers to are sent along as context
+- Tap an identifier to see a summary of its definition and jump to it. Symbols and tactics such as `∀`, `omega` and `rcases` get a short explanation
+- Long proofs start folded
+- Translations are kept in the browser. Export them and commit them to the repository, and anyone who opens it can read them without an API key
+- Make share links that open a given file or declaration
 
-## 使い方
+## Usage
 
-### Web 版（Cloudflare Pages）
+### Web version (Cloudflare Pages)
 
-<https://side-by-side-lean-natural.pages.dev/> を開きます。
+Open <https://side-by-side-lean-natural.pages.dev/>.
 
-1. GitHub の URL を入れて「開く」を押す
-2. 「設定」で Anthropic API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる。設定にある「GitHub でトークンを作る」から開くと、読み取り専用（Contents: read）・期限 30 日の設定が記入済みの作成画面になるので、読みたいリポジトリを選んで作るだけです
-3. 「このファイルを訳す」、または各ブロックの「訳す」を押す
+1. Enter a GitHub URL and press "Open"
+2. In "Settings", enter an Anthropic API key (needed for translation). For a private repository, also enter a GitHub token. "Create a token on GitHub" in Settings opens GitHub's token page with read-only access (Contents: read) and a 30-day expiry already filled in: choose the repositories you want to read and create it
+3. Press "Translate this file", or "Translate" on a single block
 
-URL を入れずに開くと、デモが表示されます。CRuby の `range.c` にある `rb_range_component_beg_len`（範囲引数の正規化）を Lean に写したモデルと、仕様・性質 P1〜P4・修正版のモデルです（作者の実験リポジトリ `gotoken/cruby-formalized-trial` @74e11c6 から。リポジトリ自体は非公開）。`Basic`・`Cases`・`Spec`・`Impl`・`Statements`・`Fixed` は日本語訳つきで、ほかのファイルはその場で訳せます。
+Opened without a URL, the page shows a demo: a Lean model of `rb_range_component_beg_len` (the normalization of range arguments) in CRuby's `range.c`, with its specification, properties P1–P4 and a model of the fix. It comes from the author's experiment repository `gotoken/cruby-formalized-trial` @74e11c6, which is not public. `Basic`, `Cases`, `Spec`, `Impl`, `Statements` and `Fixed` come with English and Japanese translations; the other files can be translated on the spot.
 
-### claude.ai 版
+### claude.ai version
 
-`dist/claude-artifact.html` を claude.ai のアーティファクトとして公開すると、閲覧した人それぞれの Claude アカウントで翻訳します（API キー不要）。ただし claude.ai の中のページからは GitHub に接続できないので、GitHub の「Code → Download ZIP」で取得した ZIP を「ZIP を開く」で読み込みます。
+Publish `dist/claude-artifact.html` as a claude.ai artifact, and each viewer's own Claude account does the translating (no API key needed). Pages inside claude.ai cannot reach GitHub, so download the repository with GitHub's "Code → Download ZIP" and load it with "Open ZIP".
 
-### 共有リンク
+### Share links
 
-Web 版で GitHub から開いている間は、アドレスバーの URL がそのまま共有リンクになります。各ブロック右上の行番号（`L16–17` など）を押すと、その宣言へのリンクをコピーできます。
+While the web version shows a repository from GitHub, the URL in the address bar is a share link. The line numbers at the top right of each block (`L16–17` and so on) copy a link to that declaration.
 
-| パラメータ | 意味 |
+| Parameter | Meaning |
 |---|---|
 | `repo` | `owner/repo` |
-| `ref` | ブランチ、タグ、コミット（省略時は既定のブランチ） |
-| `path` | 開くファイル |
-| `decl` | スクロールする宣言の名前（名前のないブロックは `id=b12` の形） |
-| `lang` | 訳す言語 |
+| `ref` | Branch, tag or commit (the default branch if omitted) |
+| `path` | File to open |
+| `decl` | Name of the declaration to scroll to (blocks without a name use the form `id=b12`) |
+| `lang` | Translation language |
 
-例: <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E6%97%A5%E6%9C%AC%E8%AA%9E>
+Example: <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=English>
 
-### 訳をリポジトリに同梱する
+### Bundling translations with a repository
 
-1. 訳したいファイルを訳す
-2. 「設定」→「訳をエクスポート」で JSON を取り出す（いま開いているリポジトリの分だけが出ます）
-3. 対象リポジトリに `.lean-taiyaku/ja.json` としてコミットする（言語ごとに 1 ファイル。名前は自由）
+1. Translate the files you want
+2. Use "Settings" → "Export translations" to get a JSON file (only the repository you have open is exported)
+3. Commit it to the target repository as `.lean-taiyaku/en.json` (one file per language; any name works)
 
-リポジトリを開くと `.lean-taiyaku/*.json` を自動で読み込みます。同じブロックに手元で付けた訳があれば、そちらが優先されます。訳の照合には「言語・詳しさ・ファイルパスとブロック本文のハッシュ」を使うので、コードが変わったブロックの古い訳は自動的に使われなくなります。
+Opening a repository loads `.lean-taiyaku/*.json` automatically. A translation you made yourself for the same block takes precedence. Translations are matched by language, detail level and a hash of the file path and block text, so when the code of a block changes, its old translation is no longer used.
 
-## キーとデータの扱い
+## Keys and data
 
-- API キーと GitHub トークンはブラウザの中だけで使います。「このブラウザに保存する」を選んだときだけ localStorage に保存します。共用の PC では保存しないでください。
-- ページが通信する先は `api.github.com` と `api.anthropic.com` だけです。Web 版では `public/_headers` の Content-Security-Policy でこれを固定しているので、ブラウザはそれ以外への送信を拒否します。インラインスクリプトもハッシュで固定しています。
-- 翻訳するとき、対象ファイルと参照している定義の Lean ソースを Anthropic に送ります。private なコードを訳すときは、所属組織の方針を確認してください。
-- GitHub トークンは fine-grained personal access token をおすすめします。対象のリポジトリだけを選び、権限は Contents: Read-only にしてください。
+- The API key and the GitHub token are used only inside the browser. They are saved to localStorage only if you choose "Remember in this browser". Do not save them on a shared computer.
+- The page talks only to `api.github.com` and `api.anthropic.com`. In the web version, the Content-Security-Policy in `public/_headers` enforces this, so the browser refuses to send anything anywhere else. Inline scripts are pinned by hash as well.
+- Translating sends the Lean source of the file, and of the definitions it refers to, to Anthropic. Check your organization's policy before translating private code.
+- For the GitHub token, use a fine-grained personal access token: select only the repositories you need, with Contents: Read-only.
 
-## 仕組みと限界
+## How it works, and its limits
 
-- 分割は、トップレベルのキーワードと、コメント・文字列の内外を見て行う静的な処理です。Lean を実行しないので、型情報、記法やマクロの展開、タクティクの途中のゴールは使っていません。
-- 文脈は、import を最大 3 段・30 ファイルまでたどり、名前が一致する定義を拾います。同名の定義が多すぎる短い名前は除外します。
-- 訳は LLM によるもので、誤りがありえます。コードと照らして読んでください。
-- `mutual` ブロックの中やマクロが生成する宣言は、うまく分割できないことがあります。
+- Splitting is static: it looks at top-level keywords and at whether text is inside comments or strings. Lean is not run, so type information, notation and macro expansion, and the goals in the middle of tactic proofs are not used.
+- Context follows imports up to 3 levels deep and 30 files, and picks up definitions whose names match. Short names with too many definitions are skipped.
+- Translations come from an LLM and can be wrong. Read them against the code.
+- Declarations inside `mutual` blocks, or generated by macros, may not split well.
 
-## 開発
+## Development
 
 ```sh
-python3 tools/build.py             # src/ と demo/ から public/ と dist/ を生成
-node --test "test/*.test.cjs"      # 分割・文脈収集・返答の解析のテスト
+python3 tools/build.py             # build public/ and dist/ from src/ and demo/
+node --test "test/*.test.cjs"      # tests for splitting, context collection and reply parsing
 python3 -m http.server -d public 8000
 ```
 
 ```
-src/        template.html, core.js（分割など DOM を使わない部分）, app.js（UI）, glossary.js（記号辞典）
-demo/       デモ用の Lean ファイル、日本語訳、CRuby の BSDL
-vendor/     KaTeX, JSZip（MIT）
-tools/      build.py
-test/       node:test のテスト
-public/     Web 版（ビルド結果。Cloudflare Pages はここを配信）
-dist/       claude.ai 版（ビルド結果。1 ファイル）
+src/        template.html, core.js (splitting and other DOM-free parts), app.js (UI),
+            i18n.js (languages and interface text), glossary.js (symbol glossary)
+demo/       demo Lean files, their English and Japanese translations, CRuby's BSDL
+vendor/     KaTeX, JSZip (MIT)
+tools/      build.py, sources of the demo translations
+test/       node:test tests
+docs/       translations of this README, screenshot
+public/     web version (build output; Cloudflare Pages serves this directory)
+dist/       claude.ai version (build output; a single file)
 ```
 
-`src/` を変えたら `tools/build.py` を実行して `public/` と `dist/` もコミットしてください。CI がビルド結果とソースの一致を確認します。配信されるものがそのままリポジトリで読めるように、ビルド済みのファイルを置いています。
+After changing `src/` or `demo/`, run `tools/build.py` and commit `public/` and `dist/` too. CI checks that the build output matches the sources. The built files are kept in the repository so that what is served can be read here as it is.
 
-## Cloudflare Pages に置く
+## Deploying to Cloudflare Pages
 
-1. Cloudflare のダッシュボードで Workers & Pages → Create → Pages → Connect to Git を選び、このリポジトリを指定する
-2. Framework preset は None、Build command は空、Build output directory は `public`
-3. 保存すると、`main` に push するたびに配置される
+1. In the Cloudflare dashboard, choose Workers & Pages → Create → Pages → Connect to Git, and select this repository
+2. Framework preset: None. Build command: empty. Build output directory: `public`
+3. Once saved, every push to `main` is deployed
 
-`public/_headers` のセキュリティヘッダーも一緒に配信されます。
+The security headers in `public/_headers` are served as well.
 
-## ライセンス
+## License
 
-- リポジトリ全体: BSD 2-Clause License（`LICENSE`）。デモの Lean ファイルも同じです
-- デモの `Impl.lean` と `Fixed.lean` は、CRuby の `range.c`（Copyright (C) 1993-2007 Yukihiro Matsumoto）と ruby/ruby#19824 のパッチを短く引用しています。CRuby は 2-clause BSDL か Ruby License で再配布でき、引用部分は BSDL で使っています（`demo/CRuby-BSDL.txt`）
-- `vendor/`: KaTeX、JSZip（いずれも MIT）
+- The whole repository, including the demo's Lean files: BSD 2-Clause License (`LICENSE`)
+- The demo's `Impl.lean` and `Fixed.lean` quote short excerpts of CRuby's `range.c` (Copyright (C) 1993-2007 Yukihiro Matsumoto) and of the patch in ruby/ruby#19824. CRuby may be redistributed under the 2-clause BSDL or the Ruby License; the excerpts are used under the BSDL (`demo/CRuby-BSDL.txt`)
+- `vendor/`: KaTeX and JSZip (both MIT)
 
-詳しくは `NOTICE` を見てください。
+See `NOTICE` for details.
 
----
-
-## English
-
-**side-by-side-lean-natural** (Lean 対訳ブラウザ) splits Lean 4 source into declarations and shows each one next to a natural-language mathematical translation in the language you choose. It reads source only: no Lean build is required.
-
-**Web version: <https://side-by-side-lean-natural.pages.dev/>**
-
-- Open a repository from a GitHub URL (private repositories work with a token), a ZIP or a folder.
-- One language choice drives the translations, the interface, the glossary and "Ask Claude". Interface strings are built in for ten languages (English otherwise); the glossary is built in for Japanese and English and is translated by Claude on first use for other languages, with the clicked word first and a progress chip for the rest.
-- Translations are made by Claude, either with your Anthropic API key (web version) or with the viewer's own Claude account (claude.ai version, `dist/claude-artifact.html`). Definitions referenced from imported files are sent as context.
-- Tap identifiers to see and jump to their definitions; tap Lean symbols and tactics for a short explanation.
-- Share links with `?repo=owner/repo&path=…&decl=…&lang=…`.
-- Export translations and commit them as `.lean-taiyaku/<lang>.json` in the target repository; anyone who opens it then reads them without a key.
-- Keys stay in the browser. The page talks only to `api.github.com` and `api.anthropic.com`, enforced by the Content-Security-Policy in `public/_headers`.
-- Deploy: Cloudflare Pages with no build command and `public` as the output directory.
-
-The demo is a Lean model of `rb_range_component_beg_len` in CRuby's `range.c`, with its specification, properties P1–P4 and a model of the fix (from the author's experiment, not public); six of its files come with Japanese translations.
-
-License: BSD 2-Clause, including the demo. The demo quotes short excerpts of CRuby's `range.c` under CRuby's 2-clause BSDL (`demo/CRuby-BSDL.txt`). KaTeX and JSZip are MIT. See `NOTICE`.
+The READMEs under `docs/` are translations of this file. If they differ, this English version prevails.
