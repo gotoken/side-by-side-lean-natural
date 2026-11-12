@@ -76,6 +76,9 @@ const PROVIDERS = {
     models: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-6-astra"] },
   google: { name: "Google Gemini", host: "generativelanguage.googleapis.com", ph: "AIza…", keyURL: "https://aistudio.google.com/apikey",
     models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"] },
+  // One key for many vendors' models, obtainable with a button (OAuth PKCE) instead of copying a key.
+  openrouter: { name: "OpenRouter", host: "openrouter.ai", ph: "sk-or-…", keyURL: "https://openrouter.ai/settings/keys", oauth: true,
+    models: ["google/gemma-4-31b-it:free", "nvidia/nemotron-3-super:free", "anthropic/claude-sonnet-5-5", "openai/gpt-5.6-terra", "google/gemini-3.8-flash"] },
   // Gemini Nano inside Chrome (Prompt API): no key, nothing leaves the device, small context.
   chrome: { local: true, models: ["gemini-nano"] },
 };
@@ -97,6 +100,14 @@ const LIST_MODELS = {
     const r = await fetch("https://api.openai.com/v1/models", { headers: { authorization: "Bearer " + key } });
     if (!r.ok) throw new Error("API " + r.status);
     return ((await r.json()).data || []).sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => m.id).filter(id => /^(gpt-|o\d|chatgpt-)/.test(id) && !MODEL_SKIP.test(id));
+  },
+  // Free models (":free", 50 requests a day without a purchase) come first, then the newest.
+  async openrouter(key) {
+    const r = await fetch("https://openrouter.ai/api/v1/models?output_modalities=text", { headers: { authorization: "Bearer " + key } });
+    if (!r.ok) throw new Error("API " + r.status);
+    const free = m => /:free$/.test(m.id);
+    return ((await r.json()).data || []).filter(m => !m.architecture || !m.architecture.output_modalities || m.architecture.output_modalities.includes("text"))
+      .filter(m => !MODEL_SKIP.test(m.id)).sort((a, b) => free(b) - free(a) || (b.created || 0) - (a.created || 0)).map(m => m.id);
   },
   async google(key) {
     const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": key } });
@@ -288,6 +299,13 @@ const REQUEST = {
       { model: S.model, input: prompt, max_output_tokens: max * 2, store: false }, signal);
     const text = (d.output || []).filter(o => o.type === "message").flatMap(o => o.content || []).filter(c => c.type === "output_text").map(c => c.text).join("");
     return { text, truncated: d.status === "incomplete", model: d.model || S.model };
+  },
+  async openrouter(prompt, signal, max) {
+    const d = await postJSON("https://openrouter.ai/api/v1/chat/completions", { authorization: "Bearer " + S.apiKey, "x-title": "Taiyak" },
+      { model: S.model, messages: [{ role: "user", content: prompt }], max_tokens: max * 2 }, signal);
+    if (d.error) throw new Error("API: " + (d.error.message || d.error.code));
+    const c = (d.choices || [])[0] || {};
+    return { text: (c.message && c.message.content) || "", truncated: c.finish_reason === "length", model: d.model || S.model };
   },
   async chrome(prompt, signal, max, onText) {
     if (!hasLM()) throw new Error(t("chromeState", "missing"));
@@ -946,6 +964,40 @@ function openSettings() {
   $("#tier").innerHTML = ["default", "complex", "quick"].map(v => `<option value="${v}" ${v === S.tier ? "selected" : ""}>${t("tier" + v[0].toUpperCase() + v.slice(1))}</option>`).join("");
   d.hidden = false; $("#apiKey").focus();
 }
+// ---------- "Connect OpenRouter" (OAuth PKCE: no client registration, no server) ----------
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const OR_PENDING = "taiyak:orPending"; // sessionStorage: verifier, state and where to come back to
+async function orConnect() {
+  if (!PROVIDERS[DRAFT.provider].local) stashProvider();
+  DRAFT.provider = "openrouter"; saveSettings();
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  const state = b64url(crypto.getRandomValues(new Uint8Array(16)));
+  // Come back to the same address, with the language even where the address does not carry it (the demo).
+  const back = new URL(location.href); if (!back.searchParams.has("lang")) back.searchParams.set("lang", S.lang);
+  try { sessionStorage.setItem(OR_PENDING, JSON.stringify({ verifier, state, back: back.pathname + back.search + back.hash })); } catch (e) { }
+  const q = new URLSearchParams({ callback_url: location.origin + location.pathname, code_challenge: challenge, code_challenge_method: "S256", state, key_label: "Taiyak" });
+  location.assign("https://openrouter.ai/auth?" + q);
+}
+// Back from OpenRouter with ?code=…: exchange it for a key, then restore the address the user left from.
+async function orCallback() {
+  const q = new URLSearchParams(location.search), code = q.get("code");
+  let pend = null; try { pend = JSON.parse(sessionStorage.getItem(OR_PENDING) || "null"); } catch (e) { }
+  if (!code && !(pend && q.has("state"))) return;
+  try { sessionStorage.removeItem(OR_PENDING); } catch (e) { }
+  try { history.replaceState(null, "", pend ? pend.back : location.pathname); } catch (e) { }
+  if (!pend || !code || q.get("state") !== pend.state) { if (pend) setStatus(t("orFailed", code ? "state" : "denied"), "err"); return; }
+  try {
+    const r = await fetch("https://openrouter.ai/api/v1/auth/keys", { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code, code_verifier: pend.verifier, code_challenge_method: "S256" }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.key) throw new Error(r.status + " " + ((d.error && d.error.message) || ""));
+    S.provider = "openrouter"; S.keys.openrouter = d.key;
+    LS.set("provider", S.provider); if (S.remember) LS.set("keys", S.keys);
+    setEngineLabel(); toast(t("orConnected"));
+  } catch (e) { setStatus(t("orFailed", e.message), "err"); }
+}
+
 // The settings dialog edits a draft, so each provider's key and model survive switching between them.
 let DRAFT = null;
 function stashProvider() {
@@ -961,6 +1013,7 @@ function showProvider() {
   $("#apiKey").value = DRAFT.keys[id] || ""; $("#apiKey").placeholder = P.ph;
   $("#model").value = DRAFT.models[id] || P.models[0];
   $("#keyLink").href = P.keyURL; $("#keyLink").textContent = t("keyLink", P.name);
+  $("#orRow").hidden = !P.oauth;
   $("#sNote").textContent = S.sample ? t("sNoteArtifact") : t("sNoteStandalone", P.host);
   fillModels(false);
 }
@@ -1033,6 +1086,7 @@ function bind() {
   $("#apiKey").addEventListener("change", () => fillModels(false));
   $("#modelRefresh").addEventListener("click", () => fillModels(true));
   $("#chromeDl").addEventListener("click", chromeDownload);
+  $("#orConnect").addEventListener("click", orConnect);
   $("#style").addEventListener("change", e => { S.style = e.target.value; LS.set("style", S.style); refresh(); });
   $("#viewSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.view = b.dataset.v; LS.set("view", S.view); applyUI(); });
   $("#filter").addEventListener("input", buildTree);
@@ -1091,6 +1145,7 @@ async function boot() {
       for (const b of bl) { const tr = m[b.id]; if (!tr) continue; const k = `${lang}|normal|${CORE.hashStr(p + "\n" + b.text)}`; MEM.set(k, { tr, path: p, id: b.id, name: b.name || "", repo: demo.label, lang, style: "normal", model: "Claude (demo)", demo: true }); }
     }
   }
+  if (!S.inArtifact) await orCallback();
   await openDB(); await migrateOldDB();
   for (const [k, v] of await idbAll()) {
     if (String(k).startsWith("g|")) { if (v && v.gloss && GLOSSARY[v.k] && v.h === CORE.hashStr(GLOSSARY[v.k][1])) GL.set(v.lang + "|" + v.k, v.gloss); }
