@@ -27,7 +27,7 @@ Lean 4 소스를 선언 단위로 나누고, 각 선언 옆에 선택한 자연�
 <https://taiyak.pages.dev/>를 엽니다.
 
 1. GitHub URL을 입력하고 '열기'를 누른다
-2. '설정'에서 Anthropic API 키를 입력한다(번역에 필요). 비공개 저장소라면 GitHub 토큰도 입력한다. 설정의 'GitHub에서 토큰 만들기'를 누르면 읽기 전용(Contents: read)과 30일 만료가 미리 입력된 GitHub 토큰 생성 화면이 열리므로, 읽고 싶은 저장소를 골라 만들기만 하면 된다
+2. '설정'에서 Anthropic, OpenAI, Google 중 하나의 API 키를 입력한다(번역에 필요). 비공개 저장소라면 GitHub 토큰도 입력한다. 설정의 'GitHub에서 토큰 만들기'를 누르면 읽기 전용(Contents: read)과 30일 만료가 미리 입력된 GitHub 토큰 생성 화면이 열리므로, 읽고 싶은 저장소를 골라 만들기만 하면 된다
 3. '이 파일 번역' 또는 각 블록의 '번역'을 누른다
 
 URL 없이 열면 데모가 표시됩니다. CRuby `range.c`의 `rb_range_component_beg_len`(범위 인수의 정규화)을 Lean으로 옮긴 모델과, 그 명세, 성질 P1–P4, 수정판 모델입니다. 작성자의 비공개 실험 저장소 `gotoken/cruby-formalized-trial` @74e11c6에서 가져왔습니다. `Basic`, `Cases`, `Spec`, `Impl`, `Statements`, `Fixed`에는 영어와 일본어 번역이 들어 있고, 다른 파일은 그 자리에서 번역할 수 있습니다.
@@ -61,8 +61,8 @@ URL 없이 열면 데모가 표시됩니다. CRuby `range.c`의 `rb_range_compon
 ## 키와 데이터
 
 - API 키와 GitHub 토큰은 브라우저 안에서만 사용합니다. '이 브라우저에 저장'을 선택했을 때만 localStorage에 저장합니다. 공용 컴퓨터에서는 저장하지 마세요.
-- 페이지가 통신하는 곳은 `api.github.com`과 `api.anthropic.com`뿐입니다. 웹 버전에서는 `public/_headers`의 Content-Security-Policy로 이를 강제하므로, 브라우저는 그 밖의 곳으로 보내는 것을 거부합니다. 인라인 스크립트도 해시로 고정되어 있습니다.
-- 번역할 때 대상 파일과 그 파일이 참조하는 정의의 Lean 소스를 Anthropic에 보냅니다. 비공개 코드를 번역할 때는 소속 조직의 방침을 확인하세요.
+- 페이지가 통신하는 곳은 `api.github.com`, `api.anthropic.com`, `api.openai.com`과 `generativelanguage.googleapis.com`뿐입니다. 웹 버전에서는 `public/_headers`의 Content-Security-Policy로 이를 강제하므로, 브라우저는 그 밖의 곳으로 보내는 것을 거부합니다. 인라인 스크립트도 해시로 고정되어 있습니다.
+- 번역할 때 대상 파일과 그 파일이 참조하는 정의의 Lean 소스를 선택한 API(Anthropic, OpenAI, Google 중 하나)에 보냅니다. 비공개 코드를 번역할 때는 소속 조직의 방침을 확인하세요.
 - GitHub 토큰은 fine-grained personal access token을 권장합니다. 필요한 저장소만 선택하고 권한은 Contents: Read-only로 하세요.
 
 ## 동작 방식과 한계

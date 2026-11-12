@@ -27,7 +27,7 @@ Un navegador que divide el código fuente de Lean 4 en declaraciones y muestra c
 Abre <https://taiyak.pages.dev/>.
 
 1. Escribe una URL de GitHub y pulsa «Abrir»
-2. En «Ajustes», introduce una clave de API de Anthropic (necesaria para traducir). Para un repositorio privado, introduce también un token de GitHub. «Crear un token en GitHub» en los ajustes abre la página de tokens de GitHub con acceso de solo lectura (Contents: read) y caducidad de 30 días ya rellenados: elige los repositorios que quieras leer y créalo
+2. En «Ajustes», introduce una clave de API de Anthropic, OpenAI o Google (necesaria para traducir). Para un repositorio privado, introduce también un token de GitHub. «Crear un token en GitHub» en los ajustes abre la página de tokens de GitHub con acceso de solo lectura (Contents: read) y caducidad de 30 días ya rellenados: elige los repositorios que quieras leer y créalo
 3. Pulsa «Traducir este archivo», o «Traducir» en un bloque concreto
 
 Si se abre sin URL, la página muestra una demo: un modelo en Lean de `rb_range_component_beg_len` (la normalización de los argumentos de rango) del `range.c` de CRuby, con su especificación, las propiedades P1–P4 y un modelo de la corrección. Procede del repositorio de experimentos del autor, `gotoken/cruby-formalized-trial` @74e11c6, que no es público. `Basic`, `Cases`, `Spec`, `Impl`, `Statements` y `Fixed` incluyen traducciones al inglés y al japonés; los demás archivos se pueden traducir en el momento.
@@ -61,8 +61,8 @@ Al abrir un repositorio se carga automáticamente `.taiyak/*.json`. Si tú mismo
 ## Claves y datos
 
 - La clave de API y el token de GitHub solo se usan dentro del navegador. Se guardan en localStorage solo si eliges «Recordar en este navegador». No los guardes en un ordenador compartido.
-- La página solo se comunica con `api.github.com` y `api.anthropic.com`. En la versión web lo impone la Content-Security-Policy de `public/_headers`, así que el navegador rechaza cualquier envío a otro destino. Los scripts en línea también están fijados por hash.
-- Al traducir se envía a Anthropic el código Lean del archivo y de las definiciones a las que hace referencia. Comprueba la política de tu organización antes de traducir código privado.
+- La página solo se comunica con `api.github.com`, `api.anthropic.com`, `api.openai.com` y `generativelanguage.googleapis.com`. En la versión web lo impone la Content-Security-Policy de `public/_headers`, así que el navegador rechaza cualquier envío a otro destino. Los scripts en línea también están fijados por hash.
+- Al traducir se envía a la API elegida (Anthropic, OpenAI o Google) el código Lean del archivo y de las definiciones a las que hace referencia. Comprueba la política de tu organización antes de traducir código privado.
 - Para el token de GitHub, usa un fine-grained personal access token: selecciona solo los repositorios necesarios, con Contents: Read-only.
 
 ## Funcionamiento y límites

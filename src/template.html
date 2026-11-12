@@ -292,8 +292,10 @@ math { font-size: 1.06em; }
     <h2 id="sTitle" data-i="settings"></h2>
     <div id="sClaudeRow" class="row"><label for="tier"><span data-i="sEngine"></span>: <span data-i="sClaude"></span></label><select id="tier"></select></div>
     <div id="sApiRow" class="row wide">
-      <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></div>
-      <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"><option value="claude-sonnet-5-5"></option><option value="claude-opus-5-5"></option><option value="claude-haiku-5-5"></option></datalist></div>
+      <div class="row"><label for="provider" data-i="sProvider"></label><select id="provider"></select></div>
+      <div class="row"><label for="apiKey" data-i="sApi"></label><input id="apiKey" type="password" autocomplete="off">
+        <p class="note"><a id="keyLink" target="_blank" rel="noopener"></a></p></div>
+      <div class="row"><label for="model" data-i="sModel"></label><input id="model" list="models" autocomplete="off"><datalist id="models"></datalist></div>
       <div class="row"><label for="ghToken" data-i="sGh"></label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
         <p class="note"><a id="patLink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" data-i="patLink"></a><br><span data-i="patSteps"></span></p></div>
       <label class="chk"><input type="checkbox" id="remember"> <span data-i="sRemember"></span></label>
