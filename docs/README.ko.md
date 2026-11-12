@@ -1,10 +1,10 @@
-# side-by-side-lean-natural
+# Taiyak
 
 [English](../README.md) · [日本語](README.ja.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · **한국어** · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-Lean 4 소스를 선언 단위로 나누고, 각 선언 옆에 선택한 자연어로 쓴 수학적 번역을 나란히 보여 주는 브라우저입니다. 소스를 읽기만 하므로 Lean 빌드는 필요 없습니다.
+Lean 4 소스를 선언 단위로 나누고, 각 선언 옆에 선택한 자연어로 쓴 수학적 번역을 나란히 보여 주는 브라우저입니다. 소스를 읽기만 하므로 Lean 빌드는 필요 없습니다. 이름은 원문과 번역을 나란히 놓은 글을 뜻하는 일본어 '対訳'(taiyaku)에서 따왔습니다.
 
-**웹 버전: <https://side-by-side-lean-natural.pages.dev/>**
+**웹 버전: <https://taiyak.pages.dev/>**
 
 ![데모의 Impl.lean을 Lean 코드와 번역을 나란히 표시한 화면](screenshot.png)
 
@@ -24,7 +24,7 @@ Lean 4 소스를 선언 단위로 나누고, 각 선언 옆에 선택한 자연�
 
 ### 웹 버전 (Cloudflare Pages)
 
-<https://side-by-side-lean-natural.pages.dev/>를 엽니다.
+<https://taiyak.pages.dev/>를 엽니다.
 
 1. GitHub URL을 입력하고 '열기'를 누른다
 2. '설정'에서 Anthropic API 키를 입력한다(번역에 필요). 비공개 저장소라면 GitHub 토큰도 입력한다. 설정의 'GitHub에서 토큰 만들기'를 누르면 읽기 전용(Contents: read)과 30일 만료가 미리 입력된 GitHub 토큰 생성 화면이 열리므로, 읽고 싶은 저장소를 골라 만들기만 하면 된다
@@ -48,15 +48,15 @@ URL 없이 열면 데모가 표시됩니다. CRuby `range.c`의 `rb_range_compon
 | `decl` | 스크롤할 선언 이름(이름 없는 블록은 `id=b12` 형식) |
 | `lang` | 번역 언어 |
 
-예: <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%ED%95%9C%EA%B5%AD%EC%96%B4>
+예: <https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%ED%95%9C%EA%B5%AD%EC%96%B4>
 
 ### 번역을 저장소에 함께 넣기
 
 1. 원하는 파일을 번역한다
 2. '설정' → '번역 내보내기'로 JSON 파일을 얻는다(지금 열려 있는 저장소의 것만 나온다)
-3. 대상 저장소에 `.lean-taiyaku/ko.json`으로 커밋한다(언어마다 파일 하나, 이름은 자유)
+3. 대상 저장소에 `.taiyak/ko.json`으로 커밋한다(언어마다 파일 하나, 이름은 자유)
 
-저장소를 열면 `.lean-taiyaku/*.json`을 자동으로 읽습니다. 같은 블록에 직접 만든 번역이 있으면 그쪽이 우선합니다. 번역은 '언어, 자세히 수준, 파일 경로와 블록 본문의 해시'로 대조하므로, 블록의 코드가 바뀌면 예전 번역은 더 이상 쓰이지 않습니다.
+저장소를 열면 `.taiyak/*.json`을 자동으로 읽습니다. 같은 블록에 직접 만든 번역이 있으면 그쪽이 우선합니다. 번역은 '언어, 자세히 수준, 파일 경로와 블록 본문의 해시'로 대조하므로, 블록의 코드가 바뀌면 예전 번역은 더 이상 쓰이지 않습니다.
 
 ## 키와 데이터
 

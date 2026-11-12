@@ -1,10 +1,10 @@
-# side-by-side-lean-natural
+# Taiyak
 
 [English](../README.md) · [日本語](README.ja.md) · **简体中文** · [繁體中文](README.zh-Hant.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-一个浏览器：把 Lean 4 源代码按声明切分，并在每个声明旁边显示用你所选自然语言写成的数学译文。它只读取源代码，不需要构建 Lean。
+一个浏览器：把 Lean 4 源代码按声明切分，并在每个声明旁边显示用你所选自然语言写成的数学译文。它只读取源代码，不需要构建 Lean。名称取自日语“対訳”（taiyaku，原文与译文对照）。
 
-**网页版：<https://side-by-side-lean-natural.pages.dev/>**
+**网页版：<https://taiyak.pages.dev/>**
 
 ![演示中的 Impl.lean：Lean 代码与译文并排显示](screenshot.png)
 
@@ -24,7 +24,7 @@
 
 ### 网页版（Cloudflare Pages）
 
-打开 <https://side-by-side-lean-natural.pages.dev/>。
+打开 <https://taiyak.pages.dev/>。
 
 1. 输入 GitHub URL，点击“打开”
 2. 在“设置”中填入 Anthropic API 密钥（翻译需要）。如果是私有仓库，还要填入 GitHub 令牌。点击设置中的“在 GitHub 上创建令牌”，会打开 GitHub 的令牌创建页面，并已填好只读权限（Contents: read）和 30 天有效期：只需选择要读取的仓库并创建
@@ -48,15 +48,15 @@
 | `decl` | 要滚动到的声明名称（没有名称的代码块使用 `id=b12` 的形式） |
 | `lang` | 翻译语言 |
 
-示例：<https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87>
+示例：<https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87>
 
 ### 把译文随仓库一起提供
 
 1. 翻译需要的文件
 2. 通过“设置”→“导出译文”取得 JSON 文件（只导出当前打开的仓库）
-3. 把它作为 `.lean-taiyaku/zh-Hans.json` 提交到目标仓库（每种语言一个文件，文件名任意）
+3. 把它作为 `.taiyak/zh-Hans.json` 提交到目标仓库（每种语言一个文件，文件名任意）
 
-打开仓库时会自动读取 `.lean-taiyaku/*.json`。如果你在本地为同一代码块做过翻译，则以本地译文为准。译文按“语言、详细程度、文件路径与代码块正文的哈希”匹配，因此代码块的代码改变后，旧译文不会再被使用。
+打开仓库时会自动读取 `.taiyak/*.json`。如果你在本地为同一代码块做过翻译，则以本地译文为准。译文按“语言、详细程度、文件路径与代码块正文的哈希”匹配，因此代码块的代码改变后，旧译文不会再被使用。
 
 ## 密钥与数据
 

@@ -1,10 +1,10 @@
-# side-by-side-lean-natural（Lean 対訳ブラウザ）
+# Taiyak
 
 [English](../README.md) · **日本語** · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言語の数学的な文章に訳して横に並べるブラウザです。ソースを読むだけで動くので、Lean のビルドは要りません。
+Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言語の数学的な文章に訳して横に並べるブラウザです。ソースを読むだけで動くので、Lean のビルドは要りません。名前は「対訳」から取っています。
 
-**Web 版: <https://side-by-side-lean-natural.pages.dev/>**
+**Web 版: <https://taiyak.pages.dev/>**
 
 ![デモの Impl.lean を Lean と訳を並べて表示したところ](screenshot.png)
 
@@ -24,7 +24,7 @@ Lean 4 のソースを宣言ごとに区切り、それぞれを指定した言�
 
 ### Web 版（Cloudflare Pages）
 
-<https://side-by-side-lean-natural.pages.dev/> を開きます。
+<https://taiyak.pages.dev/> を開きます。
 
 1. GitHub の URL を入れて「開く」を押す
 2. 「設定」で Anthropic API キーを入れる（翻訳に必要）。private リポジトリなら GitHub トークンも入れる。設定にある「GitHub でトークンを作る」から開くと、読み取り専用（Contents: read）・期限 30 日の設定が記入済みの作成画面になるので、読みたいリポジトリを選んで作るだけです
@@ -48,15 +48,15 @@ Web 版で GitHub から開いている間は、アドレスバーの URL がそ
 | `decl` | スクロールする宣言の名前（名前のないブロックは `id=b12` の形） |
 | `lang` | 訳す言語 |
 
-例: <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E6%97%A5%E6%9C%AC%E8%AA%9E>
+例: <https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E6%97%A5%E6%9C%AC%E8%AA%9E>
 
 ### 訳をリポジトリに同梱する
 
 1. 訳したいファイルを訳す
 2. 「設定」→「訳をエクスポート」で JSON を取り出す（いま開いているリポジトリの分だけが出ます）
-3. 対象リポジトリに `.lean-taiyaku/ja.json` としてコミットする（言語ごとに 1 ファイル。名前は自由）
+3. 対象リポジトリに `.taiyak/ja.json` としてコミットする（言語ごとに 1 ファイル。名前は自由）
 
-リポジトリを開くと `.lean-taiyaku/*.json` を自動で読み込みます。同じブロックに手元で付けた訳があれば、そちらが優先されます。訳の照合には「言語・詳しさ・ファイルパスとブロック本文のハッシュ」を使うので、コードが変わったブロックの古い訳は自動的に使われなくなります。
+リポジトリを開くと `.taiyak/*.json` を自動で読み込みます。同じブロックに手元で付けた訳があれば、そちらが優先されます。訳の照合には「言語・詳しさ・ファイルパスとブロック本文のハッシュ」を使うので、コードが変わったブロックの古い訳は自動的に使われなくなります。
 
 ## キーとデータの扱い
 

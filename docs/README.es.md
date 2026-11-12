@@ -1,10 +1,10 @@
-# side-by-side-lean-natural
+# Taiyak
 
 [English](../README.md) · [日本語](README.ja.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · **Español** · [Português](README.pt.md) · [Русский](README.ru.md)
 
-Un navegador que divide el código fuente de Lean 4 en declaraciones y muestra cada una junto a una traducción matemática en el idioma natural que elijas. Solo lee el código fuente: no hace falta compilar Lean.
+Un navegador que divide el código fuente de Lean 4 en declaraciones y muestra cada una junto a una traducción matemática en el idioma natural que elijas. Solo lee el código fuente: no hace falta compilar Lean. El nombre viene del japonés 対訳 (*taiyaku*), un texto presentado junto a su traducción.
 
-**Versión web: <https://side-by-side-lean-natural.pages.dev/>**
+**Versión web: <https://taiyak.pages.dev/>**
 
 ![Impl.lean de la demo, con el Lean y su traducción lado a lado](screenshot.png)
 
@@ -24,7 +24,7 @@ Un navegador que divide el código fuente de Lean 4 en declaraciones y muestra c
 
 ### Versión web (Cloudflare Pages)
 
-Abre <https://side-by-side-lean-natural.pages.dev/>.
+Abre <https://taiyak.pages.dev/>.
 
 1. Escribe una URL de GitHub y pulsa «Abrir»
 2. En «Ajustes», introduce una clave de API de Anthropic (necesaria para traducir). Para un repositorio privado, introduce también un token de GitHub. «Crear un token en GitHub» en los ajustes abre la página de tokens de GitHub con acceso de solo lectura (Contents: read) y caducidad de 30 días ya rellenados: elige los repositorios que quieras leer y créalo
@@ -48,15 +48,15 @@ Mientras la versión web muestra un repositorio de GitHub, la URL de la barra de
 | `decl` | Nombre de la declaración a la que desplazarse (los bloques sin nombre usan la forma `id=b12`) |
 | `lang` | Idioma de traducción |
 
-Ejemplo: <https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=Espa%C3%B1ol>
+Ejemplo: <https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=Espa%C3%B1ol>
 
 ### Incluir las traducciones en un repositorio
 
 1. Traduce los archivos que quieras
 2. Usa «Ajustes» → «Exportar traducciones» para obtener un archivo JSON (solo se exporta el repositorio abierto)
-3. Confírmalo en el repositorio de destino como `.lean-taiyaku/es.json` (un archivo por idioma; el nombre es libre)
+3. Confírmalo en el repositorio de destino como `.taiyak/es.json` (un archivo por idioma; el nombre es libre)
 
-Al abrir un repositorio se carga automáticamente `.lean-taiyaku/*.json`. Si tú mismo tradujiste el mismo bloque, tu traducción tiene prioridad. Las traducciones se emparejan por idioma, nivel de detalle y un hash de la ruta del archivo y del texto del bloque, de modo que cuando cambia el código de un bloque su traducción antigua deja de usarse.
+Al abrir un repositorio se carga automáticamente `.taiyak/*.json`. Si tú mismo tradujiste el mismo bloque, tu traducción tiene prioridad. Las traducciones se emparejan por idioma, nivel de detalle y un hash de la ruta del archivo y del texto del bloque, de modo que cuando cambia el código de un bloque su traducción antigua deja de usarse.
 
 ## Claves y datos
 

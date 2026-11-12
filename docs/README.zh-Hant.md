@@ -1,10 +1,10 @@
-# side-by-side-lean-natural
+# Taiyak
 
 [English](../README.md) · [日本語](README.ja.md) · [简体中文](README.zh-Hans.md) · **繁體中文** · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-一個瀏覽器：把 Lean 4 原始碼依宣告切分，並在每個宣告旁邊顯示以你選擇的自然語言寫成的數學譯文。它只讀取原始碼，不需要建置 Lean。
+一個瀏覽器：把 Lean 4 原始碼依宣告切分，並在每個宣告旁邊顯示以你選擇的自然語言寫成的數學譯文。它只讀取原始碼，不需要建置 Lean。名稱取自日文「対訳」（taiyaku，原文與譯文對照）。
 
-**網頁版：<https://side-by-side-lean-natural.pages.dev/>**
+**網頁版：<https://taiyak.pages.dev/>**
 
 ![示範中的 Impl.lean：Lean 程式碼與譯文並排顯示](screenshot.png)
 
@@ -24,7 +24,7 @@
 
 ### 網頁版（Cloudflare Pages）
 
-開啟 <https://side-by-side-lean-natural.pages.dev/>。
+開啟 <https://taiyak.pages.dev/>。
 
 1. 輸入 GitHub URL，按下「開啟」
 2. 在「設定」中填入 Anthropic API 金鑰（翻譯需要）。若是私有儲存庫，還要填入 GitHub 權杖。按下設定中的「在 GitHub 上建立權杖」，會開啟 GitHub 的權杖建立頁面，並已填好唯讀權限（Contents: read）與 30 天期限：只要選擇要讀取的儲存庫並建立即可
@@ -48,15 +48,15 @@
 | `decl` | 要捲動到的宣告名稱（沒有名稱的區塊使用 `id=b12` 的形式） |
 | `lang` | 翻譯語言 |
 
-範例：<https://side-by-side-lean-natural.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87>
+範例：<https://taiyak.pages.dev/?repo=Broyojo/python-formalization&path=lean/PyLean/RangeSlice/Length.lean&decl=slow_isLen&lang=%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87>
 
 ### 將譯文隨儲存庫一起提供
 
 1. 翻譯需要的檔案
 2. 透過「設定」→「匯出譯文」取得 JSON 檔（只會匯出目前開啟的儲存庫）
-3. 將它以 `.lean-taiyaku/zh-Hant.json` 提交到目標儲存庫（每種語言一個檔案，檔名不限）
+3. 將它以 `.taiyak/zh-Hant.json` 提交到目標儲存庫（每種語言一個檔案，檔名不限）
 
-開啟儲存庫時會自動讀取 `.lean-taiyaku/*.json`。若你在本機為同一區塊做過翻譯，則以本機譯文為準。譯文依「語言、詳細程度、檔案路徑與區塊內文的雜湊」比對，因此區塊的程式碼改變後，舊譯文就不再使用。
+開啟儲存庫時會自動讀取 `.taiyak/*.json`。若你在本機為同一區塊做過翻譯，則以本機譯文為準。譯文依「語言、詳細程度、檔案路徑與區塊內文的雜湊」比對，因此區塊的程式碼改變後，舊譯文就不再使用。
 
 ## 金鑰與資料
 
