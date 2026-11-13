@@ -102,7 +102,9 @@ textarea { width: 100%; font-family: var(--font-code); font-size: 12px; }
   option { padding: 5px 12px 5px 8px; border-radius: 6px; gap: 6px; cursor: pointer; }
   option:hover, option:focus-visible { background: color-mix(in srgb, var(--accent) 14%, transparent); outline: none; }
   option:checked { color: var(--accent); font-weight: 600; }
-  option::checkmark { color: var(--accent); }
+  /* The check mark is drawn in each option's font, so with per-language fonts its width (and the
+     text after it) would shift; give it one font and a fixed width. */
+  option::checkmark { color: var(--accent); font-family: var(--font-latin), sans-serif; display: inline-block; inline-size: 1em; text-align: center; }
 }
 #engine.off { color: var(--err); }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
