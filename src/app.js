@@ -274,10 +274,20 @@ const sleep = (ms, signal) => new Promise((res, rej) => {
   if (signal) signal.addEventListener("abort", () => { clearTimeout(id); rej({ code: "cancelled" }); }, { once: true });
 });
 // Busy or temporarily failing APIs (429, 5xx, Anthropic's 529) are retried a few times, waiting
-// as long as the server asks (Retry-After) or 2, 5 and 10 seconds. A request that ran out of time
-// (504, or Gemini's 503 "Deadline expired") is not: the same request would run out of time again.
+// as long as the server asks or 2, 5 and 10 seconds. Not retried: a request that ran out of time
+// (504, or Gemini's 503 "Deadline expired"), which would run out of time again; a wait of more
+// than a minute; and a quota of 0 (Gemini's free tier has none for some models, e.g. Argon).
 const RETRY_STATUS = new Set([429, 500, 502, 503, 504, 529]), RETRY_WAIT = [2000, 5000, 10000];
 const isDeadline = (status, msg) => status === 504 || /deadline/i.test(msg || "");
+const isZeroQuota = (status, msg) => status === 429 && /\blimit: 0(?![\d.])/.test(msg || "");
+// Seconds to wait: Retry-After, or Gemini's google.rpc.RetryInfo in the body ("19808s").
+function retryAfter(r, data) {
+  const h = Number(r.headers.get("retry-after"));
+  if (h > 0) return h;
+  const info = ((data.error && data.error.details) || []).find(d => d && d.retryDelay);
+  const s = info ? parseFloat(info.retryDelay) : 0;
+  return s > 0 ? s : 0;
+}
 async function post(url, headers, body, signal) {
   for (let attempt = 0; ; attempt++) {
     let r;
@@ -286,12 +296,12 @@ async function post(url, headers, body, signal) {
     if (r.ok) return r;
     const data = await r.json().catch(() => ({}));
     const msg = (data.error && data.error.message) || "";
-    if (RETRY_STATUS.has(r.status) && !isDeadline(r.status, msg) && attempt < RETRY_WAIT.length) {
-      const ra = Number(r.headers.get("retry-after"));
-      await sleep(ra > 0 && ra <= 60 ? ra * 1000 : RETRY_WAIT[attempt], signal);
+    const wait = retryAfter(r, data), zero = isZeroQuota(r.status, msg);
+    if (RETRY_STATUS.has(r.status) && !isDeadline(r.status, msg) && !zero && wait <= 60 && attempt < RETRY_WAIT.length) {
+      await sleep(wait > 0 ? wait * 1000 : RETRY_WAIT[attempt], signal);
       continue;
     }
-    throw new Error(`API ${r.status}: ${msg}` + (attempt ? ` (${attempt + 1}×)` : ""));
+    throw new Error(`API ${r.status}: ` + (zero ? t("quotaZero") + " — " : "") + msg + (attempt ? ` (${attempt + 1}×)` : ""));
   }
 }
 async function postJSON(url, headers, body, signal) {
