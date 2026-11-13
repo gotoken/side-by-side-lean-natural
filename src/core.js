@@ -456,6 +456,34 @@ function parseReply(text) {
   return salvageObjects(text || "");
 }
 
+// Server-sent events: the data of each complete event in buf, and the incomplete rest.
+function splitSSE(buf) {
+  const events = [];
+  const parts = String(buf).split(/\r\n\r\n|\n\n|\r\r/);
+  const rest = parts.pop();
+  for (const ev of parts) {
+    const data = ev.split(/\r\n|\n|\r/).filter(l => l.startsWith("data:")).map(l => l.slice(5).replace(/^ /, "")).join("\n");
+    if (data) events.push(data);
+  }
+  return { events, rest };
+}
+
+// One chunk of a streamed Gemini reply (a GenerateContentResponse) folded into acc.
+// Thought summaries are skipped; the last finishReason and modelVersion win.
+function foldGemini(acc, d) {
+  acc = acc || { text: "", finish: "", model: "", block: "" };
+  if (!d) return acc;
+  if (d.error) throw new Error("API " + (d.error.code || "") + ": " + (d.error.message || d.error.status || ""));
+  if (d.modelVersion) acc.model = d.modelVersion;
+  if (d.promptFeedback && d.promptFeedback.blockReason) acc.block = d.promptFeedback.blockReason;
+  const c = (d.candidates || [])[0];
+  if (c) {
+    for (const p of (c.content && c.content.parts) || []) if (!p.thought && typeof p.text === "string") acc.text += p.text;
+    if (c.finishReason) acc.finish = c.finishReason;
+  }
+  return acc;
+}
+
 function hashStr(s) { // FNV-1a 32 → base36, two rounds for fewer collisions
   let h1 = 0x811c9dc5, h2 = 0x01000193 ^ s.length;
   for (let i = 0; i < s.length; i++) {
@@ -482,5 +510,5 @@ function parseGitHubURL(input) {
 }
 
 const CORE = { splitLean, statementPart, proofSplit, identifiers, buildIndex, lookupIdent, importsOf, modulePath,
-  collectContext, chunkBlocks, buildPrompt, extractJSONArray, salvageObjects, parseReply, parseObject, hashStr, parseGitHubURL, declName, headKeyword, codeOnly };
+  collectContext, chunkBlocks, buildPrompt, extractJSONArray, salvageObjects, parseReply, parseObject, splitSSE, foldGemini, hashStr, parseGitHubURL, declName, headKeyword, codeOnly };
 if (typeof module !== "undefined") module.exports = CORE;
