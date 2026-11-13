@@ -122,3 +122,25 @@ test("parseObject reads a JSON object from a reply", () => {
   assert.deepEqual(C.parseObject('Sure:\n```json\n{"a":"x","|>":"y"}\n```'), { a: "x", "|>": "y" });
   assert.equal(C.parseObject("no json"), null);
 });
+
+test("splitSSE returns complete events and keeps the incomplete rest", () => {
+  const a = C.splitSSE('data: {"a":1}\r\n\r\ndata: {"b"');
+  assert.deepEqual(a.events, ['{"a":1}']);
+  const b = C.splitSSE(a.rest + ':2}\n\n: comment\n\nevent: x\ndata: one\ndata: two\n\n');
+  assert.deepEqual(b.events, ['{"b":2}', "one\ntwo"]);
+  assert.equal(b.rest, "");
+});
+
+test("foldGemini joins answer parts, skips thoughts and keeps the finish reason", () => {
+  const chunks = [
+    { candidates: [{ content: { parts: [{ text: "thinking…", thought: true }] } }] },
+    { candidates: [{ content: { parts: [{ text: '[{"id":' }] } }], modelVersion: "gemini-x" },
+    { candidates: [{ content: { parts: [{ text: '"b1"}]' }] }, finishReason: "STOP" }] },
+  ];
+  const acc = chunks.reduce(C.foldGemini, null);
+  assert.equal(acc.text, '[{"id":"b1"}]');
+  assert.equal(acc.finish, "STOP");
+  assert.equal(acc.model, "gemini-x");
+  assert.equal(C.foldGemini(null, { promptFeedback: { blockReason: "SAFETY" } }).block, "SAFETY");
+  assert.throws(() => C.foldGemini(null, { error: { code: 504, message: "Deadline exceeded" } }), /504/);
+});

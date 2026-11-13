@@ -274,21 +274,47 @@ const sleep = (ms, signal) => new Promise((res, rej) => {
   if (signal) signal.addEventListener("abort", () => { clearTimeout(id); rej({ code: "cancelled" }); }, { once: true });
 });
 // Busy or temporarily failing APIs (429, 5xx, Anthropic's 529) are retried a few times, waiting
-// as long as the server asks (Retry-After) or 2, 5 and 10 seconds.
+// as long as the server asks (Retry-After) or 2, 5 and 10 seconds. A request that ran out of time
+// (504, or Gemini's 503 "Deadline expired") is not: the same request would run out of time again.
 const RETRY_STATUS = new Set([429, 500, 502, 503, 504, 529]), RETRY_WAIT = [2000, 5000, 10000];
-async function postJSON(url, headers, body, signal) {
+const isDeadline = (status, msg) => status === 504 || /deadline/i.test(msg || "");
+async function post(url, headers, body, signal) {
   for (let attempt = 0; ; attempt++) {
     let r;
     try { r = await fetch(url, { method: "POST", signal, headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) }); }
     catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
+    if (r.ok) return r;
     const data = await r.json().catch(() => ({}));
-    if (r.ok) return data;
-    if (RETRY_STATUS.has(r.status) && attempt < RETRY_WAIT.length) {
+    const msg = (data.error && data.error.message) || "";
+    if (RETRY_STATUS.has(r.status) && !isDeadline(r.status, msg) && attempt < RETRY_WAIT.length) {
       const ra = Number(r.headers.get("retry-after"));
       await sleep(ra > 0 && ra <= 60 ? ra * 1000 : RETRY_WAIT[attempt], signal);
       continue;
     }
-    throw new Error(`API ${r.status}: ${(data.error && data.error.message) || ""}` + (attempt ? ` (${attempt + 1}×)` : ""));
+    throw new Error(`API ${r.status}: ${msg}` + (attempt ? ` (${attempt + 1}×)` : ""));
+  }
+}
+async function postJSON(url, headers, body, signal) {
+  const r = await post(url, headers, body, signal);
+  return r.json().catch(() => ({}));
+}
+// Reads a text/event-stream response, handing the data of each event to onData.
+async function readSSE(r, signal, onData) {
+  const reader = r.body.getReader(), dec = new TextDecoder();
+  let buf = "";
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      buf += done ? dec.decode() + "\n\n" : dec.decode(value, { stream: true });
+      const s = CORE.splitSSE(buf);
+      buf = s.rest;
+      for (const ev of s.events) onData(ev);
+      if (done) return;
+    }
+  } catch (e) {
+    reader.cancel().catch(() => { });
+    if (signal && signal.aborted || e && e.name === "AbortError") throw { code: "cancelled" };
+    throw e;
   }
 }
 // One request per provider: prompt in, { text, truncated, model } out. OpenAI and Gemini count
@@ -331,13 +357,21 @@ const REQUEST = {
       throw e;
     } finally { try { session.destroy(); } catch (e) { } }
   },
-  async google(prompt, signal, max) {
-    const d = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:generateContent`, { "x-goog-api-key": S.apiKey },
+  // Streamed: a whole file in one non-streaming generateContent call can outlast the server's
+  // deadline (504 DEADLINE_EXCEEDED), and the stream also shows progress while the reply arrives.
+  async google(prompt, signal, max, onText) {
+    const r = await post(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:streamGenerateContent?alt=sse`, { "x-goog-api-key": S.apiKey },
       { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: max * 2 } }, signal);
-    const c = (d.candidates || [])[0];
-    if (!c) throw new Error("API: " + ((d.promptFeedback && d.promptFeedback.blockReason) || "no candidates"));
-    const text = ((c.content && c.content.parts) || []).filter(p => !p.thought && typeof p.text === "string").map(p => p.text).join("");
-    return { text, truncated: c.finishReason === "MAX_TOKENS", model: d.modelVersion || S.model };
+    let acc = CORE.foldGemini(null, null);
+    await readSSE(r, signal, data => {
+      let d; try { d = JSON.parse(data); } catch (e) { return; }
+      const before = acc.text.length;
+      acc = CORE.foldGemini(acc, d);
+      if (onText && acc.text.length > before) onText(acc.text);
+    });
+    if (!acc.text && acc.block) throw new Error("API: " + acc.block);
+    if (!acc.text && !acc.finish) throw new Error("API: no candidates");
+    return { text: acc.text, truncated: acc.finish === "MAX_TOKENS", model: acc.model || S.model };
   },
 };
 async function callLLM(prompt, onText, signal, opts = {}) {
