@@ -108,8 +108,12 @@ const LIST_MODELS = {
     return ((await r.json()).data || []).sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => m.id).filter(id => /^(gpt-|o\d|chatgpt-)/.test(id) && !MODEL_SKIP.test(id));
   },
   // Free models (":free", 50 requests a day without a purchase) come first, then the newest.
+  // /models/user leaves out what the account's privacy settings and guardrails would refuse.
   async openrouter(key) {
-    const r = await fetch("https://openrouter.ai/api/v1/models?output_modalities=text", { headers: { authorization: "Bearer " + key } });
+    const h = { headers: { authorization: "Bearer " + key } };
+    let r = await fetch("https://openrouter.ai/api/v1/models/user", h);
+    if (r.status === 404) throw new Error(t("orPolicy"));
+    if (!r.ok) r = await fetch("https://openrouter.ai/api/v1/models?output_modalities=text", h);
     if (!r.ok) throw new Error("API " + r.status);
     const free = m => /:free$/.test(m.id);
     return ((await r.json()).data || []).filter(m => !m.architecture || !m.architecture.output_modalities || m.architecture.output_modalities.includes("text"))
@@ -295,7 +299,7 @@ async function post(url, headers, body, signal) {
     catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
     if (r.ok) return r;
     const data = await r.json().catch(() => ({}));
-    const msg = (data.error && data.error.message) || "";
+    const msg = apiErrText(data);
     const wait = retryAfter(r, data), zero = isZeroQuota(r.status, msg);
     if (RETRY_STATUS.has(r.status) && !isDeadline(r.status, msg) && !zero && wait <= 60 && attempt < RETRY_WAIT.length) {
       await sleep(wait > 0 ? wait * 1000 : RETRY_WAIT[attempt], signal);
@@ -303,6 +307,21 @@ async function post(url, headers, body, signal) {
     }
     throw new Error(`API ${r.status}: ` + (zero ? t("quotaZero") + " — " : "") + msg + (attempt ? ` (${attempt + 1}×)` : ""));
   }
+}
+// The error message, plus what a gateway passed on from the provider behind it (OpenRouter puts it
+// in error.metadata: provider_name and the provider's raw reply).
+function apiErrText(data) {
+  const e = data && data.error; if (!e) return "";
+  let s = typeof e === "string" ? e : e.message || "";
+  const m = (typeof e === "object" && e.metadata) || {};
+  if (m.provider_name) s += ` [${m.provider_name}]`;
+  if (m.raw) {
+    let raw = m.raw;
+    try { const j = typeof raw === "string" ? JSON.parse(raw) : raw; raw = (j.error && (j.error.message || j.error)) || j.message || j; } catch (x) { }
+    raw = typeof raw === "string" ? raw : JSON.stringify(raw);
+    if (raw && !s.includes(raw)) s += ": " + raw.slice(0, 300);
+  }
+  return s;
 }
 async function postJSON(url, headers, body, signal) {
   const r = await post(url, headers, body, signal);
@@ -343,9 +362,17 @@ const REQUEST = {
     return { text, truncated: d.status === "incomplete", model: d.model || S.model };
   },
   async openrouter(prompt, signal, max) {
-    const d = await postJSON("https://openrouter.ai/api/v1/chat/completions", { authorization: "Bearer " + S.apiKey, "x-title": "Taiyak" },
-      { model: S.model, messages: [{ role: "user", content: prompt }], max_tokens: max * 2 }, signal);
-    if (d.error) throw new Error("API: " + (d.error.message || d.error.code));
+    let d;
+    try {
+      d = await postJSON("https://openrouter.ai/api/v1/chat/completions", { authorization: "Bearer " + S.apiKey, "x-title": "Taiyak" },
+        { model: S.model, messages: [{ role: "user", content: prompt }], max_tokens: max * 2 }, signal);
+    } catch (e) {
+      // Free models are mostly served by providers that may train on prompts; an account that does not
+      // allow that gets "No endpoints found matching your data policy".
+      if (e instanceof Error && /data policy|guardrail|eligible endpoints/i.test(e.message)) e.message += " — " + t("orPolicy");
+      throw e;
+    }
+    if (d.error) throw new Error("API: " + (apiErrText(d) || d.error.code));
     const c = (d.choices || [])[0] || {};
     return { text: (c.message && c.message.content) || "", truncated: c.finish_reason === "length", model: d.model || S.model };
   },

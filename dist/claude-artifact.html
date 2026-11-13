@@ -1128,6 +1128,7 @@ const UI = {
     sEngine: "翻訳エンジン", sClaude: "Claude（claude.ai のあなたのアカウント）",
     tierDefault: "標準", tierComplex: "高精度（時間がかかる）", tierQuick: "高速",
     sApi: "API キー", sProvider: "翻訳に使う API", keyLink: h => `${h} でキーを作る`, sModel: "モデル名", sGh: "GitHub トークン（private 用。fine-grained PAT で Contents: Read-only）",
+    orPolicy: "OpenRouter のプライバシー設定（openrouter.ai/settings/privacy）で、このモデルの事業者が許可されていません。無料モデルの多くは入力を学習に使う事業者が動かしています",
     showKey: "キーを表示", hideKey: "キーを隠す",
     orConnect: "OpenRouter に接続", orHint: "キーをコピーする代わりに、OpenRouter で承認するとキーが入ります。末尾が :free のモデルは無料です（1 日 50 回まで）。", orConnected: "OpenRouter に接続しました", orFailed: e => `OpenRouter に接続できませんでした（${e}）`,
     chromeName: "Chrome 内蔵（Gemini Nano）", chromeNote: "この端末の中で動くモデルです。キーは要らず、コードも外に送りません。小さなモデルなので、訳の質は API より落ち、長い宣言は扱えないことがあります。",
@@ -1183,6 +1184,7 @@ const UI = {
     sEngine: "Translator", sClaude: "Claude (your claude.ai account)",
     tierDefault: "Default", tierComplex: "Most capable (slower)", tierQuick: "Fast",
     sApi: "API key", sProvider: "Translation API", keyLink: h => `Create a key at ${h}`, sModel: "Model", sGh: "GitHub token (for private repos; fine-grained PAT with Contents: Read-only)",
+    orPolicy: "OpenRouter's privacy settings (openrouter.ai/settings/privacy) do not allow this model's providers. Most free models are served by providers that may train on inputs",
     showKey: "Show key", hideKey: "Hide key",
     orConnect: "Connect OpenRouter", orHint: "Instead of copying a key, approve on OpenRouter and the key is filled in. Models ending in :free cost nothing (up to 50 requests a day).", orConnected: "Connected to OpenRouter", orFailed: e => `Could not connect to OpenRouter (${e})`,
     chromeName: "Chrome built-in (Gemini Nano)", chromeNote: "Runs on this device: no key, and the code never leaves it. It is a small model, so translations are weaker than the APIs' and long declarations may not fit.",
@@ -1238,6 +1240,7 @@ const UI = {
     sEngine: "翻译引擎", sClaude: "Claude（你在 claude.ai 的账户）",
     tierDefault: "标准", tierComplex: "高精度（较慢）", tierQuick: "快速",
     sApi: "API 密钥", sProvider: "翻译所用的 API", keyLink: h => `在 ${h} 创建密钥`, sModel: "模型", sGh: "GitHub 令牌（用于私有仓库；fine-grained PAT，Contents: Read-only）",
+    orPolicy: "OpenRouter 的隐私设置（openrouter.ai/settings/privacy）不允许该模型的提供方。大多数免费模型由可能将输入用于训练的提供方运行",
     showKey: "显示密钥", hideKey: "隐藏密钥",
     orConnect: "连接 OpenRouter", orHint: "无需复制密钥：在 OpenRouter 上授权后会自动填入密钥。名称以 :free 结尾的模型免费（每天最多 50 次）。", orConnected: "已连接 OpenRouter", orFailed: e => `无法连接 OpenRouter（${e}）`,
     chromeName: "Chrome 内置（Gemini Nano）", chromeNote: "在本设备上运行：不需要密钥，代码也不会发送出去。由于模型较小，译文质量不如 API，较长的声明可能无法处理。",
@@ -1293,6 +1296,7 @@ const UI = {
     sEngine: "翻譯引擎", sClaude: "Claude（你在 claude.ai 的帳號）",
     tierDefault: "標準", tierComplex: "高精度（較慢）", tierQuick: "快速",
     sApi: "API 金鑰", sProvider: "翻譯所用的 API", keyLink: h => `在 ${h} 建立金鑰`, sModel: "模型", sGh: "GitHub 權杖（用於私有儲存庫；fine-grained PAT，Contents: Read-only）",
+    orPolicy: "OpenRouter 的隱私設定（openrouter.ai/settings/privacy）不允許此模型的提供者。多數免費模型由可能將輸入用於訓練的提供者執行",
     showKey: "顯示金鑰", hideKey: "隱藏金鑰",
     orConnect: "連接 OpenRouter", orHint: "不必複製金鑰：在 OpenRouter 上授權後會自動填入金鑰。名稱以 :free 結尾的模型免費（每天最多 50 次）。", orConnected: "已連接 OpenRouter", orFailed: e => `無法連接 OpenRouter（${e}）`,
     chromeName: "Chrome 內建（Gemini Nano）", chromeNote: "在本裝置上執行：不需要金鑰，程式碼也不會傳送出去。由於模型較小，譯文品質不如 API，較長的宣告可能無法處理。",
@@ -1348,6 +1352,7 @@ const UI = {
     sEngine: "번역 엔진", sClaude: "Claude (claude.ai의 내 계정)",
     tierDefault: "보통", tierComplex: "고정밀 (느림)", tierQuick: "빠름",
     sApi: "API 키", sProvider: "번역에 쓸 API", keyLink: h => `${h}에서 키 만들기`, sModel: "모델", sGh: "GitHub 토큰 (비공개 저장소용, fine-grained PAT, Contents: Read-only)",
+    orPolicy: "OpenRouter 개인정보 설정(openrouter.ai/settings/privacy)에서 이 모델의 제공자가 허용되지 않았습니다. 무료 모델 대부분은 입력을 학습에 쓸 수 있는 제공자가 운영합니다",
     showKey: "키 표시", hideKey: "키 숨기기",
     orConnect: "OpenRouter 연결", orHint: "키를 복사하는 대신 OpenRouter에서 승인하면 키가 입력됩니다. 이름이 :free로 끝나는 모델은 무료입니다(하루 50회까지).", orConnected: "OpenRouter에 연결했습니다", orFailed: e => `OpenRouter에 연결하지 못했습니다 (${e})`,
     chromeName: "Chrome 내장 (Gemini Nano)", chromeNote: "이 기기 안에서 실행됩니다. 키가 필요 없고 코드도 밖으로 보내지 않습니다. 작은 모델이라 번역 품질은 API보다 낮고, 긴 선언은 처리하지 못할 수 있습니다.",
@@ -1403,6 +1408,7 @@ const UI = {
     sEngine: "Traducteur", sClaude: "Claude (votre compte claude.ai)",
     tierDefault: "Standard", tierComplex: "Le plus capable (plus lent)", tierQuick: "Rapide",
     sApi: "Clé API", sProvider: "API de traduction", keyLink: h => `Créer une clé chez ${h}`, sModel: "Modèle", sGh: "Jeton GitHub (dépôts privés ; PAT fine-grained, Contents: Read-only)",
+    orPolicy: "Les réglages de confidentialité d'OpenRouter (openrouter.ai/settings/privacy) n'autorisent pas les fournisseurs de ce modèle. La plupart des modèles gratuits sont servis par des fournisseurs qui peuvent entraîner sur les entrées",
     showKey: "Afficher la clé", hideKey: "Masquer la clé",
     orConnect: "Connecter OpenRouter", orHint: "Au lieu de copier une clé, approuvez sur OpenRouter et la clé est renseignée. Les modèles finissant par :free sont gratuits (jusqu'à 50 requêtes par jour).", orConnected: "Connecté à OpenRouter", orFailed: e => `Connexion à OpenRouter impossible (${e})`,
     chromeName: "Intégré à Chrome (Gemini Nano)", chromeNote: "S'exécute sur cet appareil : pas de clé, et le code ne le quitte pas. C'est un petit modèle : les traductions sont moins bonnes qu'avec les API et les longues déclarations peuvent ne pas tenir.",
@@ -1458,6 +1464,7 @@ const UI = {
     sEngine: "Übersetzer", sClaude: "Claude (Ihr claude.ai-Konto)",
     tierDefault: "Standard", tierComplex: "Am leistungsfähigsten (langsamer)", tierQuick: "Schnell",
     sApi: "API-Schlüssel", sProvider: "API für die Übersetzung", keyLink: h => `Schlüssel bei ${h} erstellen`, sModel: "Modell", sGh: "GitHub-Token (für private Repos; fine-grained PAT, Contents: Read-only)",
+    orPolicy: "Die Datenschutzeinstellungen von OpenRouter (openrouter.ai/settings/privacy) lassen die Anbieter dieses Modells nicht zu. Die meisten kostenlosen Modelle laufen bei Anbietern, die mit Eingaben trainieren dürfen",
     showKey: "Schlüssel anzeigen", hideKey: "Schlüssel verbergen",
     orConnect: "Mit OpenRouter verbinden", orHint: "Statt einen Schlüssel zu kopieren, bei OpenRouter bestätigen – der Schlüssel wird eingetragen. Modelle mit der Endung :free sind kostenlos (bis zu 50 Anfragen am Tag).", orConnected: "Mit OpenRouter verbunden", orFailed: e => `Verbindung mit OpenRouter fehlgeschlagen (${e})`,
     chromeName: "In Chrome integriert (Gemini Nano)", chromeNote: "Läuft auf diesem Gerät: kein Schlüssel, und der Code verlässt es nicht. Es ist ein kleines Modell, daher sind die Übersetzungen schwächer als bei den APIs, und lange Deklarationen passen eventuell nicht.",
@@ -1513,6 +1520,7 @@ const UI = {
     sEngine: "Traductor", sClaude: "Claude (su cuenta de claude.ai)",
     tierDefault: "Estándar", tierComplex: "El más capaz (más lento)", tierQuick: "Rápido",
     sApi: "Clave de API", sProvider: "API de traducción", keyLink: h => `Crear una clave en ${h}`, sModel: "Modelo", sGh: "Token de GitHub (repositorios privados; PAT fine-grained, Contents: Read-only)",
+    orPolicy: "La configuración de privacidad de OpenRouter (openrouter.ai/settings/privacy) no permite los proveedores de este modelo. La mayoría de los modelos gratuitos los sirven proveedores que pueden entrenar con las entradas",
     showKey: "Mostrar la clave", hideKey: "Ocultar la clave",
     orConnect: "Conectar OpenRouter", orHint: "En vez de copiar una clave, apruebe en OpenRouter y la clave se rellena sola. Los modelos que terminan en :free son gratuitos (hasta 50 solicitudes al día).", orConnected: "Conectado a OpenRouter", orFailed: e => `No se pudo conectar con OpenRouter (${e})`,
     chromeName: "Integrado en Chrome (Gemini Nano)", chromeNote: "Se ejecuta en este dispositivo: sin clave y el código no sale de él. Es un modelo pequeño, así que las traducciones son peores que con las API y las declaraciones largas pueden no caber.",
@@ -1568,6 +1576,7 @@ const UI = {
     sEngine: "Tradutor", sClaude: "Claude (sua conta do claude.ai)",
     tierDefault: "Padrão", tierComplex: "Mais capaz (mais lento)", tierQuick: "Rápido",
     sApi: "Chave de API", sProvider: "API de tradução", keyLink: h => `Criar uma chave em ${h}`, sModel: "Modelo", sGh: "Token do GitHub (repositórios privados; PAT fine-grained, Contents: Read-only)",
+    orPolicy: "As configurações de privacidade do OpenRouter (openrouter.ai/settings/privacy) não permitem os provedores deste modelo. A maioria dos modelos gratuitos é servida por provedores que podem treinar com as entradas",
     showKey: "Mostrar a chave", hideKey: "Ocultar a chave",
     orConnect: "Conectar ao OpenRouter", orHint: "Em vez de copiar uma chave, aprove no OpenRouter e a chave é preenchida. Modelos terminados em :free são gratuitos (até 50 solicitações por dia).", orConnected: "Conectado ao OpenRouter", orFailed: e => `Não foi possível conectar ao OpenRouter (${e})`,
     chromeName: "Integrado ao Chrome (Gemini Nano)", chromeNote: "Roda neste dispositivo: sem chave, e o código não sai dele. É um modelo pequeno, então as traduções são piores que as das APIs e declarações longas podem não caber.",
@@ -1623,6 +1632,7 @@ const UI = {
     sEngine: "Переводчик", sClaude: "Claude (ваша учётная запись claude.ai)",
     tierDefault: "Стандартная", tierComplex: "Самая мощная (медленнее)", tierQuick: "Быстрая",
     sApi: "Ключ API", sProvider: "API для перевода", keyLink: h => `Создать ключ в ${h}`, sModel: "Модель", sGh: "Токен GitHub (для приватных репозиториев; fine-grained PAT, Contents: Read-only)",
+    orPolicy: "Настройки приватности OpenRouter (openrouter.ai/settings/privacy) не допускают поставщиков этой модели. Большинство бесплатных моделей обслуживают поставщики, которые могут обучаться на входных данных",
     showKey: "Показать ключ", hideKey: "Скрыть ключ",
     orConnect: "Подключить OpenRouter", orHint: "Вместо копирования ключа подтвердите доступ в OpenRouter, и ключ подставится сам. Модели с окончанием :free бесплатны (до 50 запросов в день).", orConnected: "OpenRouter подключён", orFailed: e => `Не удалось подключиться к OpenRouter (${e})`,
     chromeName: "Встроенная в Chrome (Gemini Nano)", chromeNote: "Работает на этом устройстве: ключ не нужен, код никуда не отправляется. Модель небольшая, поэтому переводы хуже, чем через API, а длинные объявления могут не поместиться.",
@@ -1765,8 +1775,12 @@ const LIST_MODELS = {
     return ((await r.json()).data || []).sort((a, b) => (b.created || 0) - (a.created || 0)).map(m => m.id).filter(id => /^(gpt-|o\d|chatgpt-)/.test(id) && !MODEL_SKIP.test(id));
   },
   // Free models (":free", 50 requests a day without a purchase) come first, then the newest.
+  // /models/user leaves out what the account's privacy settings and guardrails would refuse.
   async openrouter(key) {
-    const r = await fetch("https://openrouter.ai/api/v1/models?output_modalities=text", { headers: { authorization: "Bearer " + key } });
+    const h = { headers: { authorization: "Bearer " + key } };
+    let r = await fetch("https://openrouter.ai/api/v1/models/user", h);
+    if (r.status === 404) throw new Error(t("orPolicy"));
+    if (!r.ok) r = await fetch("https://openrouter.ai/api/v1/models?output_modalities=text", h);
     if (!r.ok) throw new Error("API " + r.status);
     const free = m => /:free$/.test(m.id);
     return ((await r.json()).data || []).filter(m => !m.architecture || !m.architecture.output_modalities || m.architecture.output_modalities.includes("text"))
@@ -1952,7 +1966,7 @@ async function post(url, headers, body, signal) {
     catch (e) { if (e.name === "AbortError") throw { code: "cancelled" }; throw new Error(new URL(url).host + ": " + e.message); }
     if (r.ok) return r;
     const data = await r.json().catch(() => ({}));
-    const msg = (data.error && data.error.message) || "";
+    const msg = apiErrText(data);
     const wait = retryAfter(r, data), zero = isZeroQuota(r.status, msg);
     if (RETRY_STATUS.has(r.status) && !isDeadline(r.status, msg) && !zero && wait <= 60 && attempt < RETRY_WAIT.length) {
       await sleep(wait > 0 ? wait * 1000 : RETRY_WAIT[attempt], signal);
@@ -1960,6 +1974,21 @@ async function post(url, headers, body, signal) {
     }
     throw new Error(`API ${r.status}: ` + (zero ? t("quotaZero") + " — " : "") + msg + (attempt ? ` (${attempt + 1}×)` : ""));
   }
+}
+// The error message, plus what a gateway passed on from the provider behind it (OpenRouter puts it
+// in error.metadata: provider_name and the provider's raw reply).
+function apiErrText(data) {
+  const e = data && data.error; if (!e) return "";
+  let s = typeof e === "string" ? e : e.message || "";
+  const m = (typeof e === "object" && e.metadata) || {};
+  if (m.provider_name) s += ` [${m.provider_name}]`;
+  if (m.raw) {
+    let raw = m.raw;
+    try { const j = typeof raw === "string" ? JSON.parse(raw) : raw; raw = (j.error && (j.error.message || j.error)) || j.message || j; } catch (x) { }
+    raw = typeof raw === "string" ? raw : JSON.stringify(raw);
+    if (raw && !s.includes(raw)) s += ": " + raw.slice(0, 300);
+  }
+  return s;
 }
 async function postJSON(url, headers, body, signal) {
   const r = await post(url, headers, body, signal);
@@ -2000,9 +2029,17 @@ const REQUEST = {
     return { text, truncated: d.status === "incomplete", model: d.model || S.model };
   },
   async openrouter(prompt, signal, max) {
-    const d = await postJSON("https://openrouter.ai/api/v1/chat/completions", { authorization: "Bearer " + S.apiKey, "x-title": "Taiyak" },
-      { model: S.model, messages: [{ role: "user", content: prompt }], max_tokens: max * 2 }, signal);
-    if (d.error) throw new Error("API: " + (d.error.message || d.error.code));
+    let d;
+    try {
+      d = await postJSON("https://openrouter.ai/api/v1/chat/completions", { authorization: "Bearer " + S.apiKey, "x-title": "Taiyak" },
+        { model: S.model, messages: [{ role: "user", content: prompt }], max_tokens: max * 2 }, signal);
+    } catch (e) {
+      // Free models are mostly served by providers that may train on prompts; an account that does not
+      // allow that gets "No endpoints found matching your data policy".
+      if (e instanceof Error && /data policy|guardrail|eligible endpoints/i.test(e.message)) e.message += " — " + t("orPolicy");
+      throw e;
+    }
+    if (d.error) throw new Error("API: " + (apiErrText(d) || d.error.code));
     const c = (d.choices || [])[0] || {};
     return { text: (c.message && c.message.content) || "", truncated: c.finish_reason === "length", model: d.model || S.model };
   },
